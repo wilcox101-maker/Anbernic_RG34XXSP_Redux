@@ -16,7 +16,8 @@ What it produces in the output folder:
                          module loading, or power-key / lid / suspend handling,
                          with the printable strings around each hit
     files/<part>/...     copies of small text files: configs, scripts, units,
-                         udev rules, and anything that produced a hit
+                         udev rules, logs, and anything that produced a hit
+    strings/<part>/...   printable strings of the launcher's own ELF binaries
 
 Partitions read: rootfs, appfs, UDISK. The Roms partition is never read:
 its name is matched and skipped before any of its sectors are touched.
@@ -35,12 +36,18 @@ SECTOR = 512
 BOOTLOADER_BYTES = 36 * 1024 * 1024
 WANT = ("rootfs", "appfs", "UDISK")
 TEXT_MAX = 512 * 1024          # copy text files up to this size
+LOG_MAX = 8 * 1024 * 1024      # ...except logs under var/log (stock image ships a boot log)
+STRINGS_MAX = 4 * 1024 * 1024  # ELF binaries whose strings are dumped (see STRINGS_DIRS)
+# Launcher-side binaries: dump their printable strings so callers can be traced.
+STRINGS_DIRS = {"appfs": ("bin/", "ctrl/"), "rootfs": ("mnt/mod/ctrl/",)}
+STRINGS_SKIP = ("bin/game/", "bin/wiliwili/")
 SCAN_MAX = 64 * 1024 * 1024    # keyword-scan files up to this size
 
 # Directories under which every small text file is copied (configs, init, scripts).
 COPY_DIRS = ("etc/", "lib/systemd/", "usr/lib/systemd/", "lib/udev/", "usr/lib/udev/",
              "usr/local/", "root/", "home/", "opt/", "emuelec/", "mnt/", "userdata/",
-             "lib/modules-load.d/", "usr/lib/modules-load.d/", "var/spool/cron/")
+             "lib/modules-load.d/", "usr/lib/modules-load.d/", "var/spool/cron/", "var/log/",
+             ".config/")
 COPY_EXT = (".sh", ".service", ".target", ".rules", ".conf", ".py", ".ini", ".cfg",
             ".json", ".txt", ".timer", ".path", ".socket", ".desktop")
 # Noise that never matters here and costs time.
@@ -58,7 +65,12 @@ KEYWORDS = {
                  rb"/sys/power/state", rb"mem_sleep", rb"systemctl (?:suspend|poweroff)",
                  rb"\bpoweroff\b", rb"\bsuspend\b", rb"\bhall\b", rb"\blid\b",
                  rb"axp2202|axp22|axp-?pek|power[_-]?key|powerkey|pwrkey",
-                 rb"gpio[-_]keys", rb"/dev/input/(?:event\d|by-)", rb"bl_power|fb0/blank"],
+                 rb"gpio[-_]keys", rb"/dev/input/(?:event\d|by-)", rb"bl_power|fb0/blank",
+                 rb"hallkey|nds_pwrkey"],
+    # who runs the vendor control scripts (the governor and power scripts are
+    # called from compiled launcher binaries, not from other scripts)
+    "callers":  [rb"cpu_setting\.sh", rb"pwr_new\.sh", rb"mmc_new\.sh", rb"loadapp\.sh",
+                 rb"/mnt/(?:vendor|mod)/ctrl/[\w.\-]+"],
 }
 KW_RE = {k: re.compile(b"|".join(v), re.I) for k, v in KEYWORDS.items()}
 PRINTABLE = re.compile(rb"[\x20-\x7e\t]{4,}")
@@ -302,7 +314,12 @@ def inventory_part(fs, part, zf, hits, modules):
                 hits.append(f"{part}\t/{path}\t{cat}\t{len(m)}\t"
                             f"{'text' if text else 'binary'}\t"
                             + " | ".join(contexts(scan, rx)).replace("\t", " "))
-        want = text and ino["size"] <= TEXT_MAX and (
+        limit = LOG_MAX if path.startswith("var/log/") else TEXT_MAX
+        if (not text and data[:4] == b"\x7fELF" and ino["size"] <= STRINGS_MAX
+                and path.startswith(STRINGS_DIRS.get(part, ())) and not path.startswith(STRINGS_SKIP)):
+            zf.writestr(f"strings/{part}/{path}.txt",
+                        b"\n".join(STRINGS.findall(data)).decode("ascii", "replace"))
+        want = text and ino["size"] <= limit and (
             hit or path.startswith(COPY_DIRS) or path.endswith(COPY_EXT)
             or part != "rootfs")
         if want:

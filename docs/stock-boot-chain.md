@@ -32,7 +32,8 @@ Firmware: `rg34xxsp-fw-sd_202505` (`RG34XXSP.img`), GPT layout.
      that more likely
    - mount with `barrier=0` (fast, but risks corruption if power is lost mid-write)
    - `switch_root /mnt /init`, which hands off to Ubuntu
-5. Ubuntu userspace starts Anbernic's launcher from `appfs`.
+5. Ubuntu userspace (systemd) starts Anbernic's launcher from `appfs`. The details are in
+   [stock-userspace.md](stock-userspace.md).
 
 ## Serial console
 
