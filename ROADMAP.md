@@ -5,6 +5,7 @@
 - [x] Extract kernel, initramfs, DTB, kernel config, u-boot env
 - [x] Hardware map: buttons, lid, display, PMIC, thermal, CPU OPPs ([docs/hardware-map.md](docs/hardware-map.md))
 - [x] Round-trip tooling: `bootimg.py` rebuilds stock `boot.img` byte-for-byte
+- [ ] Identify hardware revisions: original 2 GB vs. "Metallic Blue" (512 MB/1 GB LPDDR3, new panel). See [docs/field-reports.md](docs/field-reports.md)
 - [ ] Inventory rootfs/appfs: what Anbernic's launcher actually runs, and which kernel modules load
 
 ## Phase 1: Stock-kernel baseline
@@ -23,7 +24,7 @@ Changes only the `boot` partition. Flash a copy of the stock card, then `dd` the
 - [ ] Boot mainline kernel with a minimal BusyBox initramfs and a serial console
 - [ ] Display, input, audio, PMIC/battery, Wi-Fi bring-up checklist
 - [ ] Read-only squashfs system loaded into RAM; ext4 data partition with barriers; watchdog
-- [ ] Lid: `SW_LID` → sync → suspend → resume to the same frame
+- [ ] Lid: `SW_LID` with lid-open as a wake source → flush saves → sync → suspend → resume to the same frame
 - [ ] Standard gamepad event codes; integer-scaled 3× output; audio/video sync to the panel's real refresh
 - [ ] Frontend + RetroArch, tuned for 720×480
 
