@@ -1,0 +1,26 @@
+# Firmware images and binaries: keep them out of git
+*.img
+*.img.gz
+*.img.xz
+*.fex
+*.zip
+*.7z
+work/
+dump/
+
+# Game content: never commit
+roms/
+Roms/
+bios/
+*.gba
+*.gb
+*.gbc
+*.nes
+*.sfc
+*.smc
+*.iso
+*.chd
+
+# Python
+__pycache__/
+*.pyc
