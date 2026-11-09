@@ -13,7 +13,7 @@ An operating system for the Anbernic RG34XXSP that lets the hardware perform the
 | Phase | Goal | State |
 |---|---|---|
 | 0 | Dissect stock firmware, map the hardware | **Done**: see [`docs/`](docs/) |
-| 1 | Stock-kernel baseline: patched `boot.img` (input poll, governor, no boot fsck) | Tooling ready, patch in progress |
+| 1 | Stock-kernel baseline: patched `boot.img` (input poll, governor, write barriers) | **Built**, awaiting on-device test |
 | 2 | Mainline kernel + purpose-built rootfs (ROCKNIX H700 kernel work as base) | Planned |
 
 The full plan is in [`ROADMAP.md`](ROADMAP.md).
@@ -53,6 +53,7 @@ All of them are standard-library Python 3 and run on Windows, WSL or Linux.
 | `tools/bootimg.py` | Unpack and repack Android boot images (v0–v2). Verified to rebuild the stock `boot.img` **byte-for-byte**. |
 | `tools/initramfs.py` | Unpack and repack the gzip'd cpio initramfs, keeping ownership, modes and symlinks in a manifest so a Windows checkout can't lose them. |
 | `tools/dt_keys.py` | Print the button → GPIO pin → Linux event map from a device tree. |
+| `tools/fdt_patch.py` | Read or overwrite a u32 property in a compiled `.dtb` in place (no `dtc` needed). |
 
 ```bash
 python3 tools/bootimg.py unpack 3.boot.img work/boot

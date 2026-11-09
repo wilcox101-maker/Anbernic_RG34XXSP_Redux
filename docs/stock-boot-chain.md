@@ -27,7 +27,9 @@ Firmware: `rg34xxsp-fw-sd_202505` (`RG34XXSP.img`), GPT layout.
    ```
 3. **Kernel 4.9.170** starts with the DTB from the boot image (u-boot patches the memory node).
 4. **initramfs** (Buildroot 2015.02, BusyBox) runs [`/init`](../reference/stock-202505/initramfs-init.sh):
-   - **`e2fsck -y` on the whole 7 GiB rootfs, every boot**
+   - `e2fsck -y` on the rootfs. Without `-f` this only does a full check if the fs is marked
+     unclean (or a mount-count/interval limit trips). With `barrier=0`, an unclean power-off makes
+     that more likely
    - mount with `barrier=0` (fast, but risks corruption if power is lost mid-write)
    - `switch_root /mnt /init`, which hands off to Ubuntu
 5. Ubuntu userspace starts Anbernic's launcher from `appfs`.

@@ -10,7 +10,7 @@ The existing H700 firmware projects split into two camps.
 ## Our plan: staged
 
 **Phase 1, stock kernel (baseline).** Patch only what's reachable without kernel source: the DTB
-(input polling) and the initramfs (governor, fsck, mount options). This gives a measurable "before
+(input polling) and the initramfs (governor, mount options). This gives a measurable "before
 vs after" for button latency, boot time and battery life.
 
 **Phase 2, mainline kernel (target).**

@@ -10,10 +10,11 @@
 
 ## Phase 1: Stock-kernel baseline
 Changes only the `boot` partition. Flash a copy of the stock card, then `dd` the new `boot.img` to p4.
-- [ ] DTB: `gpio-keys-polled` poll-interval 20 ms → 5 ms, then test whether 1–2 ms is feasible
-- [ ] initramfs: set the `schedutil` governor before `switch_root`
-- [ ] initramfs: skip the per-boot full `e2fsck`; only check when the fs is flagged as not clean
-- [ ] initramfs: mount rootfs with `barrier=1`
+- [x] DTB: `gpio-keys-polled` poll-interval 20 ms → 5 ms (built; test 1–2 ms later)
+- [x] initramfs: set the `schedutil` governor before `switch_root` (built; confirm stock userspace doesn't reset it)
+- [x] ~~Skip the per-boot fsck~~ dropped: stock `e2fsck -y` (no `-f`) already skips a clean fs, and keeping the check is right for stability
+- [x] initramfs: mount rootfs with `barrier=1` (built)
+- [ ] On-device test per [phase1-stock-tweaks/DEPLOY.md](phase1-stock-tweaks/DEPLOY.md)
 - [ ] Measurements, stock vs. patched: boot time (power-on → menu), idle battery drain per hour,
       sustained-load temperature and clock, button latency (high-speed phone video)
 - [ ] Find UART pads for a serial console
