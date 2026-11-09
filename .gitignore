@@ -24,3 +24,6 @@ bios/
 # Python
 __pycache__/
 *.pyc
+
+# stock_inventory.py output (bootloader blob + extracted stock files)
+stock-inventory/

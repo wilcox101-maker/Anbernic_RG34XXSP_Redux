@@ -54,6 +54,7 @@ All of them are standard-library Python 3 and run on Windows, WSL or Linux.
 | `tools/initramfs.py` | Unpack and repack the gzip'd cpio initramfs, keeping ownership, modes and symlinks in a manifest so a Windows checkout can't lose them. |
 | `tools/dt_keys.py` | Print the button → GPIO pin → Linux event map from a device tree. |
 | `tools/fdt_patch.py` | Read or overwrite a u32 property in a compiled `.dtb` in place (no `dtc` needed). |
+| `tools/stock_inventory.py` | Read-only inventory of `RG34XXSP.img` with no mounting: cuts the 36 MiB bootloader region, lists rootfs/appfs/UDISK through a built-in ext4 reader, and flags files that touch the CPU governor, kernel modules or power-key/lid handling. Never reads the Roms partition. |
 
 ```bash
 python3 tools/bootimg.py unpack 3.boot.img work/boot
