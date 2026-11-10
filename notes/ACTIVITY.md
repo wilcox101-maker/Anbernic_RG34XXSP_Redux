@@ -78,3 +78,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 16:36 · claude · read: Dale end of day · did: F2 menu verified on device (hw-result PR #40); next for grok: real ROM list
 - 2026-11-10 16:41 · grok · read: ACTIVITY, STATUS, hw-result F2 menu, PRs · did: PING; #39 and #40 merged; no open PRs; next is real ROM list, not started
 - 2026-11-10 17:01 · grok · read: ACTIVITY (last 20), STATUS, open notes to grok/dale/all, main commits, branches, PRs · did: PING; noted #42 merged (notify-claude + AGENTS.md Reaching Claude section), draft inbox PR #41 open; STATUS still shows waiting on #39/#40 (merged); next is real ROM list, idle
+- 2026-11-10 18:02 · grok · read: ACTIVITY (last 20), STATUS, open notes to grok/dale/all, main commits, branches, PRs · did: PING; new branch grok/f2-rom-list (ROM scanner + menu wire + review-request note, STATUS fix); no PR yet; open notes: Dale decisions (eng-tabs, text-size, power-mgmt); STATUS on main still stale; idle
