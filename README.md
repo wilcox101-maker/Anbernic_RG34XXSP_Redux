@@ -35,7 +35,7 @@ The details are in [`docs/hardware-map.md`](docs/hardware-map.md).
 ## Repo layout
 
 ```
-docs/                 hardware map, stock boot chain, kernel strategy
+docs/                 hardware map, stock boot chain and userspace, kernel strategy, frontend brief
 reference/stock-202505/  device tree source, kernel .config, u-boot env and
                       initramfs init script, extracted from Anbernic firmware
                       rg34xxsp-fw-sd_202505 (sources only, no binaries)

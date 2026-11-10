@@ -54,6 +54,14 @@ opening the lid**. Lid-open is not a wake source on stock.
 - A faint flicker on some 1 GB units, "like 50 Hz on 60 Hz". That could be a panel timing mismatch on the new panel
 - The screen is physically 4:3 behind the bezel (the visible area is 3:2)
 
+## Dale's unit (first-hand)
+
+- 2 GB RAM, confirmed in software (original revision)
+- **User mod: silicone thermal pad added between the battery and the mainboard chips.** It spreads
+  SoC heat, but it also conducts it into the battery. Combined with the stock PMIC's disabled battery
+  temperature protection (see [hardware-map.md](hardware-map.md#power-axp2202-pmic-ic-0x34)), sustained
+  load while charging is the case to test and guard against. Not a factory part: other units won't have it
+
 ## Sources
 - muOS community: lid/sleep threads 735, 1177, 1340, 1394, 213, 1036, 342; device quirks page
 - retrohandhelds.gg: "RG34XXSP might've been quietly downgraded again" (May 2026) and the follow-up on CFW failures

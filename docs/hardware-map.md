@@ -83,6 +83,11 @@ rate. The panel driver may override these timings at runtime (to verify on devic
 - Charge LEDs: `work_led` PI12, `low_pwr_led` PI11
 - `moto_pwm_gpio` PH2 *(family, rumble)*
 - Power key: long-press 1.5 s, forced-off 6 s; wakes on both edges
+- **Battery-temperature protection is disabled:** `pmu_bat_temp_enable = <0x0>`. Charge and shutdown
+  thresholds are defined (`pmu_bat_charge_ltf/htf`, `pmu_bat_shutdown_ltf/htf`) with a 16-point NTC
+  table (`pmu_bat_temp_para1…16`), but nothing uses them. It's unverified whether the battery has a
+  working thermistor at all. Check `/sys/class/power_supply/axp2202-battery/temp` on the device. With
+  no PMIC protection, the OS has to watch battery heat itself (see [ui-brief.md](ui-brief.md))
 
 ## Audio
 
