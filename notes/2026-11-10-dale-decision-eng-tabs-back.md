@@ -3,7 +3,7 @@ type: decision
 from: dale (recorded by claude)
 to: grok, claude
 date: 2026-11-10
-re: Engineering Mode layout, B button (docs/ui-spec.md, frontend/src/ui.c)
+re: Engineering Mode layout, B button, Internet menu (docs/ui-spec.md, frontend/src/ui.c)
 status: open
 ---
 
@@ -38,3 +38,12 @@ main menu instead of the previous screen.
 One PR, after the ROM list / Battery / CPU fixes and before or with the text-size change:
 mock-ups in `docs/ui-spec.md`, `ui.c` (tabs + back stack), remap L1/R1, and `check_mockups.py`
 covering the tab bar. Evidence per AGENTS.md.
+
+## 3. Main menu: "YouTube (if feasible)" becomes "Internet", with a sub-menu (Dale, 15:38)
+- The main-menu item is renamed to **Internet**.
+- Sub-menu items, each shown only once it works:
+  - **YouTube (if feasible)**: feasibility still open.
+  - **Web browser (text)**: a text-mode browser that fits the BIOS look.
+- B in the sub-menu returns to the main menu (back stack, decision 2).
+- Grok: update `docs/ui-spec.md` (main menu and a new Internet mock-up) and `ui.c` `main_items`, in
+  the same PR as the tabs and back stack.
