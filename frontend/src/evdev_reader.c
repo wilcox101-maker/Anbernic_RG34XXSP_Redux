@@ -11,6 +11,11 @@
 #include <poll.h>
 #include <linux/input.h>
 
+/* <linux/input.h> defines BTN_LEFT/BTN_RIGHT (mouse, 0x110/0x111), BTN_A, BTN_START... as macros.
+   Our logical buttons were once named BTN_* too, so here BTN_LEFT silently became 0x110 and Left/Right
+   never reached the UI on the device (2026-11-10). They are LB_* now; keep it that way. */
+_Static_assert(LB_LEFT < 64 && LB_RIGHT < 64 && LB_A < 64, "logical buttons clash with linux/input.h");
+
 #define KEYS_PATH  "/dev/input/event1"
 #define POWER_PATH "/dev/input/event0"
 #define PRESS_THR  1500
@@ -21,10 +26,10 @@ static int power_fd = -1;
 static int stick_state[6];   /* 0-3 sticks, 4-5 D-pad hat (own state, so stick and hat don't cancel) */
 
 static logical_button_t axis_to_btn(int axis, int dir) {
-    if (dir == 0) return BTN_NONE;
-    if (axis == 0 || axis == 2 || axis == 4) return dir < 0 ? BTN_LEFT : BTN_RIGHT;
-    if (axis == 1 || axis == 3 || axis == 5) return dir < 0 ? BTN_UP : BTN_DOWN;
-    return BTN_NONE;
+    if (dir == 0) return LB_NONE;
+    if (axis == 0 || axis == 2 || axis == 4) return dir < 0 ? LB_LEFT : LB_RIGHT;
+    if (axis == 1 || axis == 3 || axis == 5) return dir < 0 ? LB_UP : LB_DOWN;
+    return LB_NONE;
 }
 
 int evdev_open(void) {
@@ -41,7 +46,8 @@ void evdev_close(void) {
 
 /* On power key press, run stock pwr_new.sh. It decides sleep vs shutdown. */
 static void handle_power(void) {
-    if (system("sh /mnt/mod/ctrl/pwr_new.sh") != 0)
+    /* pwr_new.sh is a bash script (function, {0..2}); sh (dash) fails with a syntax error. */
+    if (system("/bin/bash /mnt/mod/ctrl/pwr_new.sh") != 0)
         fprintf(stderr, "pwr_new.sh returned an error\n");
 }
 
@@ -72,7 +78,7 @@ int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
             /* 0 release, 1 press, 2 autorepeat. Repeats would restart the hold-A timer. */
             if (ev.value == 2) continue;
             logical_button_t b = remap_device_key(ev.code);
-            if (b != BTN_NONE && cb) cb(b, ev.value);
+            if (b != LB_NONE && cb) cb(b, ev.value);
         } else if (ev.type == EV_ABS) {
             int axis = -1;
             if (ev.code == DEV_ABS_LEFT_X) axis = 0;

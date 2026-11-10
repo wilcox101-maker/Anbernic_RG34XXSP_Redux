@@ -20,7 +20,7 @@
 /* Map a raw device key code to a logical button. */
 logical_button_t remap_device_key(int code);
 
-/* Map a stick/hat axis value to a logical button (or BTN_NONE if inside deadzone). */
+/* Map a stick/hat axis value to a logical button (or LB_NONE if inside deadzone). */
 logical_button_t remap_device_axis(int code, int value);
 
 #endif

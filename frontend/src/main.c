@@ -20,6 +20,10 @@
 #include "evdev_reader.h"
 #endif
 
+#define VIDEO_RETRY_MS 30000u      /* keep trying to open the display this long at boot */
+#define VIDEO_RETRY_STEP_MS 500u
+#define BOOT_REPAINT_MS 15000u   /* repaint about once a second for this long after start */
+#define PRESENT_BUFFERS 3   /* covers double and triple buffering */
 #define SCREEN_W (GRID_COLS * FONT_W)
 #define SCREEN_H (GRID_ROWS * FONT_H)
 
@@ -71,19 +75,29 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
-        return 1;
-    }
-    SDL_Window *win = SDL_CreateWindow("RG34XXSP Redux", SDL_WINDOWPOS_CENTERED,
-                                       SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, SDL_WINDOW_SHOWN);
-    SDL_Renderer *ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED) : NULL;
-    if (!ren) ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE) : NULL;
-    if (!ren) {
-        fprintf(stderr, "SDL window/renderer: %s\n", SDL_GetError());
-        if (win) SDL_DestroyWindow(win);
+    /* At boot the Mali kernel driver can still be loading when we start: SDL then fails with
+       "Could not initialize EGL" (device log, 2026-11-10, start at 10.7 s). Exiting costs a 30 s
+       black wait in dmenu_ln, so retry here for up to VIDEO_RETRY_MS instead. */
+    SDL_Window *win = NULL;
+    SDL_Renderer *ren = NULL;
+    for (uint32_t waited = 0;; waited += VIDEO_RETRY_STEP_MS) {
+        if (SDL_Init(SDL_INIT_VIDEO) == 0) {
+            win = SDL_CreateWindow("RG34XXSP Redux", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                   SCREEN_W, SCREEN_H, SDL_WINDOW_SHOWN);
+            ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED) : NULL;
+            if (!ren) ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE) : NULL;
+            if (ren) {
+                if (waited) fprintf(stderr, "video ready after %u ms of retries\n", (unsigned)waited);
+                break;
+            }
+            if (win) SDL_DestroyWindow(win);
+            win = NULL;
+        }
+        if (waited == 0 || waited + VIDEO_RETRY_STEP_MS >= VIDEO_RETRY_MS)
+            fprintf(stderr, "SDL video not ready (%u ms): %s\n", (unsigned)waited, SDL_GetError());
         SDL_Quit();
-        return 1;
+        if (waited + VIDEO_RETRY_STEP_MS >= VIDEO_RETRY_MS) return 1;
+        SDL_Delay(VIDEO_RETRY_STEP_MS);
     }
 
 #ifdef REDUX_PLATFORM_STOCK
@@ -92,12 +106,21 @@ int main(int argc, char **argv) {
 #endif
 
     ui_init();
+    const uint32_t start_ms = SDL_GetTicks();
     int running = 1;
     while (running && !ui_should_exit()) {
-        if (ui_dirty()) {
+        /* For the first seconds after start, repaint even when nothing changed: at boot the
+           first frames can land before the display shows them, and the stock boot logo stayed
+           up until the next change (~45 s on the device, 2026-11-10). */
+        if (ui_dirty() || SDL_GetTicks() - start_ms < BOOT_REPAINT_MS) {
             ui_draw();
-            grid_present(ren);
-            SDL_RenderPresent(ren);
+            /* Draw the same frame into every buffer the display backend flips between. On the
+               device (Anbernic SDL 2.0.12, page-flipped framebuffer) presenting once left the
+               previous frame in the other buffer, so two highlights showed (Dale, 2026-11-10). */
+            for (int i = 0; i < PRESENT_BUFFERS; i++) {
+                grid_present(ren);
+                SDL_RenderPresent(ren);
+            }
         }
         SDL_Event e;
         int have_event;
@@ -115,7 +138,7 @@ int main(int argc, char **argv) {
                 if (e.type == SDL_QUIT) running = 0;
                 if ((e.type == SDL_KEYDOWN && !e.key.repeat) || e.type == SDL_KEYUP) {
                     logical_button_t btn = remap_key(e.key.keysym.sym);
-                    if (btn != BTN_NONE) ui_button(btn, e.type == SDL_KEYDOWN, SDL_GetTicks());
+                    if (btn != LB_NONE) ui_button(btn, e.type == SDL_KEYDOWN, SDL_GetTicks());
                 }
                 if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
                     grid_present(ren);   /* window uncovered: repaint the last frame */

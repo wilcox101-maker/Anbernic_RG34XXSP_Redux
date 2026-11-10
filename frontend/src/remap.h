@@ -3,21 +3,21 @@
 
 /* Logical buttons. UI code only ever sees these. */
 typedef enum {
-    BTN_NONE = 0,
-    BTN_UP,
-    BTN_DOWN,
-    BTN_LEFT,
-    BTN_RIGHT,
-    BTN_A,
-    BTN_B,
-    BTN_X,
-    BTN_Y,
-    BTN_MENU,
-    BTN_START,
-    BTN_SELECT
+    LB_NONE = 0,
+    LB_UP,
+    LB_DOWN,
+    LB_LEFT,
+    LB_RIGHT,
+    LB_A,
+    LB_B,
+    LB_X,
+    LB_Y,
+    LB_MENU,
+    LB_START,
+    LB_SELECT
 } logical_button_t;
 
-/* Map a raw SDL keycode to a logical button. Returns BTN_NONE if unmapped. */
+/* Map a raw SDL keycode to a logical button. Returns LB_NONE if unmapped. */
 logical_button_t remap_key(int sdl_keycode);
 
 #endif

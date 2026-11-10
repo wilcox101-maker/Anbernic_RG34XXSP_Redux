@@ -3,16 +3,16 @@
 
 logical_button_t remap_key(int key) {
     switch (key) {
-    case SDLK_UP:    case SDLK_w: return BTN_UP;
-    case SDLK_DOWN:  case SDLK_s: return BTN_DOWN;
-    case SDLK_LEFT:  case SDLK_a: return BTN_LEFT;
-    case SDLK_RIGHT: case SDLK_d: return BTN_RIGHT;
-    case SDLK_RETURN: case SDLK_z: return BTN_A;
-    case SDLK_ESCAPE: case SDLK_x: return BTN_B;
-    case SDLK_c: return BTN_X;
-    case SDLK_v: return BTN_Y;
-    case SDLK_m: return BTN_MENU;
-    case SDLK_SPACE: return BTN_START;
-    default: return BTN_NONE;
+    case SDLK_UP:    case SDLK_w: return LB_UP;
+    case SDLK_DOWN:  case SDLK_s: return LB_DOWN;
+    case SDLK_LEFT:  case SDLK_a: return LB_LEFT;
+    case SDLK_RIGHT: case SDLK_d: return LB_RIGHT;
+    case SDLK_RETURN: case SDLK_z: return LB_A;
+    case SDLK_ESCAPE: case SDLK_x: return LB_B;
+    case SDLK_c: return LB_X;
+    case SDLK_v: return LB_Y;
+    case SDLK_m: return LB_MENU;
+    case SDLK_SPACE: return LB_START;
+    default: return LB_NONE;
     }
 }

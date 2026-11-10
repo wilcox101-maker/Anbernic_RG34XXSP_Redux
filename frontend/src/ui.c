@@ -59,7 +59,7 @@ static int list_count(void) {
 }
 
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
-    if (screen == SCREEN_ENG_CONFIRM && btn == BTN_A) {
+    if (screen == SCREEN_ENG_CONFIRM && btn == LB_A) {
         if (pressed) { a_down_at = now_ms ? now_ms : 1; hold_ms = 0; }
         else { a_down_at = 0; hold_ms = 0; }
         dirty = 1;
@@ -68,26 +68,26 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (!pressed) return;
 
     int n = list_count();
-    if (n && btn == BTN_UP)   { selected = (selected - 1 + n) % n; dirty = 1; }
-    if (n && btn == BTN_DOWN) { selected = (selected + 1) % n; dirty = 1; }
+    if (n && btn == LB_UP)   { selected = (selected - 1 + n) % n; dirty = 1; }
+    if (n && btn == LB_DOWN) { selected = (selected + 1) % n; dirty = 1; }
 
-    if (btn == BTN_A && screen == SCREEN_MAIN) {
+    if (btn == LB_A && screen == SCREEN_MAIN) {
         if (selected == MAIN_GAME_ROOM)   go(SCREEN_ROMS);
         if (selected == MAIN_SETTINGS)    go(SCREEN_SETTINGS);
         if (selected == MAIN_ENGINEERING) go(SCREEN_ENG_CONFIRM);
         return;
     }
-    if (btn == BTN_A && screen == SCREEN_ROMS) {
+    if (btn == LB_A && screen == SCREEN_ROMS) {
         const system_entry_t *sys = systems_lookup(rom_system);
         if (sys && launcher_start(sys->target, sys->core_or_path, rom_paths[selected]) == 0)
             should_exit = 1;
         return;
     }
-    if ((btn == BTN_LEFT || btn == BTN_RIGHT) && (screen == SCREEN_CPU || screen == SCREEN_BATTERY)) {
+    if ((btn == LB_LEFT || btn == LB_RIGHT) && (screen == SCREEN_CPU || screen == SCREEN_BATTERY)) {
         go(screen == SCREEN_CPU ? SCREEN_BATTERY : SCREEN_CPU);
         return;
     }
-    if (btn == BTN_B && screen != SCREEN_MAIN) go(SCREEN_MAIN);
+    if (btn == LB_B && screen != SCREEN_MAIN) go(SCREEN_MAIN);
 }
 
 void ui_tick(uint32_t now_ms) {
