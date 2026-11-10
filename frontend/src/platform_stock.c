@@ -9,7 +9,7 @@ static int read_int(const char *path, int fallback) {
     FILE *f = fopen(path, "r");
     if (!f) return fallback;
     int v = fallback;
-    fscanf(f, "%d", &v);
+    if (fscanf(f, "%d", &v) != 1) v = fallback;
     fclose(f);
     return v;
 }
@@ -20,7 +20,7 @@ int platform_battery_percent(void) {
 int platform_battery_charging(void) {
     char buf[32] = {0};
     FILE *f = fopen("/sys/class/power_supply/axp2202-battery/status", "r");
-    if (f) { fgets(buf, sizeof buf, f); fclose(f); }
+    if (f) { if (!fgets(buf, sizeof buf, f)) buf[0] = 0; fclose(f); }
     return strstr(buf, "Charging") != NULL;
 }
 int platform_battery_mv(void) {

@@ -17,11 +17,11 @@ jobs:
         run: python3 tools/check_rules.py
       - name: Build desktop (warnings are errors)
         run: |
-          cmake -S frontend -B build -DREDUX_PLATFORM=desktop -DCMAKE_C_FLAGS="-Werror"
+          cmake -S frontend -B build -DREDUX_PLATFORM=desktop -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
           cmake --build build
       - name: Build stock platform (host compiler; catches compile errors only)
         run: |
-          cmake -S frontend -B build-stock -DREDUX_PLATFORM=stock -DCMAKE_C_FLAGS="-Werror"
+          cmake -S frontend -B build-stock -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
           cmake --build build-stock
       - name: Launcher tests
         run: ./build/test_launcher
@@ -59,7 +59,7 @@ jobs:
             export DEBIAN_FRONTEND=noninteractive
             apt-get update -qq
             apt-get install -y -qq --no-install-recommends cmake make gcc libc6-dev libsdl2-dev >/dev/null
-            cmake -S frontend -B build-arm64 -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
+            cmake -S frontend -B build-arm64 -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
             cmake --build build-arm64
             ./build-arm64/test_launcher
             ./build-arm64/test_remap_device

@@ -40,7 +40,8 @@ void evdev_close(void) {
 
 /* On power key press, run stock pwr_new.sh. It decides sleep vs shutdown. */
 static void handle_power(void) {
-    system("sh /mnt/mod/ctrl/pwr_new.sh");
+    if (system("sh /mnt/mod/ctrl/pwr_new.sh") != 0)
+        fprintf(stderr, "pwr_new.sh returned an error\n");
 }
 
 int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
