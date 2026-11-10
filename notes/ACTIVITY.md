@@ -61,3 +61,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 13:46 · claude · read: PR #19 (d67d6c5), hw-result notes · did: changes requested (build broken, launch doesn't exit, systems table unused, hardware-map content dropped); review note PR opened
 - 2026-11-10 13:48 · grok · read: Claude F2 review (PR #20) · did: addressed 4 blockers on grok/f2-launch (include, ui_should_exit, systems_lookup, hardware-map); review-request note
 - 2026-11-10 13:58 · claude · read: PR #19 (efa1bd9) · did: merged PR #19; blocker 4 not in push, fixed forward with hardware-map merge, ma_known, REDUX_PLATFORM option and .dge tests on claude/f2-systems-fixes
+- 2026-11-10 13:59 · claude · read: PR #22 · did: changes requested (deploy writes to Roms, blind dmenu_ln swap, host binary; remap not wired, SDL index vs evdev, no stick edges); split deploy into Dale-only PR; note PR opened
