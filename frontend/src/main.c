@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
                     if (btn != BTN_NONE) ui_button(btn, e.type == SDL_KEYDOWN, SDL_GetTicks());
                 }
                 if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
-                    grid_present(ren);
+                    grid_present(ren);   /* window uncovered: repaint the last frame */
                     SDL_RenderPresent(ren);
                 }
             } while (SDL_PollEvent(&e));
@@ -104,5 +104,5 @@ int main(int argc, char **argv) {
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
     SDL_Quit();
-    return ui_should_exit() ? 0 : 0;
+    return 0;   /* on a launch, loadapp.sh now runs /tmp/.next */
 }

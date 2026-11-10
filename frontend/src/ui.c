@@ -192,8 +192,15 @@ void ui_draw(void) {
         snprintf(t, sizeof t, "  Capacity:     %d %%", platform_battery_percent()); body(0, t);
         snprintf(t, sizeof t, "  Voltage:      %d.%02d V", platform_battery_mv() / 1000,
                  (platform_battery_mv() % 1000) / 10); body(1, t);
-        snprintf(t, sizeof t, "  Current:     %s%d mA", ma < 0 ? "-" : " ", ma < 0 ? -ma : ma); body(2, t);
-        snprintf(t, sizeof t, "  Status:       %s", ma < 0 ? "Discharging" : "Charging"); body(3, t);
+        if (platform_battery_ma_known()) {
+            snprintf(t, sizeof t, "  Current:     %s%d mA", ma < 0 ? "-" : " ", ma < 0 ? -ma : ma); body(2, t);
+            snprintf(t, sizeof t, "  Status:       %s", ma < 0 ? "Discharging" : "Charging"); body(3, t);
+        } else {
+            /* Stock PMIC exposes no current: use the status file instead. */
+            body(2, "  Current:      unknown");
+            snprintf(t, sizeof t, "  Status:       %s",
+                     platform_battery_charging() ? "Charging" : "Discharging"); body(3, t);
+        }
         body(4, "  Time left:    ~4 h 12 m");
         body(6, platform_battery_temp_known() ? "  Temperature:  -- C"
                                               : "  Temperature:  unknown   (thermistor unverified)");

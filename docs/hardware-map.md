@@ -26,11 +26,35 @@ decompiled to [`reference/stock-202505/board.dts`](../reference/stock-202505/boa
 | trip-point@1 | 70 °C | passive (CPU/GPU cooling maps engage) |
 | cpu_crit | 115 °C | critical shutdown |
 
-## Buttons and sticks (confirmed on device, 2026-11-10)
+## Buttons and sticks
 
-Driver: `gpio-keys-polled`, label `ANBERNIC-keys`, device `/dev/input/event1`.
+Driver: `gpio-keys-polled`, label `ANBERNIC-keys`, device `/dev/input/event1` (js0),
+**poll-interval 20 ms**. That alone adds up to a frame of input lag (a Phase 2 item). All buttons are
+active-low GPIOs. Codes in the last column were read with `evtest` on Dale's unit (2026-11-10).
+Where they differ from what the DT says, the device wins; the DT value is noted.
 
-**Analog sticks** (range −4096…+4096, fuzz/flat 32):
+| Button | Pin | Event | Code on device |
+|---|---|---|---|
+| D-pad Up / Down | PA6 / PE0 | EV_ABS | ABS_HAT0Y (17) −1 / +1 |
+| D-pad Left / Right | PA8 / PA9 | EV_ABS | ABS_HAT0X (16) −1 / +1 |
+| A | PA0 | EV_KEY | BTN_SOUTH (304) |
+| B | PA1 | EV_KEY | BTN_EAST (305) |
+| X | PA3 | EV_KEY | BTN_C (306) |
+| Y | PA2 | EV_KEY | BTN_NORTH (307) |
+| L1 | PA10 | EV_KEY | BTN_WEST (308) |
+| R1 | PA12 | EV_KEY | BTN_Z (309) |
+| L2 | PA11 | EV_KEY | BTN_TL (310) ⚠ DT: BTN_SELECT |
+| R2 | PA7 | EV_KEY | BTN_TR (311) ⚠ DT: BTN_START |
+| Select | PA5 | EV_KEY | BTN_SELECT (314) ⚠ DT: BTN_TL |
+| Start | PA4 | EV_KEY | BTN_START (315) ⚠ DT: BTN_TR |
+| Menu | PE3 | EV_KEY | BTN_TL2 (312) |
+| L3 / R3 | PE8 / PE9 | EV_KEY | BTN_TR2 (313) / BTN_MODE (316), probably real now the sticks are confirmed |
+
+⚠ = the decompiled DT and the device disagree. Both orders are still not standard gamepad codes, so
+every frontend needs a remap table; we'll emit standard Linux gamepad codes instead. The DT columns
+can be regenerated with `python3 tools/dt_keys.py`.
+
+**Analog sticks: two** (confirmed on device). Range −4096…+4096, fuzz/flat 32:
 
 | Stick | Axis | Code |
 |---|---|---|
@@ -39,32 +63,24 @@ Driver: `gpio-keys-polled`, label `ANBERNIC-keys`, device `/dev/input/event1`.
 | Right X | ABS_RY | 4 |
 | Right Y | ABS_RZ | 5 |
 
-**Digital D-pad**
-- ABS_HAT0X (16): −1 left, +1 right
-- ABS_HAT0Y (17): −1 up, +1 down
+In the stock DT they have no node of their own. The `ANBERNIC-keys` node carries an analog
+multiplexer, `amux-en-gpios` (PI8), mux selects `A0_gpio` / `A1_gpio` (PI1 / PI2) and
+`adc-en-gpios` (PE11), read through the GPADC by Anbernic's driver (stock also loads
+`gpio_keys_gpadc.ko` from the SD card if present). Mainline's RG35XX-H tree models the same idea as
+`adc-joystick` over an `adc_mux` (`ABS_X/Y/RX/RY`), the model for Phase 2.
 
-**Buttons** (scrambled codes):
+Other input devices: event0 = `axp2202-pek` (power key), event2 = `dierct-keys-polled` (sic).
+Power and volume keys are on the AXP2202 power-key driver and the ADC (to be documented).
 
-| Button | Event code |
-|---|---|
-| A | BTN_SOUTH (304) |
-| B | BTN_EAST (305) |
-| X | BTN_C (306) |
-| Y | BTN_NORTH (307) |
-| L1 | BTN_WEST (308) |
-| R1 | BTN_Z (309) |
-| L2 | BTN_TL (310) |
-| R2 | BTN_TR (311) |
-| Select | BTN_SELECT (314) |
-| Start | BTN_START (315) |
-| Menu | BTN_TL2 (312) |
-| L3/R3 (family) | BTN_TR2 (313) / BTN_MODE (316) |
+## Lid (clamshell)
 
-## Lid (clamshell) — confirmed
-
-`/sys/class/power_supply/axp2202-battery/hallkey`:
-- Lid open: `1`
-- Lid closed: `0`
+- Hall sensor on **PE7**, declared as `hall_key` inside the **AXP2202 power-key node**
+  (`x-powers,axp2101-pek`). The stock kernel treats the lid as a power-key event, not a standard lid
+  switch.
+- State on device: `/sys/class/power_supply/axp2202-battery/hallkey` reads `1` open, `0` closed
+  (confirmed 2026-11-10).
+- Mainline Linux's RG35XX-SP device tree exposes the same pin as a proper `gpio-keys`
+  **SW_LID** switch, which is the model for Phase 2.
 
 ## Battery temperature — dummy value
 

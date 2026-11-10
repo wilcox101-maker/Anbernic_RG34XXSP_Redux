@@ -8,6 +8,7 @@ int platform_battery_percent(void)    { return 87; }
 int platform_battery_charging(void)   { return 1; }
 int platform_battery_mv(void)         { return 3920; }
 int platform_battery_ma(void)         { return -420; }
+int platform_battery_ma_known(void)   { return 1; }
 int platform_battery_temp_known(void) { return 0; }
 int platform_wifi_connected(void)     { return 1; }
 int platform_cpu_temp_c(void)         { return 54; }
