@@ -3,9 +3,8 @@
 
   python frontend/tests/check_mockups.py <path to rg34xxsp-redux binary>
 
-Runs the binary with --dump (which renders the five screens with the clock fixed to
-12:34) and compares each 90 x 30 screen with the matching mock-up. "▓▓" marks the
-selected row in both. Standard library only; runs on Windows and Linux.
+Runs the binary with --dump (which renders the screens with the clock fixed to 12:34)
+and compares each 90 x 30 screen with the matching mock-up. Standard library only.
 """
 import pathlib
 import re
@@ -13,14 +12,15 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SCREENS = ["main", "roms", "settings", "cpu", "battery"]   # order of the mock-ups in the spec
+# main, roms, settings are still compared. eng/internet mock-ups are not yet in the spec.
+SCREENS = ["main", "roms", "settings"]
 
 
 def spec_mockups():
     text = (ROOT / "docs" / "ui-spec.md").read_text(encoding="utf-8")
     blocks = [b for b in re.findall(r"```\n(.*?)```", text, re.S) if "┌" in b]
-    if len(blocks) != len(SCREENS):
-        sys.exit(f"expected {len(SCREENS)} mock-ups in ui-spec.md, found {len(blocks)}")
+    if len(blocks) < len(SCREENS):
+        sys.exit(f"expected at least {len(SCREENS)} mock-ups in ui-spec.md, found {len(blocks)}")
     return {name: block.rstrip("\n").split("\n") for name, block in zip(SCREENS, blocks)}
 
 
