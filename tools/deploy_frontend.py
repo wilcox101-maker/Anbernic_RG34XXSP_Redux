@@ -67,21 +67,22 @@ def main():
     if run(["ssh", f"root@{ip}", "mkdir -p /mnt/vendor/redux"]) != 0:
         print("error: cannot reach the device or create /mnt/vendor/redux", file=sys.stderr)
         return 1
-    rc = run(["scp", bin_path, f"root@{ip}:/mnt/vendor/redux/rg34xxsp-redux.new"])
+    rc = run(["scp", bin_path, f"root@{ip}:/mnt/vendor/redux/dmenu.bin.new"])
     if rc != 0:
         return rc
     rc = run(["ssh", f"root@{ip}",
-              "chmod +x /mnt/vendor/redux/rg34xxsp-redux.new && "
-              "mv /mnt/vendor/redux/rg34xxsp-redux.new /mnt/vendor/redux/rg34xxsp-redux"])
+              "chmod +x /mnt/vendor/redux/dmenu.bin.new && "
+              "mv /mnt/vendor/redux/dmenu.bin.new /mnt/vendor/redux/dmenu.bin"])
     if rc != 0:
         return rc
 
     print()
-    print("Copied. On the device, after reading /mnt/vendor/ctrl/dmenu_ln:")
-    print("  # back up stock once; a redeploy must never replace the stock backup:")
+    print("Copied to /mnt/vendor/redux/dmenu.bin (named dmenu.bin so pwr_new.sh's pidof check")
+    print("still finds the menu). To switch the launcher, on the device:")
     print("  [ -e /mnt/vendor/ctrl/dmenu_ln.bak ] || cp /mnt/vendor/ctrl/dmenu_ln /mnt/vendor/ctrl/dmenu_ln.bak")
-    print("  # edit the wrapper to call /mnt/vendor/redux/rg34xxsp-redux")
-    print("  # do not use exec if pwr_new.sh kills by process name")
+    print("""  sed -i 's|^CMD="/mnt/vendor/bin/dmenu.bin"|CMD="/mnt/vendor/redux/dmenu.bin"|' /mnt/vendor/ctrl/dmenu_ln""")
+    print("  grep '^CMD=' /mnt/vendor/ctrl/dmenu_ln   # expect the redux path")
+    print("See notes/2026-11-10-claude-finding-dmenu-ln.md.")
     print()
     print(f"To restore: python tools/deploy_frontend.py --restore {ip}")
     return 0
