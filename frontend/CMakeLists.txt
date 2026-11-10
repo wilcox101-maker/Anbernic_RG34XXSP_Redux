@@ -14,10 +14,21 @@ add_executable(rg34xxsp-redux
     src/remap.c
     src/ui.c
 )
+target_include_directories(rg34xxsp-redux PRIVATE src)
 
-target_include_directories(rg34xxsp-redux PRIVATE ${SDL2_INCLUDE_DIRS} src)
-target_link_libraries(rg34xxsp-redux ${SDL2_LIBRARIES})
+# Newer SDL2 packages export targets; older ones only set variables.
+if(TARGET SDL2::SDL2)
+    if(TARGET SDL2::SDL2main)
+        target_link_libraries(rg34xxsp-redux PRIVATE SDL2::SDL2main)
+    endif()
+    target_link_libraries(rg34xxsp-redux PRIVATE SDL2::SDL2)
+else()
+    target_include_directories(rg34xxsp-redux PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_link_libraries(rg34xxsp-redux PRIVATE ${SDL2_LIBRARIES})
+endif()
 
-if(WIN32)
-    target_link_libraries(rg34xxsp-redux SDL2::SDL2main)
+if(MSVC)
+    target_compile_options(rg34xxsp-redux PRIVATE /W4 /utf-8)
+else()
+    target_compile_options(rg34xxsp-redux PRIVATE -Wall -Wextra)
 endif()
