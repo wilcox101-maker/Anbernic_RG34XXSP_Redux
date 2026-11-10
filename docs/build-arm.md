@@ -3,6 +3,18 @@
 The device needs an aarch64 ELF built with `-DREDUX_PLATFORM=stock`.
 Install it as **`/mnt/vendor/redux/dmenu.bin`** so stock `pwr_new.sh` finds it with `pidof dmenu.bin`.
 
+## Option 0: download it from CI (recommended)
+
+Every push and PR builds the device binary in GitHub Actions (job `arm64`), inside an arm64
+Ubuntu 22.04 container: the same release as the stock rootfs, so glibc and SDL2 match.
+
+1. Open the PR or commit on GitHub → **Checks** → the `ci` run → **Summary** → **Artifacts**.
+2. Download `redux-dmenu-bin-aarch64` (a zip holding `dmenu.bin`) and unzip it.
+3. `python tools/deploy_frontend.py <device-ip> dmenu.bin`
+
+Not verified yet: that the device's own SDL2 is at least the 2.0.20 the binary is built against.
+If it fails to start with a missing `SDL_...` symbol, that's the cause.
+
 ## Option 1: build on the device
 
 ```bash

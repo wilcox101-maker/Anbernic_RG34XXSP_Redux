@@ -43,3 +43,38 @@ jobs:
         run: python -m compileall -q tools phase1-stock-tweaks
       - name: Hard-rule checks on Windows
         run: python tools/check_rules.py
+
+  arm64:
+    # The device binary. Built inside an emulated arm64 Ubuntu 22.04 container, the same release as
+    # the stock rootfs, so glibc and SDL2 match. Download it from the run's "Artifacts" section.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      - name: Build aarch64 (REDUX_PLATFORM=stock)
+        run: |
+          docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src ubuntu:22.04 sh -ec '
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq
+            apt-get install -y -qq --no-install-recommends cmake make gcc libc6-dev libsdl2-dev >/dev/null
+            cmake -S frontend -B build-arm64 -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
+            cmake --build build-arm64
+            ./build-arm64/test_launcher
+            ./build-arm64/test_remap_device
+          '
+      - name: Check it is an aarch64 ELF
+        run: |
+          python3 - build-arm64/rg34xxsp-redux <<'PY'
+          import sys
+          h = open(sys.argv[1], "rb").read(20)
+          assert h[:4] == b"\x7fELF" and h[18] == 0xB7, "not an aarch64 ELF"
+          print("aarch64 ELF ok")
+          PY
+          cp build-arm64/rg34xxsp-redux dmenu.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: redux-dmenu-bin-aarch64
+          path: dmenu.bin
+          retention-days: 30
