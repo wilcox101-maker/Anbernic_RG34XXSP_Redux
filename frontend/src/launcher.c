@@ -34,32 +34,37 @@ static const char *script_for(launch_target_t t) {
 }
 
 int launcher_start(launch_target_t target, const char *core, const char *rom_path) {
-    const char *script = script_for(target);
-    if (!script) return -1;
-
     FILE *f = fopen(next_path, "w");
     if (!f) return -1;
 
-    /* AUDIODEV line matches dmenu.bin style; adjust per target as needed. */
     fprintf(f, "AUDIODEV=hw:2,0 ");
 
-    if (target == LAUNCH_RETROARCH) {
+    if (target == LAUNCH_DGE) {
+        /* core is the .dge binary path. */
         if (!core) { fclose(f); return -1; }
-        fprintf(f, "sh %s ", script);
-        quote(f, core);
-        fputc(' ', f);
-        if (rom_path) quote(f, rom_path);
-        fprintf(f, " auto\n");
-    } else if (target == LAUNCH_PPSSPP || target == LAUNCH_PCSX) {
-        /* ELF binaries: run directly from their directory. */
-        fprintf(f, "%s ", script);
+        fprintf(f, "%s ", core);
         if (rom_path) quote(f, rom_path);
         fputc('\n', f);
     } else {
-        /* Scripts. */
-        fprintf(f, "sh %s ", script);
-        if (rom_path) quote(f, rom_path);
-        fputc('\n', f);
+        const char *script = script_for(target);
+        if (!script) { fclose(f); return -1; }
+
+        if (target == LAUNCH_RETROARCH) {
+            if (!core) { fclose(f); return -1; }
+            fprintf(f, "sh %s ", script);
+            quote(f, core);
+            fputc(' ', f);
+            if (rom_path) quote(f, rom_path);
+            fprintf(f, " auto\n");
+        } else if (target == LAUNCH_PPSSPP || target == LAUNCH_PCSX) {
+            fprintf(f, "%s ", script);
+            if (rom_path) quote(f, rom_path);
+            fputc('\n', f);
+        } else {
+            fprintf(f, "sh %s ", script);
+            if (rom_path) quote(f, rom_path);
+            fputc('\n', f);
+        }
     }
 
     fclose(f);
