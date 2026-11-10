@@ -9,7 +9,7 @@ find_package(SDL2 REQUIRED)
 # Platform layer: "desktop" (fake values, default) or "stock" (real sysfs on the RG34XXSP).
 set(REDUX_PLATFORM desktop CACHE STRING "desktop or stock")
 if(REDUX_PLATFORM STREQUAL "stock")
-    set(REDUX_PLATFORM_SRC src/platform_stock.c)
+    set(REDUX_PLATFORM_SRC src/platform_stock.c src/remap_device.c)
 else()
     set(REDUX_PLATFORM_SRC src/platform.c)
 endif()
@@ -25,6 +25,10 @@ add_executable(rg34xxsp-redux
     src/systems.c
 )
 target_include_directories(rg34xxsp-redux PRIVATE src)
+
+if(REDUX_PLATFORM STREQUAL "stock")
+    target_compile_definitions(rg34xxsp-redux PRIVATE REDUX_PLATFORM_STOCK)
+endif()
 
 # Newer SDL2 packages export targets; older ones only set variables.
 if(TARGET SDL2::SDL2)
@@ -46,3 +50,7 @@ endif()
 # Desktop test for the F2 launcher (no SDL needed): run ./test_launcher, exit code 0 = pass.
 add_executable(test_launcher tests/test_launcher.c src/launcher.c)
 target_include_directories(test_launcher PRIVATE src)
+
+# Device remap test (no SDL needed).
+add_executable(test_remap_device tests/test_remap_device.c src/remap_device.c)
+target_include_directories(test_remap_device PRIVATE src)
