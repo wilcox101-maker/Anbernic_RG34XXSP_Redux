@@ -17,11 +17,11 @@ jobs:
         run: python3 tools/check_rules.py
       - name: Build desktop (warnings are errors)
         run: |
-          cmake -S frontend -B build -DREDUX_PLATFORM=desktop -DCMAKE_C_FLAGS="-Werror"
+          cmake -S frontend -B build -DREDUX_PLATFORM=desktop -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
           cmake --build build
       - name: Build stock platform (host compiler; catches compile errors only)
         run: |
-          cmake -S frontend -B build-stock -DREDUX_PLATFORM=stock -DCMAKE_C_FLAGS="-Werror"
+          cmake -S frontend -B build-stock -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
           cmake --build build-stock
       - name: Launcher tests
         run: ./build/test_launcher
