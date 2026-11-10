@@ -62,20 +62,24 @@ def main():
               file=sys.stderr)
         return 1
 
-    # Never overwrite an existing stock backup.
-    rc = run(["ssh", f"root@{ip}", "test ! -f /mnt/vendor/ctrl/dmenu_ln.bak"])
-    if rc != 0:
-        print("error: dmenu_ln.bak already exists; refusing to overwrite", file=sys.stderr)
+    # Copy to a temp name, then rename: overwriting a running binary in place fails
+    # ("Text file busy") and a cut-off copy would leave a broken launcher.
+    if run(["ssh", f"root@{ip}", "mkdir -p /mnt/vendor/redux"]) != 0:
+        print("error: cannot reach the device or create /mnt/vendor/redux", file=sys.stderr)
         return 1
-
-    run(["ssh", f"root@{ip}", "mkdir -p /mnt/vendor/redux"])
-    rc = run(["scp", bin_path, f"root@{ip}:/mnt/vendor/redux/rg34xxsp-redux"])
+    rc = run(["scp", bin_path, f"root@{ip}:/mnt/vendor/redux/rg34xxsp-redux.new"])
+    if rc != 0:
+        return rc
+    rc = run(["ssh", f"root@{ip}",
+              "chmod +x /mnt/vendor/redux/rg34xxsp-redux.new && "
+              "mv /mnt/vendor/redux/rg34xxsp-redux.new /mnt/vendor/redux/rg34xxsp-redux"])
     if rc != 0:
         return rc
 
     print()
     print("Copied. On the device, after reading /mnt/vendor/ctrl/dmenu_ln:")
-    print("  cp /mnt/vendor/ctrl/dmenu_ln /mnt/vendor/ctrl/dmenu_ln.bak")
+    print("  # back up stock once; a redeploy must never replace the stock backup:")
+    print("  [ -e /mnt/vendor/ctrl/dmenu_ln.bak ] || cp /mnt/vendor/ctrl/dmenu_ln /mnt/vendor/ctrl/dmenu_ln.bak")
     print("  # edit the wrapper to call /mnt/vendor/redux/rg34xxsp-redux")
     print("  # do not use exec if pwr_new.sh kills by process name")
     print()
