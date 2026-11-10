@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "grid.h"
 #include "platform.h"
 #include <stdio.h>
 #include <string.h>
@@ -17,19 +18,17 @@ static const char *menu_items[] = {
 #define MENU_COUNT 9
 static int selected = 0;
 
-void ui_init(void) { selected = 0; }
+void ui_init(void) { selected = 0; grid_init(NULL); }
 void ui_shutdown(void) {}
 
 void ui_handle(logical_button_t btn) {
     if (btn == BTN_UP)   selected = (selected - 1 + MENU_COUNT) % MENU_COUNT;
     if (btn == BTN_DOWN) selected = (selected + 1) % MENU_COUNT;
-    /* A / B navigation stubs for later screens */
 }
 
 void ui_render(SDL_Renderer *ren) {
-    (void)ren;
-    /* Placeholder: real 8x16 grid renderer lands in grid.c + font.c.
-       For now the window is black; full cell-perfect rendering is next. */
+    grid_clear();
+
     char status[64];
     char clock[8];
     platform_clock(clock, sizeof clock);
@@ -37,5 +36,23 @@ void ui_render(SDL_Renderer *ren) {
              platform_battery_percent(),
              platform_battery_charging() ? "CHG" : "",
              platform_cpu_temp_c(), clock);
-    (void)status;
+
+    grid_puts(0, 0, "RG34XXSP Redux", 0);
+    grid_puts(90 - (int)strlen(status), 0, status, 0);
+
+    /* Box top */
+    grid_puts(0, 1, "+--------------------------------------------------------------------------------------+", 0);
+
+    for (int i = 0; i < MENU_COUNT; i++) {
+        char line[90];
+        snprintf(line, sizeof line, "|%s%-86s|",
+                 (i == selected) ? ">>" : "  ", menu_items[i]);
+        grid_puts(0, 2 + i, line, i == selected);
+    }
+
+    /* Box bottom */
+    grid_puts(0, 28, "+--------------------------------------------------------------------------------------+", 0);
+    grid_puts(0, 29, "A:Select  B:Back  M:Menu  Start:Search", 0);
+
+    grid_present(ren);
 }
