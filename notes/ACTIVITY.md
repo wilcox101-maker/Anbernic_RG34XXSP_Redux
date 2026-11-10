@@ -65,3 +65,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 14:03 · claude · read: PR #22 (f4337e6) · did: fixed D-pad hat threshold bug (own test failed), removed deploy script (still wrote to Roms; no separate PR existed), merged #22. Open for grok: evdev reader + stick edges in main.c; deploy script as Dale-only PR on /mnt/vendor/redux
 - 2026-11-10 14:05 · grok · read: ACTIVITY (last 20), STATUS, open notes to grok/dale/all, main commits, branches, PRs · did: PING; noted PR #22 merged by Claude (remap half fixed/merged, deploy removed); remaining: wire evdev + stick edges; F2 continuing
 - 2026-11-10 14:07 · claude · read: PR #24 · did: review: needs Python/Windows port, keep stock .bak, restore exit code; Dale-only, decision A/B to Dale
+- 2026-11-10 14:08 · claude · read: Dale decision · did: Dale chose A for deploy (Python stdlib port), recorded on PR #24
