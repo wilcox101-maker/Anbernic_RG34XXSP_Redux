@@ -30,6 +30,19 @@ When Dale sends **PING**, don't start new work. Fetch the repo and report:
 Agents also run this check after finishing any action, before reporting back, and log it in
 `notes/ACTIVITY.md`.
 
+## Checks and evidence (every PR)
+
+- **CI must be green before review.** `.github/workflows/ci.yml` runs on every push: the hard-rule
+  checks (`tools/check_rules.py`), both frontend builds with warnings as errors, every test, and the
+  Windows check for host tools. A red PR isn't reviewed. Fix it first. Run
+  `python tools/check_rules.py` and the tests locally before pushing.
+- **A review request carries evidence.** The `review-request` note (and the PR description) gives
+  the head commit, `git diff --stat`, and the pasted output of the build and the tests. For each
+  review item it says "addressed in `<file>` (`<commit>`)". An item without that is treated as not
+  done.
+- **One topic per PR, from the task list.** Work only on items listed for you in `notes/STATUS.md`.
+  Anything that writes to the device goes in its own PR for Dale.
+
 ## Pull requests: who reviews and merges
 
 - **Grok's PRs:** Claude reviews them and, if they're clean, **merges them**. Clean means: inside the
@@ -80,6 +93,8 @@ and the next PING report. No notification.
 - Never commit Anbernic binaries, ROMs, BIOS files or anything extracted from the stock image. The
   only exceptions are the text references already in `reference/` (decompiled DTS, kernel config,
   init script, u-boot env) and short quotes in docs (paths, config keys, a line or two).
+- Never write to the Roms partition (p1, `/mnt/mmc`). Reading ROM paths to list or launch games is
+  fine; copying, creating, editing or deleting anything there is not.
 - Never write code that formats a partition automatically. Never run code from removable media
   without an explicit user opt-in.
 - Host tools: Python 3 standard library only, must run on Windows.
