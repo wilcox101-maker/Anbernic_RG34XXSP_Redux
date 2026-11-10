@@ -26,48 +26,62 @@ decompiled to [`reference/stock-202505/board.dts`](../reference/stock-202505/boa
 | trip-point@1 | 70 °C | passive (CPU/GPU cooling maps engage) |
 | cpu_crit | 115 °C | critical shutdown |
 
-## Buttons
+## Buttons and sticks (confirmed on device, 2026-11-10)
 
-Driver: `gpio-keys-polled`, label `ANBERNIC-keys`, **poll-interval 20 ms**. That alone adds up to a
-frame of input lag. All buttons are active-low GPIOs.
+Driver: `gpio-keys-polled`, label `ANBERNIC-keys`, device `/dev/input/event1`.
 
-| Button | Pin | Event | Code sent |
-|---|---|---|---|
-| D-pad Up / Down | PA6 / PE0 | EV_ABS | ABS_HAT0Y −1 / +1 |
-| D-pad Left / Right | PA8 / PA9 | EV_ABS | ABS_HAT0X −1 / +1 |
-| A | PA0 | EV_KEY | BTN_SOUTH |
-| B | PA1 | EV_KEY | BTN_EAST |
-| X | PA3 | EV_KEY | BTN_C |
-| Y | PA2 | EV_KEY | BTN_NORTH |
-| Start | PA4 | EV_KEY | BTN_TR ⚠ |
-| Select | PA5 | EV_KEY | BTN_TL ⚠ |
-| L1 | PA10 | EV_KEY | BTN_WEST ⚠ |
-| L2 | PA11 | EV_KEY | BTN_SELECT ⚠ |
-| R1 | PA12 | EV_KEY | BTN_Z ⚠ |
-| R2 | PA7 | EV_KEY | BTN_START ⚠ |
-| Menu | PE3 | EV_KEY | BTN_TL2 ⚠ |
-| L3 / R3 *(family)* | PE8 / PE9 | EV_KEY | BTN_TR2 / BTN_MODE |
+**Analog sticks** (range −4096…+4096, fuzz/flat 32):
 
-**Analog sticks: two, confirmed present on the RG34XXSP** (Dale, 2026-11-10). In the stock DT they have
-no node of their own. The `ANBERNIC-keys` node carries an analog multiplexer, `amux-en-gpios` (PI8),
-mux selects `A0_gpio` / `A1_gpio` (PI1 / PI2) and `adc-en-gpios` (PE11), read through the GPADC by
-Anbernic's driver (stock also loads `gpio_keys_gpadc.ko` from the SD card if present). Their event
-codes aren't in the DT, so check with `evtest` on the device. Mainline's RG35XX-H tree models the same
-idea as `adc-joystick` over an `adc_mux` (`ABS_X/Y/RX/RY`), the model for Phase 2. L3 / R3 (stick
-clicks) are then probably real too, not *family*. To confirm.
+| Stick | Axis | Code |
+|---|---|---|
+| Left X | ABS_Z | 2 |
+| Left Y | ABS_RX | 3 |
+| Right X | ABS_RY | 4 |
+| Right Y | ABS_RZ | 5 |
 
-⚠ = Anbernic's scrambled codes. Every frontend needs a remap table. We'll emit standard Linux
-gamepad codes instead. Regenerate this table with `python3 tools/dt_keys.py`.
+**Digital D-pad**
+- ABS_HAT0X (16): −1 left, +1 right
+- ABS_HAT0Y (17): −1 up, +1 down
 
-Power and volume keys are on the AXP2202 power-key driver and the ADC (to be documented).
+**Buttons** (scrambled codes):
 
-## Lid (clamshell)
+| Button | Event code |
+|---|---|
+| A | BTN_SOUTH (304) |
+| B | BTN_EAST (305) |
+| X | BTN_C (306) |
+| Y | BTN_NORTH (307) |
+| L1 | BTN_WEST (308) |
+| R1 | BTN_Z (309) |
+| L2 | BTN_TL (310) |
+| R2 | BTN_TR (311) |
+| Select | BTN_SELECT (314) |
+| Start | BTN_START (315) |
+| Menu | BTN_TL2 (312) |
+| L3/R3 (family) | BTN_TR2 (313) / BTN_MODE (316) |
 
-- Hall sensor on **PE7**, declared as `hall_key` inside the **AXP2202 power-key node**
-  (`x-powers,axp2101-pek`). The stock kernel treats the lid as a power-key event, not a standard lid
-  switch.
-- Mainline Linux's RG35XX-SP device tree exposes the same pin as a proper `gpio-keys`
-  **SW_LID** switch, which is the model for Phase 2.
+## Lid (clamshell) — confirmed
+
+`/sys/class/power_supply/axp2202-battery/hallkey`:
+- Lid open: `1`
+- Lid closed: `0`
+
+## Battery temperature — dummy value
+
+`/sys/class/power_supply/axp2202-battery/temp` stayed at **300** under:
+- 120 s full CPU load (CPU temp rose 39.8 °C → 58.6 °C)
+- ~5 min charging at 5 V / 3 A (capacity 29 % → 32 %)
+
+Treat as a dummy. UI shows "battery temp: unknown". Heat guard falls back to SoC temperature only.
+Matches the stock DTS setting `pmu_bat_temp_enable = <0x0>`.
+
+## Other confirmed readings
+
+- Governor: `performance` (stock default)
+- voltage_now: 3935000 (3.935 V)
+- capacity: 35 %
+- `current_now` does not exist
+- Input devices: event0 = axp2202-pek, event1 = ANBERNIC-keys (js0), event2 = dierct-keys-polled
 
 ## Display
 
@@ -91,11 +105,8 @@ rate. The panel driver may override these timings at runtime (to verify on devic
 - Charge LEDs: `work_led` PI12, `low_pwr_led` PI11
 - `moto_pwm_gpio` PH2 *(family, rumble)*
 - Power key: long-press 1.5 s, forced-off 6 s; wakes on both edges
-- **Battery-temperature protection is disabled:** `pmu_bat_temp_enable = <0x0>`. Charge and shutdown
-  thresholds are defined (`pmu_bat_charge_ltf/htf`, `pmu_bat_shutdown_ltf/htf`) with a 16-point NTC
-  table (`pmu_bat_temp_para1…16`), but nothing uses them. It's unverified whether the battery has a
-  working thermistor at all. Check `/sys/class/power_supply/axp2202-battery/temp` on the device. With
-  no PMIC protection, the OS has to watch battery heat itself (see [ui-brief.md](ui-brief.md))
+- **Battery-temperature protection is disabled:** `pmu_bat_temp_enable = <0x0>`. Confirmed dummy
+  on device (see above).
 
 ## Audio
 
