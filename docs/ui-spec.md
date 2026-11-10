@@ -77,7 +77,7 @@ RG34XXSP Redux
 
 ```
 RG34XXSP Redux                                                      BAT 87% CHG WIFI 12:34
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
 │▓▓ Game Room                                                                            │
 │   Music                                                                                │
 │   Video                                                                                │
@@ -104,16 +104,15 @@ RG34XXSP Redux                                                      BAT 87% CHG 
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
-│                                                                                        │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
-A:Select  B:Back  M:Menu  Start:Search
+A:Select  B:Back  M:Menu  Start:Search                                                    
 ```
 
 ## 4. Mock-up 2 — System / ROM list
 
 ```
 Game Room > Systems > Game Boy Advance                              BAT 87% CHG WIFI 12:34
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
 │  Search: _                                                                             │
 │                                                                                        │
 │▓▓ Advance Wars                                                                         │
@@ -139,9 +138,8 @@ Game Room > Systems > Game Boy Advance                              BAT 87% CHG 
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
-│                                                                                        │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
-A:Launch  B:Back  X:Favorites  Y:Info  Start:Search  Select:Random
+A:Launch  B:Back  X:Favorites  Y:Info  Start:Search  Select:Random                         
 ```
 
 ## 5. Mock-up 3 — Settings
@@ -175,9 +173,8 @@ Settings                                                            BAT 87% CHG 
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
-│                                                                                        │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
-A:Enter  B:Back  M:Menu
+A:Enter  B:Back  M:Menu                                                                   
 ```
 
 ---
