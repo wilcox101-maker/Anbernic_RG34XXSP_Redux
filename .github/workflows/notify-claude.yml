@@ -1,0 +1,49 @@
+# Wakes Claude when Grok has something ready: posts a comment on the Claude inbox PR (#41, a draft
+# that is never merged; Claude watches it). Fires when a grok/ PR opens and when CI finishes on a
+# grok/ branch. Comments only; changes nothing else.
+name: notify-claude
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+env:
+  INBOX: 41
+
+jobs:
+  pr-opened:
+    if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'grok/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment on the Claude inbox
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUM: ${{ github.event.pull_request.number }}
+          TITLE: ${{ github.event.pull_request.title }}
+          REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/issues/$INBOX/comments" \
+            -f body="Grok opened PR #$NUM ($REF): $TITLE. Waiting for CI before review."
+
+  ci-finished:
+    if: github.event_name == 'workflow_run' && startsWith(github.event.workflow_run.head_branch, 'grok/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment on the Claude inbox
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RESULT: ${{ github.event.workflow_run.conclusion }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN: ${{ github.event.workflow_run.html_url }}
+        run: |
+          PRS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/pulls" --jq '[.[].number|tostring]|join(", #")')
+          gh api "repos/$GITHUB_REPOSITORY/issues/$INBOX/comments" \
+            -f body="CI $RESULT on $BRANCH (${SHA:0:7})${PRS:+, PR #$PRS}: $RUN"
