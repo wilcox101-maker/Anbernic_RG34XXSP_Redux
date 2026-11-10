@@ -69,3 +69,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 14:12 · claude · read: PR #24 (Python port) · did: fixed redeploy block (.bak refusal), safe .new+mv swap, removed .sh stub; ready for Dale's merge
 - 2026-11-10 14:18 · claude · read: stock dmenu_ln/pwr_new.sh from inventory zip · did: finding note (swap = edit CMD line, install as dmenu.bin, Redux must run pwr_new.sh on power key) in PR #25
 - 2026-11-10 14:23 · claude · read: merges #25 #26 #27 · did: CI + check_rules live on main; AGENTS evidence rule in force; deploy installs as /mnt/vendor/redux/dmenu.bin
+- 2026-11-10 14:35 · claude · read: PR #28 (green) · did: merged #28; follow-up PR #29 (1 s input lag from SDL wait, hat/stick shared state, autorepeat vs hold-A, build-arm unverified)
