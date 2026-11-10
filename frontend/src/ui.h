@@ -28,4 +28,7 @@ void ui_draw(void);
 /* For tests: jump straight to a screen. */
 void ui_show(screen_t s);
 
+/* 1 if a launch was requested and main should exit so loadapp.sh runs /tmp/.next. */
+int ui_should_exit(void);
+
 #endif
