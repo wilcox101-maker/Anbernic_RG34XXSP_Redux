@@ -48,6 +48,14 @@ frame of input lag. All buttons are active-low GPIOs.
 | Menu | PE3 | EV_KEY | BTN_TL2 ⚠ |
 | L3 / R3 *(family)* | PE8 / PE9 | EV_KEY | BTN_TR2 / BTN_MODE |
 
+**Analog sticks: two, confirmed present on the RG34XXSP** (Dale, 2026-11-10). In the stock DT they have
+no node of their own. The `ANBERNIC-keys` node carries an analog multiplexer, `amux-en-gpios` (PI8),
+mux selects `A0_gpio` / `A1_gpio` (PI1 / PI2) and `adc-en-gpios` (PE11), read through the GPADC by
+Anbernic's driver (stock also loads `gpio_keys_gpadc.ko` from the SD card if present). Their event
+codes aren't in the DT, so check with `evtest` on the device. Mainline's RG35XX-H tree models the same
+idea as `adc-joystick` over an `adc_mux` (`ABS_X/Y/RX/RY`), the model for Phase 2. L3 / R3 (stick
+clicks) are then probably real too, not *family*. To confirm.
+
 ⚠ = Anbernic's scrambled codes. Every frontend needs a remap table. We'll emit standard Linux
 gamepad codes instead. Regenerate this table with `python3 tools/dt_keys.py`.
 
