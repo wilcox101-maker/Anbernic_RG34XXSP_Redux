@@ -4,18 +4,20 @@ to: dale
 event: message
 phase: F2
 status: open
-refs: [tools/deploy_frontend.sh]
+refs: [tools/deploy_frontend.py]
 ---
 
-# Deploy script (Dale-only, fresh PR)
+# Deploy script (Dale-only, Option A)
 
-Opened after #22 merged. Deploy was removed from that PR.
+Replaced the shell script with `tools/deploy_frontend.py`.
 
-**What this script does**
+**What it does**
+- Python standard library only. Runs on Windows.
+- Checks the ELF header for AArch64 (e_machine = 0xB7). Refuses anything else.
+- Uses Windows' built-in `ssh` and `scp`.
 - Writes to `/mnt/vendor/redux/` (appfs). Never touches the Roms partition.
-- Refuses non-aarch64 binaries.
-- `--restore` checks for the backup before moving it.
-- Does not replace `dmenu_ln` automatically. Prints the steps after the stock wrapper has been read.
+- Never overwrites an existing `dmenu_ln.bak`.
+- `--restore` exits with an error if no backup exists.
 
 ## Needs from you
 - Review before any device write.
