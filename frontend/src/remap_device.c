@@ -20,15 +20,18 @@ logical_button_t remap_device_key(int code) {
 logical_button_t remap_device_axis(int code, int value) {
     int thr = DEV_STICK_THRESHOLD;
     switch (code) {
+    /* The D-pad hat reports -1/0/+1, so it has no threshold. */
+    case DEV_ABS_HAT0X:
+        return value < 0 ? BTN_LEFT : value > 0 ? BTN_RIGHT : BTN_NONE;
+    case DEV_ABS_HAT0Y:
+        return value < 0 ? BTN_UP : value > 0 ? BTN_DOWN : BTN_NONE;
     case DEV_ABS_LEFT_X:
     case DEV_ABS_RIGHT_X:
-    case DEV_ABS_HAT0X:
         if (value < -thr) return BTN_LEFT;
         if (value >  thr) return BTN_RIGHT;
         return BTN_NONE;
     case DEV_ABS_LEFT_Y:
     case DEV_ABS_RIGHT_Y:
-    case DEV_ABS_HAT0Y:
         if (value < -thr) return BTN_UP;
         if (value >  thr) return BTN_DOWN;
         return BTN_NONE;
