@@ -4,6 +4,7 @@
   python frontend/tests/check_mockups.py <path to rg34xxsp-redux binary>
 
 Runs the binary with --dump and compares each screen with the matching mock-up.
+On failure it prints the full rendered screen so the mock-up can be copied exactly.
 Standard library only.
 """
 import pathlib
@@ -51,6 +52,10 @@ def main():
             print(f"FAIL {name}: {len(bad)} row(s) differ")
             for i, a, b in bad[:5]:
                 print(f"  row {i}\n    spec: {a!r}\n    got:  {b!r}")
+            print(f"--- rendered {name} ({len(g)} rows) ---")
+            for line in g:
+                print(line)
+            print(f"--- end {name} ---")
         else:
             print(f"ok   {name}: 30 rows x 90 columns match")
     sys.exit(1 if failures else 0)
