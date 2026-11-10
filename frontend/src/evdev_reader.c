@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <time.h>
 #include <linux/input.h>
 
 /* <linux/input.h> defines BTN_LEFT/BTN_RIGHT (mouse, 0x110/0x111), BTN_A, BTN_START... as macros.
@@ -45,10 +46,32 @@ void evdev_close(void) {
 }
 
 /* On power key press, run stock pwr_new.sh. It decides sleep vs shutdown. */
+#define POWER_QUIET_MS 1500   /* ignore the power key this long after pwr_new.sh returns */
+
+static long long now_ms(void) {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (long long)t.tv_sec * 1000 + t.tv_nsec / 1000000;
+}
+
+/* Throw away whatever queued up on a device (e.g. key events from before suspend and from the wake). */
+static void drain(int fd) {
+    struct input_event ev;
+    while (fd >= 0 && read(fd, &ev, sizeof ev) == sizeof ev) { }
+}
+
+static long long power_quiet_until;
+
 static void handle_power(void) {
     /* pwr_new.sh is a bash script (function, {0..2}); sh (dash) fails with a syntax error. */
     if (system("/bin/bash /mnt/mod/ctrl/pwr_new.sh") != 0)
         fprintf(stderr, "pwr_new.sh returned an error\n");
+    /* pwr_new.sh returns after suspend+resume. The PMIC wakes on both key edges, so a held key
+       woke the device at once and its queued press put it back to sleep: a sleep/wake loop
+       while held (Dale's video, 2026-11-10). Drop the queued events and stay deaf briefly. */
+    drain(power_fd);
+    drain(keys_fd);
+    power_quiet_until = now_ms() + POWER_QUIET_MS;
 }
 
 int evdev_wait(int timeout_ms) {
@@ -67,7 +90,7 @@ int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
     /* Power key (event0). */
     if (power_fd >= 0) {
         while (read(power_fd, &ev, sizeof ev) == sizeof ev) {
-            if (ev.type == EV_KEY && ev.value == 1)
+            if (ev.type == EV_KEY && ev.value == 1 && now_ms() >= power_quiet_until)
                 handle_power();
         }
     }
