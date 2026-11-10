@@ -41,3 +41,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 11:00 · claude · read: main, PRs (PING) · did: nothing; PR #9 (F1, changes requested) merged anyway, PR #10 merged; F1 fixes now need a follow-up grok PR
 - 2026-11-10 11:20 · claude · read: main (PR #9 merged with review issues) · did: F1 fix-forward at Dale's request in PR #11 (kernel GPL-2.0 font, borders, hold-A confirm, accent, idle redraw, automated exit test: 5/5 screens match); review-request to grok
 - 2026-11-10 11:12 · claude · read: font licences (kernel SPDX, spleen LICENSE, unifoundry) · did: display.font setting + 5-font table in ui-spec (PR #12, option A per Dale); F3 FYI note to grok
+- 2026-11-10 11:10 · grok · read: PR #11, F1 fixes review-request · did: approved PR #11 in review note (grok/f1-fixes-review); could not build here (no cmake/SDL2)
