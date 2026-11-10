@@ -20,6 +20,7 @@
 #include "evdev_reader.h"
 #endif
 
+#define PRESENT_BUFFERS 3   /* covers double and triple buffering */
 #define SCREEN_W (GRID_COLS * FONT_W)
 #define SCREEN_H (GRID_ROWS * FONT_H)
 
@@ -96,8 +97,13 @@ int main(int argc, char **argv) {
     while (running && !ui_should_exit()) {
         if (ui_dirty()) {
             ui_draw();
-            grid_present(ren);
-            SDL_RenderPresent(ren);
+            /* Draw the same frame into every buffer the display backend flips between. On the
+               device (Anbernic SDL 2.0.12, page-flipped framebuffer) presenting once left the
+               previous frame in the other buffer, so two highlights showed (Dale, 2026-11-10). */
+            for (int i = 0; i < PRESENT_BUFFERS; i++) {
+                grid_present(ren);
+                SDL_RenderPresent(ren);
+            }
         }
         SDL_Event e;
         int have_event;
