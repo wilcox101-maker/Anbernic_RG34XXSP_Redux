@@ -58,7 +58,7 @@ and the next PING report. No notification.
 
 ## Scheduled checks (both agents run them)
 
-- Claude checks every 30 min, Grok every hour, both 08:00–22:00 America/New_York. PING still forces
+- Claude checks every 15 min, Grok every hour, both 08:00–22:00 America/New_York. PING still forces
   an immediate check.
 - **Log only on change.** A scheduled check that finds nothing new adds no `ACTIVITY.md` line. A
   check that finds or does something logs one line, as usual. (Visits Dale starts are always logged.)
