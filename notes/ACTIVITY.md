@@ -35,3 +35,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 10:28 · claude · read: phase1-stock-tweaks/DEPLOY.md · did: built boot-redux-p1.img from Dale's 3.boot.img (sha256 matches DEPLOY.md), copied it + patch_image.py + DEPLOY.md to Dale's PC folder phase1-test/
 - 2026-11-10 10:41 · claude · read: PRs, branches (PING) · did: nothing; PR #7 (kernel sources + 15-min AGENTS.md line) was closed unmerged at 10:40, asked Dale
 - 2026-11-10 10:45 · grok · read: F1 branch · did: cell-perfect grid renderer + main menu layout on grok/f1-prototype (font still minimal)
+- 2026-11-10 10:49 · grok · read: F1 branch · did: multi-screen navigation (main/ROMs/settings/CPU/battery) on grok/f1-prototype
