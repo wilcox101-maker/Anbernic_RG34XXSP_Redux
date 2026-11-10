@@ -15,7 +15,7 @@ Changes only the `boot` partition. Flash a copy of the stock card, then `dd` the
 - [x] initramfs: set the `schedutil` governor before `switch_root` (built; no boot script resets it, but the music/video players (via `cpu_setting.sh`) and DraStic's SDL2 can later. See [stock-userspace.md](docs/stock-userspace.md#cpu-governor))
 - [x] ~~Skip the per-boot fsck~~ dropped: stock `e2fsck -y` (no `-f`) already skips a clean fs, and keeping the check is right for stability
 - [x] initramfs: mount rootfs with `barrier=1` (built)
-- [ ] On-device test per [phase1-stock-tweaks/DEPLOY.md](phase1-stock-tweaks/DEPLOY.md)
+- [x] On-device boot test: boots to the menu in about 20 s, no issues seen (2026-11-10). Per [phase1-stock-tweaks/DEPLOY.md](phase1-stock-tweaks/DEPLOY.md)
 - [ ] Measurements, stock vs. patched: boot time (power-on → menu), idle battery drain per hour,
       sustained-load temperature and clock, button latency (high-speed phone video)
 - [ ] Find UART pads for a serial console
