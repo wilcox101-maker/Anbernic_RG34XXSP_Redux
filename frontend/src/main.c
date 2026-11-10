@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
                 if (e.type == SDL_QUIT) running = 0;
                 if ((e.type == SDL_KEYDOWN && !e.key.repeat) || e.type == SDL_KEYUP) {
                     logical_button_t btn = remap_key(e.key.keysym.sym);
-                    if (btn != BTN_NONE) ui_button(btn, e.type == SDL_KEYDOWN, SDL_GetTicks());
+                    if (btn != LB_NONE) ui_button(btn, e.type == SDL_KEYDOWN, SDL_GetTicks());
                 }
                 if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
                     grid_present(ren);   /* window uncovered: repaint the last frame */
