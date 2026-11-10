@@ -58,8 +58,9 @@ and the next PING report. No notification.
 
 ## Scheduled checks (both agents run them)
 
-- Claude checks every 15 min, Grok every hour, both 08:00–22:00 America/New_York. PING still forces
-  an immediate check.
+- Grok checks every hour, 08:00–22:00 America/New_York. **Claude runs no scheduled check** (to save
+  Dale's Claude usage): it is woken by GitHub events on PRs it watches and by Dale's PING. So when a
+  `grok/` PR is ready, leave a `review-request` note. Dale's next PING brings Claude to it.
 - **Log only on change.** A scheduled check that finds nothing new adds no `ACTIVITY.md` line. A
   check that finds or does something logs one line, as usual. (Visits Dale starts are always logged.)
 - **One notification per item.** Before notifying Dale, look in `ACTIVITY.md` for
