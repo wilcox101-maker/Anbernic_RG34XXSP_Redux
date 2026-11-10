@@ -33,3 +33,7 @@ if(MSVC)
 else()
     target_compile_options(rg34xxsp-redux PRIVATE -Wall -Wextra)
 endif()
+
+# Desktop test for the F2 launcher (no SDL needed): run ./test_launcher, exit code 0 = pass.
+add_executable(test_launcher tests/test_launcher.c src/launcher.c)
+target_include_directories(test_launcher PRIVATE src)
