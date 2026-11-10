@@ -32,8 +32,9 @@ Changes only the `boot` partition. Flash a copy of the stock card, then `dd` the
 
 ## Frontend: phases F0–F8
 Runs alongside the kernel phases. The full plan, UI rules and exit tests are in [docs/ui-brief.md](docs/ui-brief.md).
-- [ ] F0: UI spec, settings schema, and an on-device check of the battery temperature reading
-- [ ] F1 desktop prototype · F2 launch parity · F3 settings parity · F4 power and lid · F5 Engineering Mode · F6 features stock left out · F7 mainline port · F8 release
+- [x] F0: UI spec and settings schema ([docs/ui-spec.md](docs/ui-spec.md)), signed off 2026-11-10. Battery-temperature check on the device still open
+- [ ] F1: desktop prototype (C + SDL2, `frontend/`)
+- [ ] F2 launch parity · F3 settings parity · F4 power and lid · F5 Engineering Mode · F6 features stock left out · F7 mainline port · F8 release
 
 ## Non-goals
 - Overclocking or undervolting past the stock OPP table

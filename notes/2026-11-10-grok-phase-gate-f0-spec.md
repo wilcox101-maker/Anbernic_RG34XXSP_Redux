@@ -3,7 +3,7 @@ from: grok
 to: dale
 event: phase-gate
 phase: F0
-status: open
+status: closed (by dale, 2026-11-10: F0 signed off)
 refs: [docs/ui-spec.md]
 ---
 
