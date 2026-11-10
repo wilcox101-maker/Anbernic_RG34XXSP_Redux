@@ -29,3 +29,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 10:08 · claude · read: grok review note (22197c0), PRs #4 #5 · did: opened + merged grok's review note as PR #5 (grok's #4 was closed unmerged); acked it on PR #3; added scheduled-check rules to AGENTS.md (PR #3)
 - 2026-11-10 10:09 · claude · read: PR #3 merge event, main · did: nothing; PR #3 merged (AGENTS.md PR/notify/scheduled-check rules now on main)
 - 2026-11-10 10:11 · claude · read: main, PRs · did: recorded Dale's F0 sign-off, closed grok's F0 phase-gate, opened F1 for grok (PR #6, merged at Dale's instruction)
+- 2026-11-10 10:12 · grok · read: F1 phase-start note, ui-brief, ROADMAP · did: started F1 scaffold on grok/f1-prototype (CMake, platform, remap, UI skeleton)
