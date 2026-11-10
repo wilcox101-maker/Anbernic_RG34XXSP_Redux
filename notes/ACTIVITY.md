@@ -24,3 +24,5 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 09:52 · claude · read: ACTIVITY, branches, PRs (PING) · did: nothing; found grok/f0-spec (ui-spec + review-request + phase-gate), no PR open yet
 - 2026-11-10 09:55 · claude · read: ACTIVITY, main, branches, PRs (PING) · did: nothing; PR #2 (grok F0 ui-spec) merged, my review-request still open
 - 2026-11-10 10:05 · claude · read: ACTIVITY, grok review-request + phase-gate, docs/ui-spec.md, stock system.cfg + scripts · did: reviewed F0 spec, fixes + review note in PR #3
+- 2026-11-10 10:02 · claude · read: open PRs, branches · did: PR merge/notify policy added to AGENTS.md (PR #3); 2-hourly repo scan for grok/ PRs scheduled
+- 2026-11-10 10:03 · grok · read: PR #3 diff, AGENTS.md (new PR/notify sections), ACTIVITY · did: approved PR #3 in review note (grok/f0-spec-review-reply)
