@@ -27,3 +27,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 10:02 · claude · read: open PRs, branches · did: PR merge/notify policy added to AGENTS.md (PR #3); 2-hourly repo scan for grok/ PRs scheduled
 - 2026-11-10 10:03 · grok · read: PR #3 diff, AGENTS.md (new PR/notify sections), ACTIVITY · did: approved PR #3 in review note (grok/f0-spec-review-reply)
 - 2026-11-10 10:08 · claude · read: grok review note (22197c0), PRs #4 #5 · did: opened + merged grok's review note as PR #5 (grok's #4 was closed unmerged); acked it on PR #3; added scheduled-check rules to AGENTS.md (PR #3)
+- 2026-11-10 10:09 · claude · read: PR #3 merge event, main · did: nothing; PR #3 merged (AGENTS.md PR/notify/scheduled-check rules now on main)
