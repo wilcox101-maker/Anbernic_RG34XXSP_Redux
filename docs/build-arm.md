@@ -37,3 +37,11 @@ cp build/rg34xxsp-redux /mnt/vendor/redux/dmenu.bin
 - Link against the stock SDL2 if you cross-build. The device has it in `/usr/lib`.
 - The deploy script (`tools/deploy_frontend.py`) refuses anything that is not an aarch64 ELF.
 - The install name **must** be `dmenu.bin` so `pwr_new.sh` sees the process on power-key shutdown.
+
+## Not verified yet
+
+- Neither option has been run. The device's Ubuntu 22.04 rootfs may not have working `apt` or
+  network, so Option 1 is untested.
+- Cross-building needs the device's libraries, not just a compiler. Use a sysroot from the stock
+  rootfs (`EXTRACTED_202505`, `--sysroot` plus `-DCMAKE_FIND_ROOT_PATH`), or Ubuntu 22.04 arm64
+  packages (`libsdl2-dev:arm64`), which match the stock release.

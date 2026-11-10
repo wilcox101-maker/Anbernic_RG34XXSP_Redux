@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <linux/input.h>
 
 #define KEYS_PATH  "/dev/input/event1"
@@ -17,12 +18,12 @@
 
 static int keys_fd = -1;
 static int power_fd = -1;
-static int stick_state[4];
+static int stick_state[6];   /* 0-3 sticks, 4-5 D-pad hat (own state, so stick and hat don't cancel) */
 
 static logical_button_t axis_to_btn(int axis, int dir) {
     if (dir == 0) return BTN_NONE;
-    if (axis == 0 || axis == 2) return dir < 0 ? BTN_LEFT : BTN_RIGHT;
-    if (axis == 1 || axis == 3) return dir < 0 ? BTN_UP : BTN_DOWN;
+    if (axis == 0 || axis == 2 || axis == 4) return dir < 0 ? BTN_LEFT : BTN_RIGHT;
+    if (axis == 1 || axis == 3 || axis == 5) return dir < 0 ? BTN_UP : BTN_DOWN;
     return BTN_NONE;
 }
 
@@ -43,6 +44,15 @@ static void handle_power(void) {
     system("sh /mnt/mod/ctrl/pwr_new.sh");
 }
 
+int evdev_wait(int timeout_ms) {
+    struct pollfd p[2];
+    int n = 0;
+    if (keys_fd >= 0)  { p[n].fd = keys_fd;  p[n].events = POLLIN; n++; }
+    if (power_fd >= 0) { p[n].fd = power_fd; p[n].events = POLLIN; n++; }
+    if (n == 0) { usleep((useconds_t)timeout_ms * 1000); return 0; }
+    return poll(p, (nfds_t)n, timeout_ms);
+}
+
 int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
     if (keys_fd < 0) return -1;
     struct input_event ev;
@@ -58,6 +68,8 @@ int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
     /* Buttons and sticks (event1). */
     while (read(keys_fd, &ev, sizeof ev) == sizeof ev) {
         if (ev.type == EV_KEY) {
+            /* 0 release, 1 press, 2 autorepeat. Repeats would restart the hold-A timer. */
+            if (ev.value == 2) continue;
             logical_button_t b = remap_device_key(ev.code);
             if (b != BTN_NONE && cb) cb(b, ev.value);
         } else if (ev.type == EV_ABS) {
@@ -66,14 +78,14 @@ int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
             else if (ev.code == DEV_ABS_LEFT_Y) axis = 1;
             else if (ev.code == DEV_ABS_RIGHT_X) axis = 2;
             else if (ev.code == DEV_ABS_RIGHT_Y) axis = 3;
-            else if (ev.code == DEV_ABS_HAT0X) axis = 0;
-            else if (ev.code == DEV_ABS_HAT0Y) axis = 1;
+            else if (ev.code == DEV_ABS_HAT0X) axis = 4;
+            else if (ev.code == DEV_ABS_HAT0Y) axis = 5;
             if (axis < 0) continue;
 
             int dir = 0;
             int v = ev.value;
             if (ev.code == DEV_ABS_HAT0X || ev.code == DEV_ABS_HAT0Y)
-                dir = v;
+                dir = v < 0 ? -1 : v > 0 ? 1 : 0;
             else if (v <= -PRESS_THR) dir = -1;
             else if (v >= PRESS_THR) dir = 1;
             else if (v > -RELEASE_THR && v < RELEASE_THR) dir = 0;
