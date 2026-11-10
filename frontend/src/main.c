@@ -6,7 +6,8 @@
  *
  * Redraws only when something changes (input, the hold-A timer, the clock),
  * so an idle menu costs almost nothing on battery.
- * On device, a successful launch sets ui_should_exit(); main exits so loadapp.sh runs /tmp/.next. */
+ * On device, a successful launch sets ui_should_exit(); main exits so loadapp.sh runs /tmp/.next.
+ * Stock builds read /dev/input/event1 and event0 directly. */
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +16,9 @@
 #include "platform.h"
 #include "remap.h"
 #include "ui.h"
+#ifdef REDUX_PLATFORM_STOCK
+#include "evdev_reader.h"
+#endif
 
 #define SCREEN_W (GRID_COLS * FONT_W)
 #define SCREEN_H (GRID_ROWS * FONT_H)
@@ -44,6 +48,12 @@ static int dump_screens(void) {
     }
     return 0;
 }
+
+#ifdef REDUX_PLATFORM_STOCK
+static void on_device_button(logical_button_t btn, int pressed) {
+    ui_button(btn, pressed, SDL_GetTicks());
+}
+#endif
 
 int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
@@ -76,6 +86,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+#ifdef REDUX_PLATFORM_STOCK
+    if (evdev_open() != 0)
+        fprintf(stderr, "warning: could not open /dev/input/event1\n");
+#endif
+
     ui_init();
     int running = 1;
     while (running && !ui_should_exit()) {
@@ -84,6 +99,9 @@ int main(int argc, char **argv) {
             grid_present(ren);
             SDL_RenderPresent(ren);
         }
+#ifdef REDUX_PLATFORM_STOCK
+        evdev_poll(on_device_button);
+#endif
         SDL_Event e;
         if (SDL_WaitEventTimeout(&e, (int)ui_wait_ms())) {
             do {
@@ -93,7 +111,7 @@ int main(int argc, char **argv) {
                     if (btn != BTN_NONE) ui_button(btn, e.type == SDL_KEYDOWN, SDL_GetTicks());
                 }
                 if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
-                    grid_present(ren);   /* window uncovered: repaint the last frame */
+                    grid_present(ren);
                     SDL_RenderPresent(ren);
                 }
             } while (SDL_PollEvent(&e));
@@ -101,6 +119,9 @@ int main(int argc, char **argv) {
         ui_tick(SDL_GetTicks());
     }
 
+#ifdef REDUX_PLATFORM_STOCK
+    evdev_close();
+#endif
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
     SDL_Quit();

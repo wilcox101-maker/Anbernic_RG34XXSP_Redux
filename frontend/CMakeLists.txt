@@ -9,7 +9,7 @@ find_package(SDL2 REQUIRED)
 # Platform layer: "desktop" (fake values, default) or "stock" (real sysfs on the RG34XXSP).
 set(REDUX_PLATFORM desktop CACHE STRING "desktop or stock")
 if(REDUX_PLATFORM STREQUAL "stock")
-    set(REDUX_PLATFORM_SRC src/platform_stock.c src/remap_device.c)
+    set(REDUX_PLATFORM_SRC src/platform_stock.c src/remap_device.c src/evdev_reader.c)
 else()
     set(REDUX_PLATFORM_SRC src/platform.c)
 endif()

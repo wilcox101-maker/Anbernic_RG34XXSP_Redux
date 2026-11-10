@@ -1,0 +1,92 @@
+/* Read device buttons and the power key.
+   event1 (ANBERNIC-keys): sticks and buttons with edge detection.
+   event0 (axp2202-pek): power key. On press, run stock pwr_new.sh. */
+#include "evdev_reader.h"
+#include "remap_device.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <linux/input.h>
+
+#define KEYS_PATH  "/dev/input/event1"
+#define POWER_PATH "/dev/input/event0"
+#define PRESS_THR  1500
+#define RELEASE_THR 1000
+
+static int keys_fd = -1;
+static int power_fd = -1;
+static int stick_state[4];
+
+static logical_button_t axis_to_btn(int axis, int dir) {
+    if (dir == 0) return BTN_NONE;
+    if (axis == 0 || axis == 2) return dir < 0 ? BTN_LEFT : BTN_RIGHT;
+    if (axis == 1 || axis == 3) return dir < 0 ? BTN_UP : BTN_DOWN;
+    return BTN_NONE;
+}
+
+int evdev_open(void) {
+    keys_fd = open(KEYS_PATH, O_RDONLY | O_NONBLOCK);
+    power_fd = open(POWER_PATH, O_RDONLY | O_NONBLOCK);
+    return (keys_fd >= 0) ? 0 : -1;
+}
+
+void evdev_close(void) {
+    if (keys_fd >= 0) close(keys_fd);
+    if (power_fd >= 0) close(power_fd);
+    keys_fd = power_fd = -1;
+}
+
+/* On power key press, run stock pwr_new.sh. It decides sleep vs shutdown. */
+static void handle_power(void) {
+    system("sh /mnt/mod/ctrl/pwr_new.sh");
+}
+
+int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
+    if (keys_fd < 0) return -1;
+    struct input_event ev;
+
+    /* Power key (event0). */
+    if (power_fd >= 0) {
+        while (read(power_fd, &ev, sizeof ev) == sizeof ev) {
+            if (ev.type == EV_KEY && ev.value == 1)
+                handle_power();
+        }
+    }
+
+    /* Buttons and sticks (event1). */
+    while (read(keys_fd, &ev, sizeof ev) == sizeof ev) {
+        if (ev.type == EV_KEY) {
+            logical_button_t b = remap_device_key(ev.code);
+            if (b != BTN_NONE && cb) cb(b, ev.value);
+        } else if (ev.type == EV_ABS) {
+            int axis = -1;
+            if (ev.code == DEV_ABS_LEFT_X) axis = 0;
+            else if (ev.code == DEV_ABS_LEFT_Y) axis = 1;
+            else if (ev.code == DEV_ABS_RIGHT_X) axis = 2;
+            else if (ev.code == DEV_ABS_RIGHT_Y) axis = 3;
+            else if (ev.code == DEV_ABS_HAT0X) axis = 0;
+            else if (ev.code == DEV_ABS_HAT0Y) axis = 1;
+            if (axis < 0) continue;
+
+            int dir = 0;
+            int v = ev.value;
+            if (ev.code == DEV_ABS_HAT0X || ev.code == DEV_ABS_HAT0Y)
+                dir = v;
+            else if (v <= -PRESS_THR) dir = -1;
+            else if (v >= PRESS_THR) dir = 1;
+            else if (v > -RELEASE_THR && v < RELEASE_THR) dir = 0;
+            else dir = stick_state[axis];
+
+            if (dir != stick_state[axis]) {
+                if (stick_state[axis] != 0 && cb)
+                    cb(axis_to_btn(axis, stick_state[axis]), 0);
+                if (dir != 0 && cb)
+                    cb(axis_to_btn(axis, dir), 1);
+                stick_state[axis] = dir;
+            }
+        }
+    }
+    return 0;
+}
