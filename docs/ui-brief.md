@@ -43,7 +43,7 @@ kernel, boot chain and system image are handled separately. Don't redesign them.
 | Lid | Hall sensor. Stock: `/sys/class/power_supply/axp2202-battery/hallkey`. Phase 2: standard `SW_LID` input |
 | Power | AXP2202 PMIC: battery %, charging state, temperatures, LEDs, rumble via sysfs |
 | Thermal | SoC: passive at 60/70 °C, critical 115 °C (kept as stock) |
-| **Battery heat** | Dale's unit has a **silicone thermal pad between the battery and the mainboard chips**, so SoC heat flows into the battery under load. Stock sets `pmu_bat_temp_enable = <0x0>`: the PMIC's battery-temperature protection is **off**, although charge/shutdown thresholds are defined. Whether the battery even has a working thermistor is unverified |
+| **Battery heat** | Stock sets `pmu_bat_temp_enable = <0x0>`: the PMIC's battery-temperature protection is **off**, although charge/shutdown thresholds are defined. Whether the battery even has a working thermistor is unverified |
 | Wireless | RTL8821CS Wi-Fi (known to fail probe or resume sometimes: the UI must cope) and Bluetooth |
 
 ## 3. UI direction: 90s BIOS / DOS terminal
@@ -89,7 +89,7 @@ From `docs/stock-userspace.md`, the stock OS provides:
   hangs, nothing sleeps). Suspend sequence: pause → flush saves → `sync` → suspend → resume to the same
   frame.
 - **Battery-heat guard:** the stock PMIC protection is disabled, so the frontend watches battery
-  temperature (if readable) and the SoC temperature as a proxy (the thermal pad couples them).
+  temperature (if readable), falling back to the SoC temperature if the battery reading turns out not to be real.
 - **Performance profiles** per system/game (Powersave / Balanced = schedutil / Performance), applied
   at launch and *restored on exit*. Stock lets the music/video players and DraStic leave the governor
   in a random state.

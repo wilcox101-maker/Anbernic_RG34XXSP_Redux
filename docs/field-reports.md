@@ -57,10 +57,7 @@ opening the lid**. Lid-open is not a wake source on stock.
 ## Dale's unit (first-hand)
 
 - 2 GB RAM, confirmed in software (original revision)
-- **User mod: silicone thermal pad added between the battery and the mainboard chips.** It spreads
-  SoC heat, but it also conducts it into the battery. Combined with the stock PMIC's disabled battery
-  temperature protection (see [hardware-map.md](hardware-map.md#power-axp2202-pmic-ic-0x34)), sustained
-  load while charging is the case to test and guard against. Not a factory part: other units won't have it
+- Otherwise stock: no hardware mods. All measurements and limits use stock hardware.
 
 ## Sources
 - muOS community: lid/sleep threads 735, 1177, 1340, 1394, 213, 1036, 342; device quirks page
