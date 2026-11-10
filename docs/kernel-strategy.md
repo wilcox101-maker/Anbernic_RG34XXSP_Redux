@@ -23,6 +23,20 @@ vs after" for button latency, boot time and battery life.
 - Risks to evaluate: Panfrost vs. closed Mali performance on G31, DRAM type for mainline u-boot
   (ROCKNIX ships separate DDR3/DDR4 H700 images), and AXP2202 fuel-gauge parity.
 
+## Where the kernel source is
+
+| Need | Source | Notes |
+|---|---|---|
+| Stock 4.9.170 BSP (exact) | **none** | Anbernic hasn't published its H700 kernel or u-boot source. Knulli, muOS and our Phase 1 reuse the stock binaries |
+| Stock-family BSP, for reading how a stock driver behaves | Orange Pi `github.com/orangepi-xunlong/linux-orangepi`, branch `orange-pi-4.9-sun50iw9` (H616, same `sun50iw9` family, also the base of openEuler's Allwinner kernel) | Not Anbernic's build: no `hallkey` / `nds_pwrkey` AXP2202 extras, no panel driver. Don't try to rebuild the stock kernel from it |
+| Mainline kernel (Phase 2 base) | kernel.org (`git.kernel.org`, stable tree) | Already has the H700 Anbernic device trees (`arch/arm64/boot/dts/allwinner/sun50i-h700-anbernic-*`, by Ryan Walklin and Chris Morgan). The RG35XX-SP tree has the lid as a `gpio-keys` switch on PE7 |
+| RG34XX-SP on mainline (patches, DT, panel) | ROCKNIX `github.com/ROCKNIX/distribution` (H700 project) | Added RG34XX-SP and a generic H700 panel driver in release 20250517. Ships separate DDR3 and DDR4 H700 images since 20260701 |
+| Second reference | postmarketOS port `anbernic-rgxxxx` (wiki: "Anbernic H700 Handheld") | Kernel 7.1.3, lists the RG34XX SP. Supports the LPDDR4 boards only, not the 2026 LPDDR3 revision |
+
+Plan: a kernel.org stable tree + ROCKNIX's H700 patches and RG34XX-SP device tree, with
+postmarketOS as a cross-check. Anything Anbernic-specific (hall sensor, panel ID, AXP2202 sysfs
+extras) is reimplemented on mainline, not ported from the BSP.
+
 ## First Phase 2 task
 
 Diff ROCKNIX's RG34XX-SP device tree against `reference/stock-202505/board.dts` node by node:
