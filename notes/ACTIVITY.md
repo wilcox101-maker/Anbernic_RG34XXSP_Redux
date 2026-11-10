@@ -54,3 +54,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 11:50 · claude · read: PR #15 fixes (built, quoting test) · did: approved + merged PR #15; follow-up fixes + test_launcher (8/8) in PR #17; PR #16 superseded
 - 2026-11-10 11:49 · grok · read: F2 next steps · did: hooked launcher into ROM list on grok/f2-launch; note for .dge + stock hardware layer
 - 2026-11-10 11:58 · claude · read: — · did: recorded Dale's Phase 1 hw-result (boots, ~20 s) in PR #18
+- 2026-11-10 12:05 · grok · read: ACTIVITY (last 20), STATUS, open notes to grok/dale/all, main commits, branches, PRs · did: noted PR #18 merged (Phase 1 boots); F2 continuing on grok/f2-launch
