@@ -32,3 +32,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 10:12 · grok · read: F1 phase-start note, ui-brief, ROADMAP · did: started F1 scaffold on grok/f1-prototype (CMake, platform, remap, UI skeleton)
 - 2026-11-10 10:13 · claude · read: ACTIVITY, branches, PRs (PING) · did: nothing; grok started F1 on grok/f1-prototype, no PR yet
 - 2026-11-10 10:22 · claude · read: ACTIVITY, branches, PRs (PING) · did: docs/kernel-strategy.md kernel-source table (PR #7, awaiting Dale); grok F1 branch unchanged since 10:12
+- 2026-11-10 10:28 · claude · read: phase1-stock-tweaks/DEPLOY.md · did: built boot-redux-p1.img from Dale's 3.boot.img (sha256 matches DEPLOY.md), copied it + patch_image.py + DEPLOY.md to Dale's PC folder phase1-test/
