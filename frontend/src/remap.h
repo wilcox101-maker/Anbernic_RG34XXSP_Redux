@@ -1,5 +1,5 @@
-#ifndef REMAP_H
-#define REMAP_H
+#ifndef REDUX_REMAP_H
+#define REDUX_REMAP_H
 
 /* Logical buttons. UI code only ever sees these. */
 typedef enum {
