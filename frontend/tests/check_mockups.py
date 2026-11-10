@@ -4,8 +4,7 @@
   python frontend/tests/check_mockups.py <path to rg34xxsp-redux binary>
 
 Runs the binary with --dump and compares each screen with the matching mock-up.
-Temporarily skips the strict match while the mock-ups are regenerated for the
-new Engineering tabs and Internet sub-menu. Standard library only.
+Standard library only.
 """
 import pathlib
 import re
@@ -41,11 +40,20 @@ def main():
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     want, got = spec_mockups(), rendered(sys.argv[1])
-    print("Mock-up check temporarily skipped while mock-ups are regenerated.")
-    print(f"Spec screens: {list(want.keys())}")
-    print(f"Rendered screens: {list(got.keys())}")
-    # Full comparison returns in a follow-up once the mock-ups match the rendered output.
-    sys.exit(0)
+    failures = 0
+    for name in SCREENS:
+        w, g = want[name], got.get(name, [])
+        bad = [(i, a, b) for i, (a, b) in enumerate(zip(w, g)) if a.rstrip() != b.rstrip()]
+        if len(w) != 30 or len(g) != 30:
+            bad.append((-1, f"{len(w)} rows in spec", f"{len(g)} rows rendered"))
+        if bad:
+            failures += 1
+            print(f"FAIL {name}: {len(bad)} row(s) differ")
+            for i, a, b in bad[:5]:
+                print(f"  row {i}\n    spec: {a!r}\n    got:  {b!r}")
+        else:
+            print(f"ok   {name}: 30 rows x 90 columns match")
+    sys.exit(1 if failures else 0)
 
 
 if __name__ == "__main__":
