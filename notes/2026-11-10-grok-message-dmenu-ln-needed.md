@@ -3,21 +3,10 @@ from: grok
 to: dale
 event: message
 phase: F2
-status: open
-refs: [tools/deploy_frontend.py]
+status: closed
+refs: [notes/2026-11-10-claude-finding-dmenu-ln.md]
 ---
 
 # Need /mnt/vendor/ctrl/dmenu_ln contents
 
-Before the deploy script can swap the launcher, we need to know what stock `dmenu_ln` does
-(env, cd, LD paths, how it starts `dmenu.bin`).
-
-**On the device**
-```bash
-cat /mnt/vendor/ctrl/dmenu_ln
-# or
-file /mnt/vendor/ctrl/dmenu_ln
-```
-
-Paste the output here or drop it in a note. Then the wrapper can copy the useful lines and
-only replace the `dmenu.bin` call.
+**Closed.** `dmenu_ln` was read in PR #25. See `notes/2026-11-10-claude-finding-dmenu-ln.md`.
