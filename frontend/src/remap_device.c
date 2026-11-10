@@ -6,8 +6,8 @@ logical_button_t remap_device_key(int code) {
     case 305: return LB_B;      /* BTN_EAST */
     case 306: return LB_X;      /* BTN_C */
     case 307: return LB_Y;      /* BTN_NORTH */
-    case 308: return LB_NONE;   /* BTN_WEST = L1 */
-    case 309: return LB_NONE;   /* BTN_Z = R1 */
+    case 308: return LB_L1;     /* BTN_WEST = L1 */
+    case 309: return LB_R1;     /* BTN_Z = R1 */
     case 310: return LB_NONE;   /* BTN_TL = L2 */
     case 311: return LB_NONE;   /* BTN_TR = R2 */
     case 312: return LB_MENU;   /* BTN_TL2 = Menu */
@@ -20,7 +20,6 @@ logical_button_t remap_device_key(int code) {
 logical_button_t remap_device_axis(int code, int value) {
     int thr = DEV_STICK_THRESHOLD;
     switch (code) {
-    /* The D-pad hat reports -1/0/+1, so it has no threshold. */
     case DEV_ABS_HAT0X:
         return value < 0 ? LB_LEFT : value > 0 ? LB_RIGHT : LB_NONE;
     case DEV_ABS_HAT0Y:
