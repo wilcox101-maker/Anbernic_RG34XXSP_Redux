@@ -20,6 +20,8 @@
 #include "evdev_reader.h"
 #endif
 
+#define VIDEO_RETRY_MS 30000u      /* keep trying to open the display this long at boot */
+#define VIDEO_RETRY_STEP_MS 500u
 #define BOOT_REPAINT_MS 15000u   /* repaint about once a second for this long after start */
 #define PRESENT_BUFFERS 3   /* covers double and triple buffering */
 #define SCREEN_W (GRID_COLS * FONT_W)
@@ -73,19 +75,29 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
-        return 1;
-    }
-    SDL_Window *win = SDL_CreateWindow("RG34XXSP Redux", SDL_WINDOWPOS_CENTERED,
-                                       SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, SDL_WINDOW_SHOWN);
-    SDL_Renderer *ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED) : NULL;
-    if (!ren) ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE) : NULL;
-    if (!ren) {
-        fprintf(stderr, "SDL window/renderer: %s\n", SDL_GetError());
-        if (win) SDL_DestroyWindow(win);
+    /* At boot the Mali kernel driver can still be loading when we start: SDL then fails with
+       "Could not initialize EGL" (device log, 2026-11-10, start at 10.7 s). Exiting costs a 30 s
+       black wait in dmenu_ln, so retry here for up to VIDEO_RETRY_MS instead. */
+    SDL_Window *win = NULL;
+    SDL_Renderer *ren = NULL;
+    for (uint32_t waited = 0;; waited += VIDEO_RETRY_STEP_MS) {
+        if (SDL_Init(SDL_INIT_VIDEO) == 0) {
+            win = SDL_CreateWindow("RG34XXSP Redux", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                   SCREEN_W, SCREEN_H, SDL_WINDOW_SHOWN);
+            ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED) : NULL;
+            if (!ren) ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE) : NULL;
+            if (ren) {
+                if (waited) fprintf(stderr, "video ready after %u ms of retries\n", (unsigned)waited);
+                break;
+            }
+            if (win) SDL_DestroyWindow(win);
+            win = NULL;
+        }
+        if (waited == 0 || waited + VIDEO_RETRY_STEP_MS >= VIDEO_RETRY_MS)
+            fprintf(stderr, "SDL video not ready (%u ms): %s\n", (unsigned)waited, SDL_GetError());
         SDL_Quit();
-        return 1;
+        if (waited + VIDEO_RETRY_STEP_MS >= VIDEO_RETRY_MS) return 1;
+        SDL_Delay(VIDEO_RETRY_STEP_MS);
     }
 
 #ifdef REDUX_PLATFORM_STOCK
