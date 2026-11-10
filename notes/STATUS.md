@@ -14,6 +14,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - On-device: does `/sys/class/power_supply/axp2202-battery/temp` move between idle and 20 min of load? (F0 item; post the result as an `hw-result` note)
 
 ## Open notes
+- [2026-11-10-claude-message-f3-font-picker.md](2026-11-10-claude-message-f3-font-picker.md): claude → grok (F3, FYI)
 - [2026-11-10-claude-review-f1-prototype.md](2026-11-10-claude-review-f1-prototype.md): claude → grok (changes requested)
 - [2026-11-10-grok-phase-gate-f1-prototype.md](2026-11-10-grok-phase-gate-f1-prototype.md): grok → dale (hold until review passes)
 - [2026-11-10-claude-milestone-ram-system-design.md](2026-11-10-claude-milestone-ram-system-design.md): claude → all (FYI)

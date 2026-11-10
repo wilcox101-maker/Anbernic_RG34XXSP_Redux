@@ -278,6 +278,7 @@ Defaults match stock where known. Stock values come from `/mnt/mod/ctrl/configs/
 ```ini
 [display]
 brightness = 128          ; stock default unverified
+font = vga                ; vga | spleen | unifont | thin | chunky (see "UI fonts" below)
 hdmi_enabled = 0
 integer_scale = 1
 refresh_lock = 0
@@ -346,6 +347,25 @@ discharge_temp_limit = 60 ; Redux default (typical Li-ion), not stock
 - Top-level Network and Settings → Network share these keys.
 
 ---
+
+## 8a. UI fonts (`display.font`)
+
+Every font is drawn in the same 8×16 cell, so the 90 × 30 grid, every mock-up and the exit test stay
+the same whichever font is chosen. Switching rebuilds one glyph texture; it costs nothing in games.
+Each font must cover the box characters `┌ ─ ┐ │ └ ┘ ▓`. Missing glyphs fall back to `vga`.
+Licences were checked against each font's own source (2026-11-10).
+
+| Value | Font | Look | Licence | Source |
+|---|---|---|---|---|
+| `vga` (default) | VGA 8×16 | classic PC BIOS | GPL-2.0 | Linux `lib/fonts/font_8x16.c` (in use since F1) |
+| `spleen` | Spleen 8×16 | clean modern terminal | BSD-2-Clause (© Frederic Cambus) | `github.com/fcambus/spleen`, `spleen-8x16.bdf` |
+| `unifont` | GNU Unifont 8×16 | plain, very readable | GPL-2.0+ with font embedding exception (dual OFL-1.1) | `unifoundry.com/unifont` |
+| `thin` | 7×14, centred in the 8×16 cell | lighter, airier | GPL-2.0 | Linux `lib/fonts/font_7x14.c` |
+| `chunky` | Acorn 8×8, doubled in height | bold retro (Amiga/C64 feel) | GPL-2.0 | Linux `lib/fonts/font_acorn_8x8.c` |
+
+Implementation is in **F3** (settings parity): fonts are converted by a stdlib Python tool into C
+arrays at build time, keep their copyright/licence headers, and are listed in a `LICENSES` section of
+`frontend/README.md`. The picker lives in Settings → Display and previews the font live.
 
 ## 9. F0 exit criteria
 - Dale approves the five mock-ups and the settings schema.
