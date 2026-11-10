@@ -20,10 +20,10 @@
 #include "evdev_reader.h"
 #endif
 
-#define VIDEO_RETRY_MS 30000u      /* keep trying to open the display this long at boot */
+#define VIDEO_RETRY_MS 30000u
 #define VIDEO_RETRY_STEP_MS 500u
-#define BOOT_REPAINT_MS 15000u   /* repaint about once a second for this long after start */
-#define PRESENT_BUFFERS 3   /* covers double and triple buffering */
+#define BOOT_REPAINT_MS 15000u
+#define PRESENT_BUFFERS 3
 #define SCREEN_W (GRID_COLS * FONT_W)
 #define SCREEN_H (GRID_ROWS * FONT_H)
 
@@ -40,7 +40,7 @@ static int parse_hex_color(const char *s, Uint8 *r, Uint8 *g, Uint8 *b) {
 static int dump_screens(void) {
     static const struct { screen_t s; const char *name; } shots[] = {
         { SCREEN_MAIN, "main" }, { SCREEN_ROMS, "roms" }, { SCREEN_SETTINGS, "settings" },
-        { SCREEN_CPU, "cpu" }, { SCREEN_BATTERY, "battery" },
+        { SCREEN_ENG, "eng" }, { SCREEN_INTERNET, "internet" },
     };
     static char buf[GRID_ROWS * (GRID_COLS * 3 + 1) + 1];
     platform_set_fixed_clock("12:34");
@@ -75,9 +75,6 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-    /* At boot the Mali kernel driver can still be loading when we start: SDL then fails with
-       "Could not initialize EGL" (device log, 2026-11-10, start at 10.7 s). Exiting costs a 30 s
-       black wait in dmenu_ln, so retry here for up to VIDEO_RETRY_MS instead. */
     SDL_Window *win = NULL;
     SDL_Renderer *ren = NULL;
     for (uint32_t waited = 0;; waited += VIDEO_RETRY_STEP_MS) {
@@ -109,14 +106,8 @@ int main(int argc, char **argv) {
     const uint32_t start_ms = SDL_GetTicks();
     int running = 1;
     while (running && !ui_should_exit()) {
-        /* For the first seconds after start, repaint even when nothing changed: at boot the
-           first frames can land before the display shows them, and the stock boot logo stayed
-           up until the next change (~45 s on the device, 2026-11-10). */
         if (ui_dirty() || SDL_GetTicks() - start_ms < BOOT_REPAINT_MS) {
             ui_draw();
-            /* Draw the same frame into every buffer the display backend flips between. On the
-               device (Anbernic SDL 2.0.12, page-flipped framebuffer) presenting once left the
-               previous frame in the other buffer, so two highlights showed (Dale, 2026-11-10). */
             for (int i = 0; i < PRESENT_BUFFERS; i++) {
                 grid_present(ren);
                 SDL_RenderPresent(ren);
@@ -125,8 +116,6 @@ int main(int argc, char **argv) {
         SDL_Event e;
         int have_event;
 #ifdef REDUX_PLATFORM_STOCK
-        /* Sleep on the input devices, not on SDL: SDL never sees event0/event1, so waiting in
-           SDL_WaitEventTimeout would delay every button press by up to ui_wait_ms() (1 s idle). */
         evdev_wait((int)ui_wait_ms());
         evdev_poll(on_device_button);
         have_event = SDL_PollEvent(&e);
@@ -141,7 +130,7 @@ int main(int argc, char **argv) {
                     if (btn != LB_NONE) ui_button(btn, e.type == SDL_KEYDOWN, SDL_GetTicks());
                 }
                 if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
-                    grid_present(ren);   /* window uncovered: repaint the last frame */
+                    grid_present(ren);
                     SDL_RenderPresent(ren);
                 }
             } while (SDL_PollEvent(&e));
@@ -155,5 +144,5 @@ int main(int argc, char **argv) {
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
     SDL_Quit();
-    return 0;   /* on a launch, loadapp.sh now runs /tmp/.next */
+    return 0;
 }
