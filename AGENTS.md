@@ -30,6 +30,32 @@ When Dale sends **PING**, don't start new work. Fetch the repo and report:
 Agents also run this check after finishing any action, before reporting back, and log it in
 `notes/ACTIVITY.md`.
 
+## Pull requests: who reviews and merges
+
+- **Grok's PRs:** Claude reviews them and, if they're clean, **merges them**. Clean means: inside the
+  current phase's scope, no hard-rule breaks, docs consistent with `docs/`, nothing unverified
+  presented as fact. Claude fixes small factual issues in a follow-up `claude/` PR rather than
+  blocking. Anything larger goes back to Grok as a `review` note asking for changes.
+- **Claude's PRs:** Dale merges them (or tells Claude to).
+- **Never merged without Dale, whoever wrote it:**
+  - phase sign-offs (`phase-gate`)
+  - anything that changes `AGENTS.md`'s hard rules
+  - anything that writes to the device's boot chain or partitions (`phase1-*`, `phase2-*`
+    flashing/deploy steps)
+  - anything security-related (SSH, Samba, WebUI, update path)
+
+## When Dale gets notified
+
+Dale is notified (push notification plus a chat summary) only for:
+- a `phase-gate` waiting for his sign-off
+- a `decision` note (2–3 options with a recommendation)
+- a `blocker`, including a Grok PR sent back for changes that hasn't moved in a day
+- a PR in the "never merged without Dale" list above, ready for him
+- a hardware test he needs to run
+
+Everything else (merged Grok PRs, review notes, small fixes, visits) goes in `notes/ACTIVITY.md`
+and the next PING report. No notification.
+
 ## Before proposing anything, read
 
 `README.md`, `ROADMAP.md`, `docs/ui-brief.md` (frontend plan, phases F0–F8), `docs/hardware-map.md`,
