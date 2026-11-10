@@ -47,13 +47,17 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
     FILE *f = fopen(next_path, "w");
     if (!f) return -1;
 
+    /* dmenu.bin prefixes launches with AUDIODEV=hw:2,0.
+       A shell variable prefix applies only to the command right after it,
+       so for ELF targets it goes after the cd, directly in front of the emulator. */
     const char *audiodev = "AUDIODEV=hw:2,0 ";
 
     if (target == LAUNCH_DGE) {
-        /* core is the .dge binary path. */
+        /* core is the .dge binary path. Quote it like every other path. */
         if (!core) { fclose(f); return -1; }
         fputs(audiodev, f);
-        fprintf(f, "%s ", core);
+        quote(f, core);
+        fputc(' ', f);
         if (rom_path) quote(f, rom_path);
         fputc('\n', f);
     } else {
@@ -67,6 +71,8 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
             fprintf(f, "sh %s ", script);
             quote(f, core);
             fputc(' ', f);
+            /* RA_launch.sh: $1 core, $2 ROM, $3 "auto".
+               Without a ROM, "auto" would land in $2 and be taken as the ROM. */
             if (rom_path) { quote(f, rom_path); fprintf(f, " auto"); }
             fputc('\n', f);
         } else if (target == LAUNCH_PPSSPP || target == LAUNCH_PCSX) {
