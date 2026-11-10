@@ -7,12 +7,12 @@
 - [x] Round-trip tooling: `bootimg.py` rebuilds stock `boot.img` byte-for-byte
 - [ ] Identify hardware revisions: original 2 GB vs. "Metallic Blue" (512 MB/1 GB LPDDR3, new panel). See [docs/field-reports.md](docs/field-reports.md)
 - [x] Inventory rootfs/appfs/UDISK: launcher chain, kernel modules, governor and power/lid handling ([docs/stock-userspace.md](docs/stock-userspace.md))
-- [ ] Re-run `stock_inventory.py` (now dumps launcher-binary strings and logs) to find what calls `cpu_setting.sh` and `pwr_new.sh`
+- [x] Re-run `stock_inventory.py` with string dumps and logs: callers of `cpu_setting.sh` / `pwr_new.sh` found, stock boot log reviewed
 
 ## Phase 1: Stock-kernel baseline
 Changes only the `boot` partition. Flash a copy of the stock card, then `dd` the new `boot.img` to p4.
 - [x] DTB: `gpio-keys-polled` poll-interval 20 ms → 5 ms (built; test 1–2 ms later)
-- [x] initramfs: set the `schedutil` governor before `switch_root` (built; no boot script resets it, but `appfs/ctrl/cpu_setting.sh` and DraStic's SDL2 can later. See [stock-userspace.md](docs/stock-userspace.md#cpu-governor))
+- [x] initramfs: set the `schedutil` governor before `switch_root` (built; no boot script resets it, but the music/video players (via `cpu_setting.sh`) and DraStic's SDL2 can later. See [stock-userspace.md](docs/stock-userspace.md#cpu-governor))
 - [x] ~~Skip the per-boot fsck~~ dropped: stock `e2fsck -y` (no `-f`) already skips a clean fs, and keeping the check is right for stability
 - [x] initramfs: mount rootfs with `barrier=1` (built)
 - [ ] On-device test per [phase1-stock-tweaks/DEPLOY.md](phase1-stock-tweaks/DEPLOY.md)

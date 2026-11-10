@@ -63,17 +63,21 @@ PICO-8 stub.
 |---|---|---|
 | Kernel | `CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y`. Built in: performance, powersave, userspace, ondemand, conservative, interactive, schedutil | confirmed |
 | Boot scripts (rootfs, appfs, `/mnt/mod`) | **None of them set a governor** | confirmed |
-| `appfs/ctrl/cpu_setting.sh` | writes cpu0 `scaling_governor`: `full` → performance, `powersave` → powersave, `user` → userspace @ 792 MHz, anything else → **interactive**. Also has a commented-out DDR DVFS block. Frequencies listed in a comment: 480/600/792/1008/1200/1512 MHz | script confirmed; **no script calls it**, so the caller is a compiled binary (unconfirmed which, and when) |
+| `appfs/ctrl/cpu_setting.sh` | writes cpu0 `scaling_governor`: `full` → performance, `powersave` → powersave, `user` → userspace @ 792 MHz, anything else → interactive. Also has a commented-out DDR DVFS block. Frequencies listed in a comment: 480/600/792/1008/1200/1512 MHz | script confirmed |
+| …called by `bin/charg.dge` (charging screen), `bin/video/vp.dge` (video player), `bin/music/ap.dge` (music player) | only the arguments `full` and `user` appear next to the call, so it ends up `performance` or `userspace` @ 792 MHz, never the `interactive` default | strings only (which argument, when, is not visible) |
+| `bin/dmenu.bin` (launcher), RetroArch, PPSSPP, the `.dge` emulators | **do not reference `cpu_setting.sh` or any cpufreq file** | strings: confirmed absent |
 | DraStic (`deep/drastic-modify/res/libs/libSDL2-2.0.so.0`, preloaded by its `launch.sh`) | contains `echo performance > …cpu0/cpufreq/scaling_governor` and `echo ondemand > …` | strings only. Most likely performance on start and ondemand on exit |
 | RetroArch 1.19.1 | has the CPU-scaling menu built in, but the shipped `/.config/retroarch/retroarch.cfg` contains no `cpu_scaling` keys | confirmed not configured |
 | `/mnt/vendor/deep/retro` cores, players | only unrelated `ondemand` / `cpufreq` strings | — |
 
-So with stock userspace the CPU **stays on the kernel default `performance`** until something calls
-`cpu_setting.sh` or DraStic runs.
+So with stock userspace the CPU **stays on the kernel default `performance`**. It changes only when the
+music player, video player or charging screen runs, or when DraStic runs. Menus, RetroArch, PPSSPP and the
+built-in emulators leave it alone.
 
 **Effect on Phase 1:** setting `schedutil` in the initramfs survives the boot scripts. It can still be
-overwritten later: by whatever calls `cpu_setting.sh` (its default is `interactive`), and by DraStic,
-which probably leaves the CPU on `ondemand` after exit. Only cpu0's file is written. The H700 has one
+overwritten later by the music/video players (`performance` or `userspace` @ 792 MHz) and by DraStic,
+which probably leaves the CPU on `ondemand` after exit. Phase 1 can neutralise both by having
+`cpu_setting.sh` write `schedutil` for `full`, and by dropping the governor lines from DraStic's launch. Only cpu0's file is written. The H700 has one
 cluster, so policy0 should cover all four cores (check `related_cpus` on the device). Checks to add to
 [DEPLOY.md](../phase1-stock-tweaks/DEPLOY.md): read `scaling_governor` after boot, after a RetroArch
 game, after a standalone emulator, and after DraStic.
@@ -108,8 +112,11 @@ Almost everything is built in (`modules.builtin`). The loadable `.ko` files in r
 - Apps also read the key themselves:
   - Anbernic's RetroArch has a `read_pwrkey_thread` that polls `/sys/class/power_supply/axp2202-battery/nds_pwrkey`. `RA_launch.sh` resets that file and starts `/mnt/mod/ctrl/joy`, an `evtest` watcher that toggles `nds_pwrkey` with rumble on `KEY_POWER` release.
   - Standalone players and readers (`ffplay`, `ap.dge`, `pdf/green`, file manager, ebook) open `/dev/input/event0`/`event1` directly (strings only).
-- **Unconfirmed:** what calls `pwr_new.sh` on a key press. No script does, so it's one of the
-  launcher binaries (`dmenu.bin`, `cexpert`, the `.dge` apps).
+- `pwr_new.sh` is called from compiled code, by whichever program is in the foreground: `dmenu.bin`, RetroArch
+  (both binaries), PPSSPP, every built-in `.dge` emulator, `pcsx`, the ebook readers, the music/video
+  players and `charg.dge` (strings only). There is no central power daemon. If the foreground app hangs
+  or doesn't handle the key, nothing suspends.
+- `cexpert` only handles SD-card hot-plug (`mmc_new.sh add` / `remove`); it doesn't touch power.
 
 **Lid (Hall sensor):**
 - It is **not** an input switch. The stock kernel exposes it as
@@ -121,7 +128,10 @@ Almost everything is built in (`modules.builtin`). The loadable `.ko` files in r
   - HDMI connected with `power.hdmi=1` (stock): nothing happens.
   - `power.lock=1`: shuts down.
   - Stock `power.lock=0`: suspends.
-- **Unconfirmed:** which binary polls `hallkey` and calls `pwr_new.sh auto`.
+- The kernel side is interrupt-driven: the stock boot log shows `hall_switch_isr`,
+  `hall_press_work_func` / `hall_release_work_func` (Anbernic debug prints tagged `[allen]`).
+  `dmenu.bin` reads `hallkey`, `os_sleep` and `workled_sleep`, has an `enter_sleep_state` routine, and
+  calls `pwr_new.sh auto`. The music/video players also call `pwr_new.sh auto` (strings only).
 
 **Suspend itself** is a bare `echo -n mem > /sys/power/state`. Nothing flushes emulator saves or
 pauses audio first, beyond each app's own handling.
@@ -150,12 +160,31 @@ pauses audio first, beyond each app's own handling.
 - appfs contains a copyrighted Neo Geo BIOS archive under `bin/game/*/bios/`. As with everything else
   from the image, it must never be committed.
 
+## What the stock boot log shows
+
+`/var/log/kern.log` and `syslog` (about 7 000 lines each) cover many boots from 7–16 April by **several
+factory units** (five different Wi-Fi chips). Early boot before about 1 s isn't captured.
+
+- **Input devices:** `input0` = `axp2202-pek` (power key, AXP on `twi5` i2c-5 @ 0x34), `input1` =
+  `ANBERNIC-keys` (gpio_keys), `input2` = `dierct-keys-polled` [sic]. USB pads show up as extra
+  inputs.
+- **rootfs mount options:** `barrier=0,noauto_da_alloc` (write barriers off). That is fast, but
+  `RG34XXSP.img` is more exposed to corruption on power loss than it needs to be. Phase 2 should keep
+  barriers on.
+- **GPU:** `mali_kbase` warns it is out of tree and taints the kernel. Its DVFS table tops out at 648 MHz @ 960 mV, with
+  600 MHz @ 950 mV as the backup step.
+- **Wi-Fi is the flakiest part:** `rtl8821cs: probe of mmc2:0001:1 failed with error -123` on 7 boots,
+  and `PM: Device mmc2:0001:1 failed to resume async` after suspend. A Phase 2 stability target.
+- Other noise: `Error reading temperature for gpu thermal zone: -11`, `refresh hdcp key failed`,
+  `avcc is not calibrated` (thermal sensor), a `FAT-fs (mmcblk1p1) not properly unmounted` on the
+  second SD card, and `cpu3: _add_opp_dev: Failed to register opp debugfs (-12)`.
+- The first-boot `resize2fs` of rootfs is visible (`resized filesystem to 1835008`, so 7 GiB with 4 KiB
+  blocks).
+
 ## Open items
 
-1. **Callers of `cpu_setting.sh` and `pwr_new.sh`.** `stock_inventory.py` now records `callers` hits,
-   dumps the strings of launcher binaries (`appfs/bin`, `appfs/ctrl`, `/mnt/mod/ctrl`) into
-   `strings/`, and copies `/var/log`. Re-run it on the image to see which binary calls each script,
-   with which arguments, and the full stock boot log.
+1. ~~Callers of `cpu_setting.sh` and `pwr_new.sh`~~: resolved by the second run of the tool (see above).
+   Still unknown: which of `full` / `user` the players pass, and when.
 2. **On-device checks** (stock card): `scaling_governor` after boot, game, DraStic. `cat
    …/axp2202-battery/hallkey` lid open vs. closed. `lsmod`. Which `/dev/input/event*` is `axp2202-pek`
    vs. `gpio_keys`.
