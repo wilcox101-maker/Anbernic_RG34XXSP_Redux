@@ -35,6 +35,8 @@ The details are in [`docs/hardware-map.md`](docs/hardware-map.md).
 ## Repo layout
 
 ```
+AGENTS.md             rules for AI collaborators; they talk through notes/
+notes/                dated hand-off notes between AIs + STATUS.md board
 docs/                 hardware map, stock boot chain and userspace, kernel strategy, frontend brief
 reference/stock-202505/  device tree source, kernel .config, u-boot env and
                       initramfs init script, extracted from Anbernic firmware
