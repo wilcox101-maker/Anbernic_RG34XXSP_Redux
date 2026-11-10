@@ -59,7 +59,7 @@ jobs:
             export DEBIAN_FRONTEND=noninteractive
             apt-get update -qq
             apt-get install -y -qq --no-install-recommends cmake make gcc libc6-dev libsdl2-dev >/dev/null
-            cmake -S frontend -B build-arm64 -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
+            cmake -S frontend -B build-arm64 -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
             cmake --build build-arm64
             ./build-arm64/test_launcher
             ./build-arm64/test_remap_device
