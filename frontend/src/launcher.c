@@ -2,48 +2,66 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
-/* Stock launch scripts live under /mnt/vendor and /mnt/mod. We only write the
-   next-command file; we never format or modify the card. */
+static const char *next_path = "/tmp/.next";
+
+void launcher_set_next_path(const char *path) {
+    next_path = path;
+}
+
+/* Quote a path for a shell single-quoted string: 'foo'bar' -> 'foo'\''bar' */
+static void quote(FILE *f, const char *s) {
+    fputc('\'', f);
+    for (; *s; s++) {
+        if (*s == '\'') {
+            fputs("'\\''", f);
+        } else {
+            fputc(*s, f);
+        }
+    }
+    fputc('\'', f);
+}
 
 static const char *script_for(launch_target_t t) {
     switch (t) {
-    case LAUNCH_RETROARCH: return "/mnt/mod/ctrl/RA_launch.sh";
-    case LAUNCH_PPSSPP:    return "/mnt/vendor/bin/ppsspp/PPSSPPSDL";
-    case LAUNCH_DRASTIC:   return "/mnt/vendor/deep/drastic-modify/launch.sh";
-    case LAUNCH_PCSX:      return "/mnt/vendor/bin/pcsx";
-    case LAUNCH_PORTMASTER:return "/roms/ports/PortMaster/PortMaster.sh";
-    default:               return NULL;
+    case LAUNCH_RETROARCH:  return "/mnt/mod/ctrl/RA_launch.sh";
+    case LAUNCH_PPSSPP:     return "/mnt/vendor/deep/ppsspp/PPSSPPSDL";
+    case LAUNCH_DRASTIC:    return "/mnt/vendor/deep/drastic-modify/launch.sh";
+    case LAUNCH_PCSX:       return "/mnt/vendor/bin/game/pcsx_rearmed/pcsx";
+    case LAUNCH_PORTMASTER: return "/roms/ports/PortMaster/PortMaster.sh";
+    default:                return NULL;
     }
 }
 
-int launcher_start(launch_target_t target, const char *rom_path) {
+int launcher_start(launch_target_t target, const char *core, const char *rom_path) {
     const char *script = script_for(target);
     if (!script) return -1;
 
-    FILE *f = fopen("/tmp/.next", "w");
+    FILE *f = fopen(next_path, "w");
     if (!f) return -1;
-    if (rom_path)
-        fprintf(f, "sh %s \"%s\"\n", script, rom_path);
-    else
-        fprintf(f, "sh %s\n", script);
+
+    /* AUDIODEV line matches dmenu.bin style; adjust per target as needed. */
+    fprintf(f, "AUDIODEV=hw:2,0 ");
+
+    if (target == LAUNCH_RETROARCH) {
+        if (!core) { fclose(f); return -1; }
+        fprintf(f, "sh %s ", script);
+        quote(f, core);
+        fputc(' ', f);
+        if (rom_path) quote(f, rom_path);
+        fprintf(f, " auto\n");
+    } else if (target == LAUNCH_PPSSPP || target == LAUNCH_PCSX) {
+        /* ELF binaries: run directly from their directory. */
+        fprintf(f, "%s ", script);
+        if (rom_path) quote(f, rom_path);
+        fputc('\n', f);
+    } else {
+        /* Scripts. */
+        fprintf(f, "sh %s ", script);
+        if (rom_path) quote(f, rom_path);
+        fputc('\n', f);
+    }
+
     fclose(f);
-
-    /* Exit so loadapp.sh picks up /tmp/.next and runs it. */
-    exit(0);
-}
-
-int launcher_resume_last(void) {
-    FILE *f = fopen("/mnt/mod/.last", "r");
-    if (!f) return 0;
-    char cmd[512];
-    if (!fgets(cmd, sizeof cmd, f)) { fclose(f); return 0; }
-    fclose(f);
-
-    FILE *next = fopen("/tmp/.next", "w");
-    if (!next) return -1;
-    fputs(cmd, next);
-    fclose(next);
-    exit(0);
+    return 0;
 }
