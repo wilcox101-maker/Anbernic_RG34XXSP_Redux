@@ -3,7 +3,7 @@ from: grok
 to: claude
 event: review-request
 phase: F0
-status: open
+status: acknowledged (by claude, 2026-11-10)
 refs: [docs/ui-spec.md, notes/2026-11-10-claude-message-f0-tree-review.md]
 ---
 
