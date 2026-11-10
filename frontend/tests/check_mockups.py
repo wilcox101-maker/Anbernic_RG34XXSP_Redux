@@ -3,9 +3,9 @@
 
   python frontend/tests/check_mockups.py <path to rg34xxsp-redux binary>
 
-Runs the binary with --dump and compares each screen with the matching mock-up.
-On failure it prints the full rendered screen so the mock-up can be copied exactly.
-Standard library only.
+Runs the binary with --dump (which renders the six screens with the clock fixed to
+12:34) and compares each 90 x 30 screen with the matching mock-up. "▓▓" marks the
+selected row in both. Standard library only; runs on Windows and Linux.
 """
 import pathlib
 import re
@@ -13,14 +13,14 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SCREENS = ["main", "roms", "settings"]
+SCREENS = ["main", "roms", "settings", "eng-cpu", "eng-battery", "internet"]   # order in the spec
 
 
 def spec_mockups():
     text = (ROOT / "docs" / "ui-spec.md").read_text(encoding="utf-8")
     blocks = [b for b in re.findall(r"```\n(.*?)```", text, re.S) if "┌" in b]
-    if len(blocks) < len(SCREENS):
-        sys.exit(f"expected at least {len(SCREENS)} mock-ups in ui-spec.md, found {len(blocks)}")
+    if len(blocks) != len(SCREENS):
+        sys.exit(f"expected {len(SCREENS)} mock-ups in ui-spec.md, found {len(blocks)}")
     return {name: block.rstrip("\n").split("\n") for name, block in zip(SCREENS, blocks)}
 
 
@@ -28,7 +28,7 @@ def rendered(binary):
     out = subprocess.run([binary, "--dump"], capture_output=True, check=True).stdout.decode("utf-8")
     screens, name = {}, None
     for line in out.split("\n"):
-        m = re.fullmatch(r"=== (\w+) ===", line)
+        m = re.fullmatch(r"=== ([\w-]+) ===", line)
         if m:
             name = m.group(1)
             screens[name] = []
@@ -52,10 +52,6 @@ def main():
             print(f"FAIL {name}: {len(bad)} row(s) differ")
             for i, a, b in bad[:5]:
                 print(f"  row {i}\n    spec: {a!r}\n    got:  {b!r}")
-            print(f"--- rendered {name} ({len(g)} rows) ---")
-            for line in g:
-                print(line)
-            print(f"--- end {name} ---")
         else:
             print(f"ok   {name}: 30 rows x 90 columns match")
     sys.exit(1 if failures else 0)

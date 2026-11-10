@@ -9,6 +9,8 @@ logical_button_t remap_key(int key) {
     case SDLK_RIGHT: case SDLK_d: return LB_RIGHT;
     case SDLK_RETURN: case SDLK_z: return LB_A;
     case SDLK_ESCAPE: case SDLK_x: return LB_B;
+    case SDLK_q: case SDLK_PAGEUP:   return LB_L1;
+    case SDLK_e: case SDLK_PAGEDOWN: return LB_R1;
     case SDLK_c: return LB_X;
     case SDLK_v: return LB_Y;
     case SDLK_m: return LB_MENU;

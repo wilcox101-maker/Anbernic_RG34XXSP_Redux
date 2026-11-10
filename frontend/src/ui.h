@@ -16,6 +16,11 @@ typedef enum {
 
 void ui_init(void);
 
+/* For tests: choose the Engineering tab; read the current screen and tab. */
+void ui_set_eng_tab(eng_tab_t t);
+screen_t ui_screen(void);
+eng_tab_t ui_eng_tab(void);
+
 /* A logical button went down (pressed = 1) or up (pressed = 0) at time now_ms. */
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms);
 

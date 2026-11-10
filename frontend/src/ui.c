@@ -8,10 +8,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#define HOLD_TO_ENTER_MS 2000
-#define IDLE_WAIT_MS     1000
-#define HOLD_WAIT_MS     50
-#define BACK_MAX 8
+#define HOLD_TO_ENTER_MS 2000   /* Engineering Mode: hold A this long (ui-spec flag 3) */
+#define IDLE_WAIT_MS     1000   /* wake once a second so the clock can roll over */
+#define HOLD_WAIT_MS     50     /* smooth progress bar while A is held */
+#define BACK_MAX 8              /* back stack depth; deeper than any menu we have */
 
 static const char *main_items[] = {
     "Game Room", "Music", "Video", "Documents", "File Manager",
@@ -19,6 +19,7 @@ static const char *main_items[] = {
 };
 enum { MAIN_GAME_ROOM = 0, MAIN_INTERNET = 5, MAIN_SETTINGS = 7, MAIN_ENGINEERING = 8 };
 
+/* Demo ROMs. Real F2 reads the stock folders. System name drives the launch table. */
 static const char *rom_items[] = {
     "Advance Wars", "Fire Emblem", "Golden Sun", "Metroid Fusion", "Pokemon Emerald"
 };
@@ -65,7 +66,15 @@ static void back(void) {
     selected = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
 }
 
-void ui_init(void) { should_exit = 0; back_top = 0; eng_tab = ENG_CPU; go(SCREEN_MAIN); }
+/* Replace the current screen without remembering it (the confirm screen is not a place to go back to). */
+static void go_replace(screen_t s) {
+    screen = s; selected = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
+}
+
+void ui_init(void) { should_exit = 0; back_top = 0; eng_tab = ENG_CPU; screen = SCREEN_MAIN; go_replace(SCREEN_MAIN); }
+void ui_set_eng_tab(eng_tab_t t) { eng_tab = t; dirty = 1; }
+screen_t ui_screen(void) { return screen; }
+eng_tab_t ui_eng_tab(void) { return eng_tab; }
 void ui_show(screen_t s) { back_top = 0; screen = s; selected = 0; dirty = 1; }
 int ui_dirty(void) { return dirty; }
 int ui_should_exit(void) { return should_exit; }
@@ -88,7 +97,7 @@ static void switch_eng_tab(int delta) {
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (screen == SCREEN_ENG_CONFIRM && btn == LB_A) {
         if (pressed) { a_down_at = now_ms ? now_ms : 1; hold_ms = 0; }
-        else { a_down_at = 0; hold_ms = 0; }
+        else { a_down_at = 0; hold_ms = 0; }          /* released early: cancel */
         dirty = 1;
         return;
     }
@@ -120,7 +129,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
 void ui_tick(uint32_t now_ms) {
     if (screen == SCREEN_ENG_CONFIRM && a_down_at) {
         hold_ms = now_ms - a_down_at;
-        if (hold_ms >= HOLD_TO_ENTER_MS) go(SCREEN_ENG);
+        if (hold_ms >= HOLD_TO_ENTER_MS) go_replace(SCREEN_ENG);   /* B from Engineering -> Main */
         dirty = 1;
     }
     char c[8];
@@ -163,17 +172,24 @@ static void list(int first_line, const char *const *items, int n) {
     }
 }
 
+/* BIOS-style tab bar on body row 0, a rule on row 1. The active tab, padded by one space on each
+   side, is inverted in the accent colour (grid_dump shows that padding as "▓"). */
 static void draw_eng_tabs(void) {
-    char line[GRID_COLS] = " ";
-    int active = (int)eng_tab;
+    char line[GRID_COLS * 3] = " ";
+    int col = 2, active_c0 = 0, active_c1 = 0;   /* body text starts at column 1, plus the lead space */
     for (int i = 0; i < ENG_TAB_COUNT; i++) {
-        if (i == active) strcat(line, "\u2593");
+        int w = (int)strlen(eng_tabs[i]) + 2;
+        if (i == (int)eng_tab) { active_c0 = col; active_c1 = col + w - 1; }
+        strcat(line, " ");
         strcat(line, eng_tabs[i]);
-        if (i == active) strcat(line, "\u2593");
-        strcat(line, "  ");
+        strcat(line, " ");
+        col += w;
     }
     body(0, line);
-    if (eng_tab == ENG_CPU) grid_invert(ROW_BODY0, 1, 5);
+    grid_invert(ROW_BODY0, active_c0, active_c1);
+    char rule[GRID_COLS * 3] = "";
+    for (int c = 1; c < GRID_COLS - 1; c++) strcat(rule, "─");
+    grid_puts(1, ROW_BODY0 + 1, rule, 0);
 }
 
 void ui_draw(void) {
@@ -205,8 +221,8 @@ void ui_draw(void) {
         body(3, "  Hold A for 2 seconds to enter. Release to cancel.");
         int width = 40, filled = (int)(hold_ms * (uint32_t)width / HOLD_TO_ENTER_MS);
         if (filled > width) filled = width;
-        char bar[4 + 40 * 3 + 2] = "  [";
-        for (int i = 0; i < width; i++) strcat(bar, i < filled ? "\u2593" : " ");
+        char bar[4 + 40 * 3 + 2] = "  [";   /* "▓" is 3 bytes in UTF-8 */
+        for (int i = 0; i < width; i++) strcat(bar, i < filled ? "▓" : " ");
         strcat(bar, "]");
         body(5, bar);
         break;
@@ -219,15 +235,43 @@ void ui_draw(void) {
             body(3, "  Min freq:     480 MHz");
             body(4, "  Max freq:     1512 MHz");
             snprintf(t, sizeof t, "  Current:      %d MHz", platform_cpu_cur_mhz(0)); body(5, t);
+            body(7, "  Per-core:");
+            for (int c = 0; c < 4; c++) {
+                snprintf(t, sizeof t, "    cpu%d  %d MHz   %s", c, platform_cpu_cur_mhz(c),
+                         platform_cpu_online(c) ? "online" : "offline");
+                body(8 + c, t);
+            }
+            body(13, "  Stock OPP table:");
+            body(14, "    480 / 600 / 792 / 1008 / 1200 / 1296 / 1416 / 1512");
+            body(16, "  Live changes only. Persist with \"Save as profile\".");
+            body(17, "  Boot watchdog resets settings after two failed boots.");
+            body(18, "  Battery-heat guard remains active.");
+            body(19, "  Entry required deliberate confirm.");
         } else if (eng_tab == ENG_BATTERY) {
             int ma = platform_battery_ma();
             snprintf(t, sizeof t, "  Capacity:     %d %%", platform_battery_percent()); body(2, t);
             snprintf(t, sizeof t, "  Voltage:      %d.%02d V", platform_battery_mv() / 1000,
                      (platform_battery_mv() % 1000) / 10); body(3, t);
-            body(4, platform_battery_ma_known() ? "  Current:      (known)" : "  Current:      unknown");
-            (void)ma;
+            if (platform_battery_ma_known()) {
+                snprintf(t, sizeof t, "  Current:     %s%d mA", ma < 0 ? "-" : " ", ma < 0 ? -ma : ma); body(4, t);
+                snprintf(t, sizeof t, "  Status:       %s", ma < 0 ? "Discharging" : "Charging"); body(5, t);
+            } else {
+                /* Stock PMIC exposes no current: use the status file instead. */
+                body(4, "  Current:      unknown");
+                snprintf(t, sizeof t, "  Status:       %s",
+                         platform_battery_charging() ? "Charging" : "Discharging"); body(5, t);
+            }
+            body(6, "  Time left:    ~4 h 12 m");
+            body(8, platform_battery_temp_known() ? "  Temperature:  -- C"
+                                                  : "  Temperature:  unknown   (thermistor unverified)");
+            body(9, "  Max seen:     --");
+            snprintf(t, sizeof t, "  SoC temp:     %d C", platform_cpu_temp_c()); body(11, t);
+            body(13, "  Stock PMIC protection: disabled. Redux guard limits:");
+            body(14, "    Charge stop:     45 C   (typical Li-ion, not stock)");
+            body(15, "    Discharge stop:  60 C   (typical Li-ion, not stock)");
+            body(17, "  Drain (last hour): -8 %");
         } else {
-            body(2, "  Not yet");
+            body(3, "  Not yet. This tab arrives with its phase.");
         }
         break;
     }
