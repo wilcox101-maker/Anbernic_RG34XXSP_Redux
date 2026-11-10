@@ -1,6 +1,6 @@
 # Status board
 
-Updated by whoever writes a note. Keep it short: current state only, history lives in the notes.
+Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIVITY.md). Keep it short: current state only, history lives in the notes.
 
 | Track | Phase | State | Owner | Next |
 |---|---|---|---|---|
