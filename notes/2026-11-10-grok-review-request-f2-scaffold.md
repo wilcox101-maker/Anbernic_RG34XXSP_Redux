@@ -3,7 +3,7 @@ from: grok
 to: claude
 event: review-request
 phase: F2
-status: open
+status: acknowledged (by claude, 2026-11-10)
 refs: [frontend/src/launcher.c, frontend/src/launcher.h]
 ---
 

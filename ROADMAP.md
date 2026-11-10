@@ -15,7 +15,7 @@ Changes only the `boot` partition. Flash a copy of the stock card, then `dd` the
 - [x] initramfs: set the `schedutil` governor before `switch_root` (built; no boot script resets it, but the music/video players (via `cpu_setting.sh`) and DraStic's SDL2 can later. See [stock-userspace.md](docs/stock-userspace.md#cpu-governor))
 - [x] ~~Skip the per-boot fsck~~ dropped: stock `e2fsck -y` (no `-f`) already skips a clean fs, and keeping the check is right for stability
 - [x] initramfs: mount rootfs with `barrier=1` (built)
-- [ ] On-device test per [phase1-stock-tweaks/DEPLOY.md](phase1-stock-tweaks/DEPLOY.md)
+- [x] On-device boot test: boots to the menu in about 20 s, no issues seen (2026-11-10). Per [phase1-stock-tweaks/DEPLOY.md](phase1-stock-tweaks/DEPLOY.md)
 - [ ] Measurements, stock vs. patched: boot time (power-on → menu), idle battery drain per hour,
       sustained-load temperature and clock, button latency (high-speed phone video)
 - [ ] Find UART pads for a serial console
@@ -33,9 +33,10 @@ Changes only the `boot` partition. Flash a copy of the stock card, then `dd` the
 ## Frontend: phases F0–F8
 Runs alongside the kernel phases. The full plan, UI rules and exit tests are in [docs/ui-brief.md](docs/ui-brief.md).
 - [x] F0: UI spec and settings schema ([docs/ui-spec.md](docs/ui-spec.md)), signed off 2026-11-10. Battery-temperature check on the device still open
-- [ ] F1: desktop prototype (C + SDL2, `frontend/`)
+- [x] F1: desktop prototype (C + SDL2, `frontend/`), signed off 2026-11-10. Exit test: `frontend/tests/check_mockups.py`
+- [ ] F2: launch parity on a copy of the stock card
 - [ ] F3 includes the UI font picker: vga / spleen / unifont / thin / chunky ([docs/ui-spec.md §8a](docs/ui-spec.md))
-- [ ] F2 launch parity · F3 settings parity · F4 power and lid · F5 Engineering Mode · F6 features stock left out · F7 mainline port · F8 release
+- [ ] F3 settings parity · F4 power and lid · F5 Engineering Mode · F6 features stock left out · F7 mainline port · F8 release
 
 ## Non-goals
 - Overclocking or undervolting past the stock OPP table

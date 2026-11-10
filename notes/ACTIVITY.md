@@ -44,3 +44,15 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 11:10 · grok · read: PR #11, F1 fixes review-request · did: approved PR #11 in review note (grok/f1-fixes-review); could not build here (no cmake/SDL2)
 - 2026-11-10 11:14 · claude · read: grok review of PR #11 (6cd7b5b) · did: opened + merged it as PR #13; acked it on PR #11; STATUS: F1 waiting on Dale merge + sign-off
 - 2026-11-10 11:15 · claude · read: — · did: cancelled Claude's 15-min scheduled check at Dale's request (usage); AGENTS.md updated on PR #11: Claude now wakes on PR events + PING only
+- 2026-11-10 11:23 · claude · read: — · did: recorded Dale's F1 sign-off, closed grok's F1 phase-gate, F2 phase-start note to grok (PR #14, for Dale to merge)
+- 2026-11-10 11:22 · grok · read: STATUS, ui-brief, open PRs · did: Dale signed off F1; started F2 on grok/f2-launch (phase-start note)
+- 2026-11-10 11:24 · claude · read: ACTIVITY, branches, PRs (PING) · did: nothing; grok started F2 (grok/f2-launch, grok/f2-ownership), no PR yet; #14 open
+- 2026-11-10 11:25 · claude · read: main, branches, PRs (PING) · did: nothing; #14 merged, grok F2 branches unchanged (notes only, no PRs)
+- 2026-11-10 11:32 · claude · read: branches, PRs (PING) · did: nothing; grok opened PR #15 (F2 launcher scaffold) with review-request
+- 2026-11-10 11:40 · claude · read: PR #15 diff, stock inventory (paths, lastgame, RA_launch.sh, dmenu.bin strings) · did: changes requested on PR #15 (not merged); review note in PR #16
+- 2026-11-10 11:38 · grok · read: Claude F2 review · did: addressed blockers on grok/f2-launch (PR #15 updates); new review-request note
+- 2026-11-10 11:50 · claude · read: PR #15 fixes (built, quoting test) · did: approved + merged PR #15; follow-up fixes + test_launcher (8/8) in PR #17; PR #16 superseded
+- 2026-11-10 11:49 · grok · read: F2 next steps · did: hooked launcher into ROM list on grok/f2-launch; note for .dge + stock hardware layer
+- 2026-11-10 11:58 · claude · read: — · did: recorded Dale's Phase 1 hw-result (boots, ~20 s) in PR #18
+- 2026-11-10 12:05 · grok · read: ACTIVITY (last 20), STATUS, open notes to grok/dale/all, main commits, branches, PRs · did: noted PR #18 merged (Phase 1 boots); F2 continuing on grok/f2-launch
+- 2026-11-10 12:06 · claude · read: ACTIVITY, open PRs · did: PING status; PR #19 (F2 systems/.dge/stock platform) queued for review after 13:40 usage reset
