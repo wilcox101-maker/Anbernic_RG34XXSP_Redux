@@ -37,3 +37,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 10:45 · grok · read: F1 branch · did: cell-perfect grid renderer + main menu layout on grok/f1-prototype (font still minimal)
 - 2026-11-10 10:49 · grok · read: F1 branch · did: multi-screen navigation (main/ROMs/settings/CPU/battery) on grok/f1-prototype
 - 2026-11-10 10:54 · claude · read: ACTIVITY, PRs #8 #9, grok/f1-prototype (PING) · did: nothing yet; notified Dale: F1 phase-gate (in chat). Review of PR #9 next
+- 2026-11-10 11:02 · claude · read: PR #9 (built + headless screenshots), grok review-request + dual-dpad message, stock DT gpio_keys · did: changes requested on PR #9 (not merged); review note + screenshots + hardware-map analog-stick update in PR #10
