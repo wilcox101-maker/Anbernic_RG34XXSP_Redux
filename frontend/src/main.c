@@ -99,11 +99,18 @@ int main(int argc, char **argv) {
             grid_present(ren);
             SDL_RenderPresent(ren);
         }
-#ifdef REDUX_PLATFORM_STOCK
-        evdev_poll(on_device_button);
-#endif
         SDL_Event e;
-        if (SDL_WaitEventTimeout(&e, (int)ui_wait_ms())) {
+        int have_event;
+#ifdef REDUX_PLATFORM_STOCK
+        /* Sleep on the input devices, not on SDL: SDL never sees event0/event1, so waiting in
+           SDL_WaitEventTimeout would delay every button press by up to ui_wait_ms() (1 s idle). */
+        evdev_wait((int)ui_wait_ms());
+        evdev_poll(on_device_button);
+        have_event = SDL_PollEvent(&e);
+#else
+        have_event = SDL_WaitEventTimeout(&e, (int)ui_wait_ms());
+#endif
+        if (have_event) {
             do {
                 if (e.type == SDL_QUIT) running = 0;
                 if ((e.type == SDL_KEYDOWN && !e.key.repeat) || e.type == SDL_KEYUP) {
@@ -111,7 +118,7 @@ int main(int argc, char **argv) {
                     if (btn != BTN_NONE) ui_button(btn, e.type == SDL_KEYDOWN, SDL_GetTicks());
                 }
                 if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
-                    grid_present(ren);
+                    grid_present(ren);   /* window uncovered: repaint the last frame */
                     SDL_RenderPresent(ren);
                 }
             } while (SDL_PollEvent(&e));
