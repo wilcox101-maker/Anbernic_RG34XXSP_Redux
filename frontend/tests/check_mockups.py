@@ -3,7 +3,7 @@
 
   python frontend/tests/check_mockups.py <path to rg34xxsp-redux binary>
 
-Runs the binary with --dump (which renders the five screens with the clock fixed to
+Runs the binary with --dump (which renders the six screens with the clock fixed to
 12:34) and compares each 90 x 30 screen with the matching mock-up. "▓▓" marks the
 selected row in both. Standard library only; runs on Windows and Linux.
 """
@@ -13,7 +13,7 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SCREENS = ["main", "roms", "settings", "cpu", "battery"]   # order of the mock-ups in the spec
+SCREENS = ["main", "roms", "settings", "eng-cpu", "eng-battery", "internet"]   # order in the spec
 
 
 def spec_mockups():
@@ -28,7 +28,7 @@ def rendered(binary):
     out = subprocess.run([binary, "--dump"], capture_output=True, check=True).stdout.decode("utf-8")
     screens, name = {}, None
     for line in out.split("\n"):
-        m = re.fullmatch(r"=== (\w+) ===", line)
+        m = re.fullmatch(r"=== ([\w-]+) ===", line)
         if m:
             name = m.group(1)
             screens[name] = []

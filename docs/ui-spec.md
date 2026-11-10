@@ -38,7 +38,9 @@ RG34XXSP Redux
 ├── Video
 ├── Documents
 ├── File Manager
-├── YouTube                    (if feasible, no earlier than F6)
+├── Internet
+│   ├── YouTube                (if feasible, no earlier than F6)
+│   └── Web browser (text)
 │
 ├── Network
 │   ├── WebUI                  (On/Off, default Off)
@@ -104,7 +106,7 @@ RG34XXSP Redux                                                      BAT 87% CHG 
 │   Video                                                                                │
 │   Documents                                                                            │
 │   File Manager                                                                         │
-│   YouTube (if feasible)                                                                │
+│   Internet                                                                             │
 │   Network                                                                              │
 │   Settings                                                                             │
 │   Engineering Mode                                                                     │
@@ -199,11 +201,18 @@ Settings                                                            BAT 87% CHG 
 A:Enter  B:Back  M:Menu
 ```
 
-## 6. Mock-up 4 — Engineering Mode: CPU
+## 6. Mock-up 4 — Engineering Mode, CPU tab
+
+Engineering Mode is one screen with an AMI/Phoenix-style tab bar (decision 2026-11-10): CPU,
+Battery, Thermal, Display, System. L1/R1 or Left/Right switch tabs and wrap; the active tab is
+inverted in the accent colour (shown here as `▓CPU▓`). B exits to the main menu. Tabs without content
+yet say "Not yet".
 
 ```
-[ENGINEERING] CPU                                                BAT 87% CHG CPU 54C 12:34
+[ENGINEERING]                                                    BAT 87% CHG CPU 54C 12:34
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ ▓CPU▓ Battery  Thermal  Display  System                                                │
+│────────────────────────────────────────────────────────────────────────────────────────│
 │  Governor:     schedutil                                                               │
 │  Min freq:     480 MHz                                                                 │
 │  Max freq:     1512 MHz                                                                │
@@ -228,17 +237,17 @@ A:Enter  B:Back  M:Menu
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
-│                                                                                        │
-│                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-A:Edit  B:Back  X:Save as profile  Y:Reset to stock
+L1/R1:Tab  A:Edit  B:Exit  X:Save profile  Y:Reset
 ```
 
-## 7. Mock-up 5 — Battery screen
+## 7. Mock-up 5 — Engineering Mode, Battery tab
 
 ```
-Battery                                                                  BAT 87% CHG 12:34
+[ENGINEERING]                                                    BAT 87% CHG CPU 54C 12:34
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  CPU ▓Battery▓ Thermal  Display  System                                                │
+│────────────────────────────────────────────────────────────────────────────────────────│
 │  Capacity:     87 %                                                                    │
 │  Voltage:      3.92 V                                                                  │
 │  Current:     -420 mA                                                                  │
@@ -263,10 +272,47 @@ Battery                                                                  BAT 87%
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+L1/R1:Tab  A:Edit  B:Exit  X:Save profile  Y:Reset
+```
+
+
+## 7a. Mock-up 6 — Internet
+
+Replaces the old "YouTube (if feasible)" item (decision 2026-11-10). Items appear only once they
+work; B returns to the main menu.
+
+```
+Internet                                                            BAT 87% CHG WIFI 12:34
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│▓▓ YouTube (if feasible)                                                                │
+│   Web browser (text)                                                                   │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
 │                                                                                        │
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-A:Refresh  B:Back  M:Menu
+A:Enter  B:Back
 ```
 
 ---

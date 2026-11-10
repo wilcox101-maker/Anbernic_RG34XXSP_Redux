@@ -28,6 +28,8 @@ jobs:
       - name: Remap tests
         run: |
           if [ -x ./build/test_remap_device ]; then ./build/test_remap_device; fi
+      - name: Navigation test
+        run: ./build/test_ui_nav
       - name: Mock-up exit test (F1)
         run: python3 frontend/tests/check_mockups.py ./build/rg34xxsp-redux
 

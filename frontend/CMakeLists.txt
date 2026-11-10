@@ -54,3 +54,13 @@ target_include_directories(test_launcher PRIVATE src)
 # Device remap test (no SDL needed).
 add_executable(test_remap_device tests/test_remap_device.c src/remap_device.c)
 target_include_directories(test_remap_device PRIVATE src)
+
+# Navigation test (back stack, Engineering tabs). Links the UI with the desktop platform; no window.
+add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/grid.c src/font.c src/platform.c src/launcher.c src/systems.c)
+target_include_directories(test_ui_nav PRIVATE src)
+if(TARGET SDL2::SDL2)
+    target_link_libraries(test_ui_nav PRIVATE SDL2::SDL2)
+else()
+    target_include_directories(test_ui_nav PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_link_libraries(test_ui_nav PRIVATE ${SDL2_LIBRARIES})
+endif()

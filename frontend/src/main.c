@@ -40,12 +40,14 @@ static int parse_hex_color(const char *s, Uint8 *r, Uint8 *g, Uint8 *b) {
 static int dump_screens(void) {
     static const struct { screen_t s; const char *name; } shots[] = {
         { SCREEN_MAIN, "main" }, { SCREEN_ROMS, "roms" }, { SCREEN_SETTINGS, "settings" },
-        { SCREEN_CPU, "cpu" }, { SCREEN_BATTERY, "battery" },
+        { SCREEN_ENG, "eng-cpu" }, { SCREEN_ENG, "eng-battery" }, { SCREEN_INTERNET, "internet" },
     };
     static char buf[GRID_ROWS * (GRID_COLS * 3 + 1) + 1];
     platform_set_fixed_clock("12:34");
     for (size_t i = 0; i < sizeof shots / sizeof shots[0]; i++) {
         ui_show(shots[i].s);
+        if (shots[i].s == SCREEN_ENG)
+            ui_set_eng_tab(strcmp(shots[i].name, "eng-battery") == 0 ? ENG_BATTERY : ENG_CPU);
         ui_draw();
         grid_dump(buf, sizeof buf);
         printf("=== %s ===\n%s", shots[i].name, buf);

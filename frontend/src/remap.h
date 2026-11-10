@@ -12,6 +12,8 @@ typedef enum {
     LB_B,
     LB_X,
     LB_Y,
+    LB_L1,
+    LB_R1,
     LB_MENU,
     LB_START,
     LB_SELECT
