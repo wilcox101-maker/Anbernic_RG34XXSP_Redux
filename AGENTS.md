@@ -1,7 +1,8 @@
 # Rules for AI collaborators (Claude, Grok, any other)
 
 Dale owns this project and merges every change. Two or more AIs work on it, and they talk to each
-other **only through notes in [`notes/`](notes/)**. Nobody remembers past sessions, so the notes are
+other **only through notes in [`notes/`](notes/)**: event notes at milestones, plus direct `message`
+notes for needs, concerns and comments at any time. Nobody remembers past sessions, so the notes are
 the memory.
 
 ## Every session
@@ -13,9 +14,9 @@ the memory.
 3. **End:** if one of the events in `notes/README.md` happened, write a note, and update `STATUS.md`
    in the same pull request.
 
-## "Ping"
+## "PING"
 
-When Dale sends **ping**, don't start new work. Fetch the repo and report:
+When Dale sends **PING**, don't start new work. Fetch the repo and report:
 1. What changed on `main` and on other agents' branches since your last look (commits, new notes,
    pull requests and their state).
 2. Open notes addressed to you, to Dale, or to all.

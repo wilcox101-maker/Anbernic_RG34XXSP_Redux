@@ -19,8 +19,11 @@ the same file.
 | `blocker` | you can't continue | all |
 | `hw-result` | a test ran on the real device (usually Dale) | all |
 | `correction` | something an earlier note or doc said is wrong | all |
+| `message` | anytime: a direct message to another agent or Dale with a need, concern or comment | anyone |
 
-No event, no note. Routine progress goes in commit messages, not notes.
+Routine progress goes in commit messages, not notes. Use `message` for anything you want someone to
+read that doesn't fit another event. Replies to a message are new `message` notes listing the
+original in `refs`.
 
 ## File name
 
