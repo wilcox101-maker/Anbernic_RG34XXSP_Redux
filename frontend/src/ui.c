@@ -5,6 +5,7 @@
 #include "platform.h"
 #include "launcher.h"
 #include "systems.h"
+#include "romscan.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -19,18 +20,8 @@ static const char *main_items[] = {
 };
 enum { MAIN_GAME_ROOM = 0, MAIN_INTERNET = 5, MAIN_SETTINGS = 7, MAIN_ENGINEERING = 8 };
 
-/* Demo ROMs. Real F2 reads the stock folders. System name drives the launch table. */
-static const char *rom_items[] = {
-    "Advance Wars", "Fire Emblem", "Golden Sun", "Metroid Fusion", "Pokemon Emerald"
-};
-static const char *rom_paths[] = {
-    "/mnt/mmc/Roms/GBA/Advance Wars.gba",
-    "/mnt/mmc/Roms/GBA/Fire Emblem.gba",
-    "/mnt/mmc/Roms/GBA/Golden Sun.gba",
-    "/mnt/mmc/Roms/GBA/Metroid Fusion.gba",
-    "/mnt/mmc/Roms/GBA/Pokemon Emerald.gba"
-};
-static const char *rom_system = "GBA";
+/* ROM names come from romscan (read-only). The desktop fixture recreates the
+   five F0 names so this screen still matches the mock-up. */
 static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "Network", "System", "Emulation"
 };
@@ -43,6 +34,8 @@ static const char *eng_tabs[] = { "CPU", "Battery", "Thermal", "Display", "Syste
 static screen_t screen;
 static eng_tab_t eng_tab;
 static int selected;
+static int scroll;
+static int sys_index;
 static int dirty;
 static int should_exit;
 static uint32_t a_down_at;
@@ -57,36 +50,56 @@ static void push_back(screen_t from) {
 
 static void go(screen_t s) {
     push_back(screen);
-    screen = s; selected = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
+    screen = s; selected = 0; scroll = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
 }
 
 static void back(void) {
     if (back_top > 0) screen = back_stack[--back_top];
     else screen = SCREEN_MAIN;
-    selected = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
+    selected = 0; scroll = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
 }
 
 /* Replace the current screen without remembering it (the confirm screen is not a place to go back to). */
 static void go_replace(screen_t s) {
-    screen = s; selected = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
+    screen = s; selected = 0; scroll = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
 }
 
-void ui_init(void) { should_exit = 0; back_top = 0; eng_tab = ENG_CPU; screen = SCREEN_MAIN; go_replace(SCREEN_MAIN); }
+void ui_init(void) {
+    romscan_init();
+    should_exit = 0; back_top = 0; eng_tab = ENG_CPU; sys_index = 0; screen = SCREEN_MAIN;
+    go_replace(SCREEN_MAIN);
+}
 void ui_set_eng_tab(eng_tab_t t) { eng_tab = t; dirty = 1; }
 screen_t ui_screen(void) { return screen; }
 eng_tab_t ui_eng_tab(void) { return eng_tab; }
-void ui_show(screen_t s) { back_top = 0; screen = s; selected = 0; dirty = 1; }
+int ui_list_selected(void) { return selected; }
+int ui_list_scroll(void) { return scroll; }
+void ui_show(screen_t s) {
+    back_top = 0; screen = s; selected = 0; scroll = 0; dirty = 1;
+    if (s == SCREEN_ROMS) sys_index = romscan_index_of("GBA");
+}
 int ui_dirty(void) { return dirty; }
 int ui_should_exit(void) { return should_exit; }
 
 static int list_count(void) {
     switch (screen) {
     case SCREEN_MAIN:     return COUNT(main_items);
-    case SCREEN_ROMS:     return COUNT(rom_items);
+    case SCREEN_SYSTEMS:  return romscan_systems();
+    case SCREEN_ROMS:     return romscan_roms(sys_index);
     case SCREEN_SETTINGS: return COUNT(settings_items);
     case SCREEN_INTERNET: return COUNT(internet_items);
     default:              return 0;
     }
+}
+
+static void clamp_scroll(void) {
+    int n = list_count();
+    int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+    if (window < 1) { scroll = 0; return; }
+    if (selected < 0) selected = 0;
+    if (selected >= n) selected = n - 1;
+    if (selected < scroll) scroll = selected;
+    if (selected >= scroll + window) scroll = selected - window + 1;
 }
 
 static void switch_eng_tab(int delta) {
@@ -107,19 +120,24 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (screen == SCREEN_ENG && (btn == LB_R1 || btn == LB_RIGHT)) { switch_eng_tab(+1); return; }
 
     int n = list_count();
-    if (n && btn == LB_UP)   { selected = (selected - 1 + n) % n; dirty = 1; }
-    if (n && btn == LB_DOWN) { selected = (selected + 1) % n; dirty = 1; }
+    if (n && btn == LB_UP)   { selected = (selected - 1 + n) % n; clamp_scroll(); dirty = 1; }
+    if (n && btn == LB_DOWN) { selected = (selected + 1) % n; clamp_scroll(); dirty = 1; }
 
     if (btn == LB_A && screen == SCREEN_MAIN) {
-        if (selected == MAIN_GAME_ROOM)   go(SCREEN_ROMS);
+        if (selected == MAIN_GAME_ROOM)   go(SCREEN_SYSTEMS);
         if (selected == MAIN_INTERNET)    go(SCREEN_INTERNET);
         if (selected == MAIN_SETTINGS)    go(SCREEN_SETTINGS);
         if (selected == MAIN_ENGINEERING) go(SCREEN_ENG_CONFIRM);
         return;
     }
+    if (btn == LB_A && screen == SCREEN_SYSTEMS) {
+        if (romscan_systems() > 0) { sys_index = selected; go(SCREEN_ROMS); }
+        return;
+    }
     if (btn == LB_A && screen == SCREEN_ROMS) {
-        const system_entry_t *sys = systems_lookup(rom_system);
-        if (sys && launcher_start(sys->target, sys->core_or_path, rom_paths[selected]) == 0)
+        const system_entry_t *sys = systems_lookup(romscan_key(sys_index));
+        const char *path = romscan_rom_path(sys_index, selected);
+        if (sys && path[0] && launcher_start(sys->target, sys->core_or_path, path) == 0)
             should_exit = 1;
         return;
     }
@@ -164,16 +182,32 @@ static void frame(const char *title, const char *help, int wifi, int cpu_temp) {
 static void body(int line, const char *text) { grid_puts(1, ROW_BODY0 + line, text, 0); }
 
 static void list(int first_line, const char *const *items, int n) {
-    for (int i = 0; i < n; i++) {
+    int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+    for (int i = 0; i < window; i++) {
+        int idx = scroll + i;
         char line[GRID_COLS];
-        snprintf(line, sizeof line, "   %s", items[i]);
+        snprintf(line, sizeof line, "   %s", items[idx]);
         body(first_line + i, line);
-        if (i == selected) grid_invert(ROW_BODY0 + first_line + i, 1, GRID_COLS - 2);
+        if (idx == selected) grid_invert(ROW_BODY0 + first_line + i, 1, GRID_COLS - 2);
+    }
+}
+
+/* Same bar, but the strings come from the scanner (systems or one system's ROMs). */
+static void list_scanned(int first_line, int systems) {
+    int n = systems ? romscan_systems() : romscan_roms(sys_index);
+    int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+    for (int i = 0; i < window; i++) {
+        int idx = scroll + i;
+        const char *text = systems ? romscan_title(idx) : romscan_rom_name(sys_index, idx);
+        char line[GRID_COLS];
+        snprintf(line, sizeof line, "   %s", text);
+        body(first_line + i, line);
+        if (idx == selected) grid_invert(ROW_BODY0 + first_line + i, 1, GRID_COLS - 2);
     }
 }
 
 /* BIOS-style tab bar on body row 0, a rule on row 1. The active tab, padded by one space on each
-   side, is inverted in the accent colour (grid_dump shows that padding as "▓"). */
+   side, is inverted in the accent colour (grid_dump shows that padding as "\u2593"). */
 static void draw_eng_tabs(void) {
     char line[GRID_COLS * 3] = " ";
     int col = 2, active_c0 = 0, active_c1 = 0;   /* body text starts at column 1, plus the lead space */
@@ -188,7 +222,7 @@ static void draw_eng_tabs(void) {
     body(0, line);
     grid_invert(ROW_BODY0, active_c0, active_c1);
     char rule[GRID_COLS * 3] = "";
-    for (int c = 1; c < GRID_COLS - 1; c++) strcat(rule, "─");
+    for (int c = 1; c < GRID_COLS - 1; c++) strcat(rule, "\u2500");
     grid_puts(1, ROW_BODY0 + 1, rule, 0);
 }
 
@@ -200,11 +234,20 @@ void ui_draw(void) {
         list(0, main_items, COUNT(main_items));
         break;
     case SCREEN_ROMS:
-        frame("Game Room > Systems > Game Boy Advance",
-              "A:Launch  B:Back  X:Favorites  Y:Info  Start:Search  Select:Random", 1, 0);
+        snprintf(t, sizeof t, "Game Room > Systems > %s", romscan_title(sys_index));
+        frame(t, "A:Launch  B:Back  X:Favorites  Y:Info  Start:Search  Select:Random", 1, 0);
         body(0, "  Search: _");
-        list(2, rom_items, COUNT(rom_items));
-        body(2 + COUNT(rom_items), "   ...");
+        list_scanned(2, 0);
+        {
+            int n = romscan_roms(sys_index);
+            int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+            body(2 + window, "   ...");
+        }
+        break;
+    case SCREEN_SYSTEMS:
+        frame("Game Room > Systems", "A:Enter  B:Back", 1, 0);
+        if (romscan_systems() == 0) body(0, "   (no ROMs)");
+        else list_scanned(0, 1);
         break;
     case SCREEN_SETTINGS:
         frame("Settings", "A:Enter  B:Back  M:Menu", 1, 0);
@@ -221,8 +264,8 @@ void ui_draw(void) {
         body(3, "  Hold A for 2 seconds to enter. Release to cancel.");
         int width = 40, filled = (int)(hold_ms * (uint32_t)width / HOLD_TO_ENTER_MS);
         if (filled > width) filled = width;
-        char bar[4 + 40 * 3 + 2] = "  [";   /* "▓" is 3 bytes in UTF-8 */
-        for (int i = 0; i < width; i++) strcat(bar, i < filled ? "▓" : " ");
+        char bar[4 + 40 * 3 + 2] = "  [";   /* "\u2593" is 3 bytes in UTF-8 */
+        for (int i = 0; i < width; i++) strcat(bar, i < filled ? "\u2593" : " ");
         strcat(bar, "]");
         body(5, bar);
         break;
