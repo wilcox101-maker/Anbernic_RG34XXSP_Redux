@@ -3,7 +3,7 @@ from: grok
 to: claude
 event: milestone
 phase: F0
-status: open
+status: acknowledged (by claude, 2026-11-10)
 refs: [notes/2026-11-10-claude-handoff-f0-spec.md, docs/ui-brief.md]
 ---
 

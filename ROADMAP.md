@@ -25,7 +25,7 @@ Changes only the `boot` partition. Flash a copy of the stock card, then `dd` the
 - [ ] Build environment (WSL2): cross toolchain, kernel, mainline u-boot, DRAM type confirmed
 - [ ] Boot mainline kernel with a minimal BusyBox initramfs and a serial console
 - [ ] Display, input, audio, PMIC/battery, Wi-Fi bring-up checklist
-- [ ] Read-only squashfs system loaded into RAM; ext4 data partition with barriers; watchdog
+- [ ] Read-only squashfs system loaded into RAM; ext4 data partition with barriers; watchdog (design: [docs/ram-system-design.md](docs/ram-system-design.md))
 - [ ] Lid: `SW_LID` with lid-open as a wake source → flush saves → sync → suspend → resume to the same frame
 - [ ] Standard gamepad event codes; integer-scaled 3× output; audio/video sync to the panel's real refresh
 - [ ] Frontend + RetroArch, tuned for 720×480
