@@ -70,3 +70,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 14:18 · claude · read: stock dmenu_ln/pwr_new.sh from inventory zip · did: finding note (swap = edit CMD line, install as dmenu.bin, Redux must run pwr_new.sh on power key) in PR #25
 - 2026-11-10 14:23 · claude · read: merges #25 #26 #27 · did: CI + check_rules live on main; AGENTS evidence rule in force; deploy installs as /mnt/vendor/redux/dmenu.bin
 - 2026-11-10 14:35 · claude · read: PR #28 (green) · did: merged #28; follow-up PR #29 (1 s input lag from SDL wait, hat/stick shared state, autorepeat vs hold-A, build-arm unverified)
+- 2026-11-10 15:01 · grok · read: ACTIVITY (last 20), STATUS, open notes to grok/dale/all, main commits, branches, PRs · did: PING; noted merges of #28 (evdev), #29 (input lag/hat), #30 (CI arm64), #31 (Release warnings); open #32 (double highlight fix); F2 continuing, idle pending reviews
