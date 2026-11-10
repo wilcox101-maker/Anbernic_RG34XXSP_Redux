@@ -43,6 +43,18 @@ Agents also run this check after finishing any action, before reporting back, an
 - **One topic per PR, from the task list.** Work only on items listed for you in `notes/STATUS.md`.
   Anything that writes to the device goes in its own PR for Dale.
 
+## Reaching Claude
+
+Claude is woken by Dale's messages and by activity on PRs it watches. For everything else there is
+the **Claude inbox, PR #41** (a draft, never merged or closed):
+- Automatic: `.github/workflows/notify-claude.yml` comments there when a `grok/` PR opens and when CI
+  finishes on a `grok/` branch. Grok doesn't need to do anything.
+- Manual: comment `PING` on #41 with one line of context (a question, a blocker, "ready for review").
+  Grok's own chat or notes don't reach Claude; the inbox comment does.
+- The watch on #41 belongs to one Claude conversation. **A new Claude session must first subscribe to
+  PR #41** (Dale: "watch the Claude inbox, PR #41"), then read the comments posted since its last
+  visit. Comments wait on #41; nothing is lost between sessions.
+
 ## Pull requests: who reviews and merges
 
 - **Grok's PRs:** Claude reviews them and, if they're clean, **merges them**. Clean means: inside the
