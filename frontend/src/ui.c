@@ -1,8 +1,9 @@
-/* Screens and navigation. F2: ROM select calls the launcher. */
+/* Screens and navigation. F2: ROM select looks up the system and launches. */
 #include "ui.h"
 #include "grid.h"
 #include "platform.h"
 #include "launcher.h"
+#include "systems.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -16,7 +17,7 @@ static const char *main_items[] = {
 };
 enum { MAIN_GAME_ROOM = 0, MAIN_SETTINGS = 7, MAIN_ENGINEERING = 8 };
 
-/* Demo ROMs. Real F2 reads the stock folders. */
+/* Demo ROMs. Real F2 reads the stock folders. System name drives the launch table. */
 static const char *rom_items[] = {
     "Advance Wars", "Fire Emblem", "Golden Sun", "Metroid Fusion", "Pokemon Emerald"
 };
@@ -27,6 +28,7 @@ static const char *rom_paths[] = {
     "/mnt/mmc/Roms/GBA/Metroid Fusion.gba",
     "/mnt/mmc/Roms/GBA/Pokemon Emerald.gba"
 };
+static const char *rom_system = "GBA";
 static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "Network", "System", "Emulation"
 };
@@ -35,15 +37,17 @@ static const char *settings_items[] = {
 static screen_t screen;
 static int selected;
 static int dirty;
+static int should_exit;
 static uint32_t a_down_at;
 static uint32_t hold_ms;
 static char last_clock[8];
 
 static void go(screen_t s) { screen = s; selected = 0; a_down_at = 0; hold_ms = 0; dirty = 1; }
 
-void ui_init(void) { go(SCREEN_MAIN); }
+void ui_init(void) { should_exit = 0; go(SCREEN_MAIN); }
 void ui_show(screen_t s) { go(s); }
 int ui_dirty(void) { return dirty; }
+int ui_should_exit(void) { return should_exit; }
 
 static int list_count(void) {
     switch (screen) {
@@ -74,10 +78,9 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (btn == BTN_A && screen == SCREEN_ROMS) {
-        /* Launch the selected ROM via RetroArch (GBA core). */
-        if (launcher_start(LAUNCH_RETROARCH, "mgba_libretro.so", rom_paths[selected]) == 0) {
-            /* main() will exit so loadapp.sh runs /tmp/.next. */
-        }
+        const system_entry_t *sys = systems_lookup(rom_system);
+        if (sys && launcher_start(sys->target, sys->core_or_path, rom_paths[selected]) == 0)
+            should_exit = 1;
         return;
     }
     if ((btn == BTN_LEFT || btn == BTN_RIGHT) && (screen == SCREEN_CPU || screen == SCREEN_BATTERY)) {
@@ -158,7 +161,7 @@ void ui_draw(void) {
         body(3, "  Hold A for 2 seconds to enter. Release to cancel.");
         int width = 40, filled = (int)(hold_ms * (uint32_t)width / HOLD_TO_ENTER_MS);
         if (filled > width) filled = width;
-        char bar[4 + 40 * 3 + 2] = "  [";
+        char bar[4 + 40 * 3 + 2] = "  [";   /* "▓" is 3 bytes in UTF-8 */
         for (int i = 0; i < width; i++) strcat(bar, i < filled ? "▓" : " ");
         strcat(bar, "]");
         body(5, bar);
