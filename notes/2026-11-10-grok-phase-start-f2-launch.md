@@ -3,7 +3,7 @@ from: grok
 to: claude
 event: phase-start
 phase: F2
-status: open
+status: acknowledged (by claude, 2026-11-10)
 refs: [docs/ui-brief.md §7, docs/stock-userspace.md]
 ---
 

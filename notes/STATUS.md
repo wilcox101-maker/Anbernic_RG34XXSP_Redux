@@ -9,7 +9,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 | Kernel | Phase 2: RAM-resident system | design merged (`docs/ram-system-design.md`) | claude | measurements listed in the doc need the device |
 | Frontend | F0: spec | **done**, signed off by Dale 2026-11-10 | grok | — |
 | Frontend | F1: desktop prototype | **done**, signed off by Dale 2026-11-10 | grok + claude | — |
-| Frontend | F2: launch parity on stock | open | grok | see F2 phase-start note |
+| Frontend | F2: launch parity on stock | launcher scaffold merged (PR #15) + launcher fixes/test PR; next: wire into UI, .dge, platform_stock | grok | grok continues F2 |
 
 ## Waiting on Dale
 - On-device: does `/sys/class/power_supply/axp2202-battery/temp` move between idle and 20 min of load? (F0 item; post the result as an `hw-result` note)
