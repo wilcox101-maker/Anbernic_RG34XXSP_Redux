@@ -1,6 +1,6 @@
-/* Read /dev/input/event1 (ANBERNIC-keys) and turn events into logical buttons.
-   Sticks and the D-pad use edge detection: press when crossing the threshold,
-   release when coming back inside the hysteresis band. */
+/* Read device buttons and the power key.
+   event1 (ANBERNIC-keys): sticks and buttons with edge detection.
+   event0 (axp2202-pek): power key. On press, run stock pwr_new.sh. */
 #include "evdev_reader.h"
 #include "remap_device.h"
 #include <stdio.h>
@@ -10,12 +10,14 @@
 #include <fcntl.h>
 #include <linux/input.h>
 
-#define DEV_PATH "/dev/input/event1"
+#define KEYS_PATH  "/dev/input/event1"
+#define POWER_PATH "/dev/input/event0"
 #define PRESS_THR  1500
 #define RELEASE_THR 1000
 
-static int fd = -1;
-static int stick_state[4];   /* left X/Y, right X/Y: -1, 0, +1 */
+static int keys_fd = -1;
+static int power_fd = -1;
+static int stick_state[4];
 
 static logical_button_t axis_to_btn(int axis, int dir) {
     if (dir == 0) return BTN_NONE;
@@ -25,20 +27,36 @@ static logical_button_t axis_to_btn(int axis, int dir) {
 }
 
 int evdev_open(void) {
-    fd = open(DEV_PATH, O_RDONLY | O_NONBLOCK);
-    return fd >= 0 ? 0 : -1;
+    keys_fd = open(KEYS_PATH, O_RDONLY | O_NONBLOCK);
+    power_fd = open(POWER_PATH, O_RDONLY | O_NONBLOCK);
+    return (keys_fd >= 0) ? 0 : -1;
 }
 
 void evdev_close(void) {
-    if (fd >= 0) close(fd);
-    fd = -1;
+    if (keys_fd >= 0) close(keys_fd);
+    if (power_fd >= 0) close(power_fd);
+    keys_fd = power_fd = -1;
 }
 
-/* Call repeatedly. Invokes cb for each logical press or release. */
+/* On power key press, run stock pwr_new.sh. It decides sleep vs shutdown. */
+static void handle_power(void) {
+    system("sh /mnt/mod/ctrl/pwr_new.sh");
+}
+
 int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
-    if (fd < 0) return -1;
+    if (keys_fd < 0) return -1;
     struct input_event ev;
-    while (read(fd, &ev, sizeof ev) == sizeof ev) {
+
+    /* Power key (event0). */
+    if (power_fd >= 0) {
+        while (read(power_fd, &ev, sizeof ev) == sizeof ev) {
+            if (ev.type == EV_KEY && ev.value == 1)
+                handle_power();
+        }
+    }
+
+    /* Buttons and sticks (event1). */
+    while (read(keys_fd, &ev, sizeof ev) == sizeof ev) {
         if (ev.type == EV_KEY) {
             logical_button_t b = remap_device_key(ev.code);
             if (b != BTN_NONE && cb) cb(b, ev.value);
@@ -55,11 +73,11 @@ int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
             int dir = 0;
             int v = ev.value;
             if (ev.code == DEV_ABS_HAT0X || ev.code == DEV_ABS_HAT0Y)
-                dir = v;   /* -1 / 0 / +1 */
+                dir = v;
             else if (v <= -PRESS_THR) dir = -1;
             else if (v >= PRESS_THR) dir = 1;
             else if (v > -RELEASE_THR && v < RELEASE_THR) dir = 0;
-            else dir = stick_state[axis];   /* hysteresis */
+            else dir = stick_state[axis];
 
             if (dir != stick_state[axis]) {
                 if (stick_state[axis] != 0 && cb)
