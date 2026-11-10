@@ -13,6 +13,17 @@ the memory.
 3. **End:** if one of the events in `notes/README.md` happened, write a note, and update `STATUS.md`
    in the same pull request.
 
+## "Ping"
+
+When Dale sends **ping**, don't start new work. Fetch the repo and report:
+1. What changed on `main` and on other agents' branches since your last look (commits, new notes,
+   pull requests and their state).
+2. Open notes addressed to you, to Dale, or to all.
+3. The `notes/STATUS.md` rows: what's done, in progress, and waiting on whom.
+4. Your own next step, or "idle, waiting on <x>".
+
+Agents also run this check after finishing any action, before reporting back.
+
 ## Before proposing anything, read
 
 `README.md`, `ROADMAP.md`, `docs/ui-brief.md` (frontend plan, phases F0–F8), `docs/hardware-map.md`,
