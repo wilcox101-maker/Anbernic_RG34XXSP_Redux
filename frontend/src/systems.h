@@ -1,6 +1,8 @@
 #ifndef REDUX_SYSTEMS_H
 #define REDUX_SYSTEMS_H
 
+#include "launcher.h"
+
 /* Per-system launch table. Maps a system name to a RetroArch core or a .dge path. */
 
 typedef struct {
