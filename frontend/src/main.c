@@ -20,6 +20,7 @@
 #include "evdev_reader.h"
 #endif
 
+#define BOOT_REPAINT_MS 15000u   /* repaint about once a second for this long after start */
 #define PRESENT_BUFFERS 3   /* covers double and triple buffering */
 #define SCREEN_W (GRID_COLS * FONT_W)
 #define SCREEN_H (GRID_ROWS * FONT_H)
@@ -93,9 +94,13 @@ int main(int argc, char **argv) {
 #endif
 
     ui_init();
+    const uint32_t start_ms = SDL_GetTicks();
     int running = 1;
     while (running && !ui_should_exit()) {
-        if (ui_dirty()) {
+        /* For the first seconds after start, repaint even when nothing changed: at boot the
+           first frames can land before the display shows them, and the stock boot logo stayed
+           up until the next change (~45 s on the device, 2026-11-10). */
+        if (ui_dirty() || SDL_GetTicks() - start_ms < BOOT_REPAINT_MS) {
             ui_draw();
             /* Draw the same frame into every buffer the display backend flips between. On the
                device (Anbernic SDL 2.0.12, page-flipped framebuffer) presenting once left the
