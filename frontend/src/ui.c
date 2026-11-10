@@ -1,4 +1,5 @@
-/* Screens and navigation. F2: ROM select looks up the system and launches. */
+/* Screens and navigation. Engineering is one screen with a tab bar.
+   B goes back one level via a small stack. Internet is a sub-menu. */
 #include "ui.h"
 #include "grid.h"
 #include "platform.h"
@@ -10,14 +11,14 @@
 #define HOLD_TO_ENTER_MS 2000
 #define IDLE_WAIT_MS     1000
 #define HOLD_WAIT_MS     50
+#define BACK_MAX 8
 
 static const char *main_items[] = {
     "Game Room", "Music", "Video", "Documents", "File Manager",
-    "YouTube (if feasible)", "Network", "Settings", "Engineering Mode"
+    "Internet", "Network", "Settings", "Engineering Mode"
 };
-enum { MAIN_GAME_ROOM = 0, MAIN_SETTINGS = 7, MAIN_ENGINEERING = 8 };
+enum { MAIN_GAME_ROOM = 0, MAIN_INTERNET = 5, MAIN_SETTINGS = 7, MAIN_ENGINEERING = 8 };
 
-/* Demo ROMs. Real F2 reads the stock folders. System name drives the launch table. */
 static const char *rom_items[] = {
     "Advance Wars", "Fire Emblem", "Golden Sun", "Metroid Fusion", "Pokemon Emerald"
 };
@@ -32,20 +33,40 @@ static const char *rom_system = "GBA";
 static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "Network", "System", "Emulation"
 };
+static const char *internet_items[] = {
+    "YouTube (if feasible)", "Web browser (text)"
+};
+static const char *eng_tabs[] = { "CPU", "Battery", "Thermal", "Display", "System" };
 #define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
 
 static screen_t screen;
+static eng_tab_t eng_tab;
 static int selected;
 static int dirty;
 static int should_exit;
 static uint32_t a_down_at;
 static uint32_t hold_ms;
 static char last_clock[8];
+static screen_t back_stack[BACK_MAX];
+static int back_top;
 
-static void go(screen_t s) { screen = s; selected = 0; a_down_at = 0; hold_ms = 0; dirty = 1; }
+static void push_back(screen_t from) {
+    if (back_top < BACK_MAX) back_stack[back_top++] = from;
+}
 
-void ui_init(void) { should_exit = 0; go(SCREEN_MAIN); }
-void ui_show(screen_t s) { go(s); }
+static void go(screen_t s) {
+    push_back(screen);
+    screen = s; selected = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
+}
+
+static void back(void) {
+    if (back_top > 0) screen = back_stack[--back_top];
+    else screen = SCREEN_MAIN;
+    selected = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
+}
+
+void ui_init(void) { should_exit = 0; back_top = 0; eng_tab = ENG_CPU; go(SCREEN_MAIN); }
+void ui_show(screen_t s) { back_top = 0; screen = s; selected = 0; dirty = 1; }
 int ui_dirty(void) { return dirty; }
 int ui_should_exit(void) { return should_exit; }
 
@@ -54,8 +75,14 @@ static int list_count(void) {
     case SCREEN_MAIN:     return COUNT(main_items);
     case SCREEN_ROMS:     return COUNT(rom_items);
     case SCREEN_SETTINGS: return COUNT(settings_items);
+    case SCREEN_INTERNET: return COUNT(internet_items);
     default:              return 0;
     }
+}
+
+static void switch_eng_tab(int delta) {
+    eng_tab = (eng_tab + delta + ENG_TAB_COUNT) % ENG_TAB_COUNT;
+    dirty = 1;
 }
 
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
@@ -67,12 +94,16 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     }
     if (!pressed) return;
 
+    if (screen == SCREEN_ENG && (btn == LB_L1 || btn == LB_LEFT))  { switch_eng_tab(-1); return; }
+    if (screen == SCREEN_ENG && (btn == LB_R1 || btn == LB_RIGHT)) { switch_eng_tab(+1); return; }
+
     int n = list_count();
     if (n && btn == LB_UP)   { selected = (selected - 1 + n) % n; dirty = 1; }
     if (n && btn == LB_DOWN) { selected = (selected + 1) % n; dirty = 1; }
 
     if (btn == LB_A && screen == SCREEN_MAIN) {
         if (selected == MAIN_GAME_ROOM)   go(SCREEN_ROMS);
+        if (selected == MAIN_INTERNET)    go(SCREEN_INTERNET);
         if (selected == MAIN_SETTINGS)    go(SCREEN_SETTINGS);
         if (selected == MAIN_ENGINEERING) go(SCREEN_ENG_CONFIRM);
         return;
@@ -83,17 +114,13 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             should_exit = 1;
         return;
     }
-    if ((btn == LB_LEFT || btn == LB_RIGHT) && (screen == SCREEN_CPU || screen == SCREEN_BATTERY)) {
-        go(screen == SCREEN_CPU ? SCREEN_BATTERY : SCREEN_CPU);
-        return;
-    }
-    if (btn == LB_B && screen != SCREEN_MAIN) go(SCREEN_MAIN);
+    if (btn == LB_B && screen != SCREEN_MAIN) back();
 }
 
 void ui_tick(uint32_t now_ms) {
     if (screen == SCREEN_ENG_CONFIRM && a_down_at) {
         hold_ms = now_ms - a_down_at;
-        if (hold_ms >= HOLD_TO_ENTER_MS) go(SCREEN_CPU);
+        if (hold_ms >= HOLD_TO_ENTER_MS) go(SCREEN_ENG);
         dirty = 1;
     }
     char c[8];
@@ -136,6 +163,18 @@ static void list(int first_line, const char *const *items, int n) {
     }
 }
 
+static void draw_eng_tabs(void) {
+    char line[GRID_COLS] = " ";
+    for (int i = 0; i < ENG_TAB_COUNT; i++) {
+        if (i == eng_tab) strcat(line, "\u2593");
+        strcat(line, eng_tabs[i]);
+        if (i == eng_tab) strcat(line, "\u2593");
+        strcat(line, "  ");
+    }
+    body(0, line);
+    if (eng_tab == ENG_CPU) grid_invert(ROW_BODY0, 1, 5);
+}
+
 void ui_draw(void) {
     char t[GRID_COLS];
     switch (screen) {
@@ -154,6 +193,10 @@ void ui_draw(void) {
         frame("Settings", "A:Enter  B:Back  M:Menu", 1, 0);
         list(0, settings_items, COUNT(settings_items));
         break;
+    case SCREEN_INTERNET:
+        frame("Internet", "A:Enter  B:Back", 1, 0);
+        list(0, internet_items, COUNT(internet_items));
+        break;
     case SCREEN_ENG_CONFIRM: {
         frame("[ENGINEERING]", "Hold A:Enter  B:Back", 0, 1);
         body(0, "  Engineering Mode shows live CPU, GPU, thermal and power controls.");
@@ -161,57 +204,31 @@ void ui_draw(void) {
         body(3, "  Hold A for 2 seconds to enter. Release to cancel.");
         int width = 40, filled = (int)(hold_ms * (uint32_t)width / HOLD_TO_ENTER_MS);
         if (filled > width) filled = width;
-        char bar[4 + 40 * 3 + 2] = "  [";   /* "▓" is 3 bytes in UTF-8 */
-        for (int i = 0; i < width; i++) strcat(bar, i < filled ? "▓" : " ");
+        char bar[4 + 40 * 3 + 2] = "  [";
+        for (int i = 0; i < width; i++) strcat(bar, i < filled ? "\u2593" : " ");
         strcat(bar, "]");
         body(5, bar);
         break;
     }
-    case SCREEN_CPU:
-        frame("[ENGINEERING] CPU", "A:Edit  B:Back  X:Save as profile  Y:Reset to stock", 0, 1);
-        body(0, "  Governor:     schedutil");
-        body(1, "  Min freq:     480 MHz");
-        body(2, "  Max freq:     1512 MHz");
-        snprintf(t, sizeof t, "  Current:      %d MHz", platform_cpu_cur_mhz(0)); body(3, t);
-        body(5, "  Per-core:");
-        for (int c = 0; c < 4; c++) {
-            snprintf(t, sizeof t, "    cpu%d  %d MHz   %s", c, platform_cpu_cur_mhz(c),
-                     platform_cpu_online(c) ? "online" : "offline");
-            body(6 + c, t);
-        }
-        body(11, "  Stock OPP table:");
-        body(12, "    480 / 600 / 792 / 1008 / 1200 / 1296 / 1416 / 1512");
-        body(14, "  Live changes only. Persist with \"Save as profile\".");
-        body(15, "  Boot watchdog resets settings after two failed boots.");
-        body(16, "  Battery-heat guard remains active.");
-        body(17, "  Entry required deliberate confirm.");
-        break;
-    case SCREEN_BATTERY: {
-        frame("Battery", "A:Refresh  B:Back  M:Menu", 0, 0);
-        int ma = platform_battery_ma();
-        snprintf(t, sizeof t, "  Capacity:     %d %%", platform_battery_percent()); body(0, t);
-        snprintf(t, sizeof t, "  Voltage:      %d.%02d V", platform_battery_mv() / 1000,
-                 (platform_battery_mv() % 1000) / 10); body(1, t);
-        if (platform_battery_ma_known()) {
-            snprintf(t, sizeof t, "  Current:     %s%d mA", ma < 0 ? "-" : " ", ma < 0 ? -ma : ma); body(2, t);
-            snprintf(t, sizeof t, "  Status:       %s", ma < 0 ? "Discharging" : "Charging"); body(3, t);
+    case SCREEN_ENG:
+        frame("[ENGINEERING]", "L1/R1:Tab  A:Edit  B:Exit  X:Save profile  Y:Reset", 0, 1);
+        draw_eng_tabs();
+        if (eng_tab == ENG_CPU) {
+            body(2, "  Governor:     schedutil");
+            body(3, "  Min freq:     480 MHz");
+            body(4, "  Max freq:     1512 MHz");
+            snprintf(t, sizeof t, "  Current:      %d MHz", platform_cpu_cur_mhz(0)); body(5, t);
+        } else if (eng_tab == ENG_BATTERY) {
+            int ma = platform_battery_ma();
+            snprintf(t, sizeof t, "  Capacity:     %d %%", platform_battery_percent()); body(2, t);
+            snprintf(t, sizeof t, "  Voltage:      %d.%02d V", platform_battery_mv() / 1000,
+                     (platform_battery_mv() % 1000) / 10); body(3, t);
+            body(4, platform_battery_ma_known() ? "  Current:      (known)" : "  Current:      unknown");
+            (void)ma;
         } else {
-            /* Stock PMIC exposes no current: use the status file instead. */
-            body(2, "  Current:      unknown");
-            snprintf(t, sizeof t, "  Status:       %s",
-                     platform_battery_charging() ? "Charging" : "Discharging"); body(3, t);
+            body(2, "  Not yet");
         }
-        body(4, "  Time left:    ~4 h 12 m");
-        body(6, platform_battery_temp_known() ? "  Temperature:  -- C"
-                                              : "  Temperature:  unknown   (thermistor unverified)");
-        body(7, "  Max seen:     --");
-        snprintf(t, sizeof t, "  SoC temp:     %d C", platform_cpu_temp_c()); body(9, t);
-        body(11, "  Stock PMIC protection: disabled. Redux guard limits:");
-        body(12, "    Charge stop:     45 C   (typical Li-ion, not stock)");
-        body(13, "    Discharge stop:  60 C   (typical Li-ion, not stock)");
-        body(15, "  Drain (last hour): -8 %");
         break;
-    }
     }
     dirty = 0;
 }
