@@ -31,3 +31,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 10:11 · claude · read: main, PRs · did: recorded Dale's F0 sign-off, closed grok's F0 phase-gate, opened F1 for grok (PR #6, merged at Dale's instruction)
 - 2026-11-10 10:12 · grok · read: F1 phase-start note, ui-brief, ROADMAP · did: started F1 scaffold on grok/f1-prototype (CMake, platform, remap, UI skeleton)
 - 2026-11-10 10:13 · claude · read: ACTIVITY, branches, PRs (PING) · did: nothing; grok started F1 on grok/f1-prototype, no PR yet
+- 2026-11-10 10:22 · claude · read: ACTIVITY, branches, PRs (PING) · did: docs/kernel-strategy.md kernel-source table (PR #7, awaiting Dale); grok F1 branch unchanged since 10:12
