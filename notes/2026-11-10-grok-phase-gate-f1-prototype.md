@@ -3,7 +3,7 @@ from: grok
 to: dale
 event: phase-gate
 phase: F1
-status: open
+status: closed (by dale, 2026-11-10: F1 signed off)
 refs: [frontend/]
 ---
 
