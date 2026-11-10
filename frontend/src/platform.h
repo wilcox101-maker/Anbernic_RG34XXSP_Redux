@@ -9,6 +9,7 @@ int  platform_battery_percent(void);
 int  platform_battery_charging(void);
 int  platform_battery_mv(void);          /* millivolts */
 int  platform_battery_ma(void);          /* negative = discharging */
+int  platform_battery_ma_known(void);    /* 0 if the PMIC exposes no current (stock: no current_now) */
 int  platform_battery_temp_known(void);  /* 0 until the thermistor is verified */
 int  platform_wifi_connected(void);
 int  platform_cpu_temp_c(void);

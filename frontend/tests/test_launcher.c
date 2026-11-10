@@ -33,6 +33,8 @@ int main(void) {
            "cd '/mnt/vendor/bin/game/pcsx_rearmed' && AUDIODEV=hw:2,0 ./pcsx '/mnt/mmc/Roms/PS/c.chd'\n");
     expect("drastic script", LAUNCH_DRASTIC, NULL, "/mnt/mmc/Roms/NDS/d.nds",
            "AUDIODEV=hw:2,0 sh /mnt/vendor/deep/drastic-modify/launch.sh '/mnt/mmc/Roms/NDS/d.nds'\n");
-    expect(".dge not implemented yet", LAUNCH_DGE, NULL, "/x", NULL);
+    expect(".dge needs a binary", LAUNCH_DGE, NULL, "/x", NULL);
+    expect(".dge binary + rom", LAUNCH_DGE, "/mnt/vendor/bin/game/fc/fc_emu.dge", "/mnt/mmc/Roms/FC/a b.nes",
+           "AUDIODEV=hw:2,0 '/mnt/vendor/bin/game/fc/fc_emu.dge' '/mnt/mmc/Roms/FC/a b.nes'\n");
     return failures ? 1 : 0;
 }

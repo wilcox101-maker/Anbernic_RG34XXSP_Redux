@@ -29,6 +29,13 @@ int platform_battery_mv(void) {
 int platform_battery_ma(void) {
     return read_int("/sys/class/power_supply/axp2202-battery/current_now", 0) / 1000;
 }
+int platform_battery_ma_known(void) {
+    /* Stock axp2202-battery has no current_now (confirmed on device 2026-11-10). */
+    FILE *f = fopen("/sys/class/power_supply/axp2202-battery/current_now", "r");
+    if (!f) return 0;
+    fclose(f);
+    return 1;
+}
 int platform_battery_temp_known(void) {
     /* Unverified whether the thermistor works. Return 0 until confirmed. */
     return 0;
@@ -52,6 +59,7 @@ int platform_cpu_online(int cpu) {
 void platform_clock(char *buf, int buflen) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
+    if (!tm) { snprintf(buf, buflen, "--:--"); return; }
     snprintf(buf, buflen, "%02d:%02d", tm->tm_hour, tm->tm_min);
 }
 void platform_set_fixed_clock(const char *hhmm) { (void)hhmm; }

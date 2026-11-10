@@ -6,11 +6,19 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 find_package(SDL2 REQUIRED)
 
+# Platform layer: "desktop" (fake values, default) or "stock" (real sysfs on the RG34XXSP).
+set(REDUX_PLATFORM desktop CACHE STRING "desktop or stock")
+if(REDUX_PLATFORM STREQUAL "stock")
+    set(REDUX_PLATFORM_SRC src/platform_stock.c)
+else()
+    set(REDUX_PLATFORM_SRC src/platform.c)
+endif()
+
 add_executable(rg34xxsp-redux
     src/main.c
     src/grid.c
     src/font.c
-    src/platform.c
+    ${REDUX_PLATFORM_SRC}
     src/remap.c
     src/ui.c
     src/launcher.c

@@ -30,6 +30,9 @@ cmake --build build --config Release
 ./build/rg34xxsp-redux --accent FFB000    # amber accent instead of the default cyan (00FFFF)
 ```
 
+The default build uses fake hardware values (`platform.c`). For the device, configure with
+`-DREDUX_PLATFORM=stock`, which swaps in `platform_stock.c` (real battery, CPU and Wi-Fi from sysfs).
+
 ## Exit test (F1)
 
 ```bash
