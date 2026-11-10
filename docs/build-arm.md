@@ -12,8 +12,14 @@ Ubuntu 22.04 container: the same release as the stock rootfs, so glibc and SDL2 
 2. Download `redux-dmenu-bin-aarch64` (a zip holding `dmenu.bin`) and unzip it.
 3. `python tools/deploy_frontend.py <device-ip> dmenu.bin`
 
-Not verified yet: that the device's own SDL2 is at least the 2.0.20 the binary is built against.
-If it fails to start with a missing `SDL_...` symbol, that's the cause.
+SDL2 on the device (Dale, 2026-11-10, Ubuntu GLIBC 2.35, aarch64): **two** copies.
+- `/usr/lib/libSDL2-2.0.so.0` → **2.0.12**. `dmenu_ln` puts `/usr/lib` first in `LD_LIBRARY_PATH`, so
+  this is the one the menu (stock and Redux) loads. It's probably Anbernic's build with the display backend.
+- `/usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0` → 2.28.5 (and an unused 2.0.18 file).
+
+The binary is built against 2.0.20 headers but uses only 23 SDL functions, all present since ≤ 2.0.5
+(`nm -D --undefined-only`). SDL2 has no symbol versioning, so it runs on 2.0.12. Keep it that way:
+**don't use SDL calls newer than 2.0.12** (e.g. `SDL_GetTicks64`) in the frontend.
 
 ## Option 1: build on the device
 
