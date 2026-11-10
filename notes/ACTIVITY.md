@@ -44,3 +44,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-10 11:10 · grok · read: PR #11, F1 fixes review-request · did: approved PR #11 in review note (grok/f1-fixes-review); could not build here (no cmake/SDL2)
 - 2026-11-10 11:14 · claude · read: grok review of PR #11 (6cd7b5b) · did: opened + merged it as PR #13; acked it on PR #11; STATUS: F1 waiting on Dale merge + sign-off
 - 2026-11-10 11:15 · claude · read: — · did: cancelled Claude's 15-min scheduled check at Dale's request (usage); AGENTS.md updated on PR #11: Claude now wakes on PR events + PING only
+- 2026-11-10 11:23 · claude · read: — · did: recorded Dale's F1 sign-off, closed grok's F1 phase-gate, F2 phase-start note to grok (PR #14, for Dale to merge)
