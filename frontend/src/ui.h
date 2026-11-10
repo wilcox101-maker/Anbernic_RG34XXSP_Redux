@@ -5,8 +5,14 @@
 #include "remap.h"
 
 typedef enum {
-    SCREEN_MAIN, SCREEN_ROMS, SCREEN_SETTINGS, SCREEN_ENG_CONFIRM, SCREEN_CPU, SCREEN_BATTERY
+    SCREEN_MAIN, SCREEN_ROMS, SCREEN_SETTINGS, SCREEN_ENG_CONFIRM,
+    SCREEN_ENG, SCREEN_INTERNET
 } screen_t;
+
+/* Engineering tabs. Only CPU and Battery have content now. */
+typedef enum {
+    ENG_CPU = 0, ENG_BATTERY, ENG_THERMAL, ENG_DISPLAY, ENG_SYSTEM, ENG_TAB_COUNT
+} eng_tab_t;
 
 void ui_init(void);
 
