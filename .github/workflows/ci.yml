@@ -1,0 +1,45 @@
+# Runs on every push and PR. A red X means: don't review, fix first.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SDL2
+        run: sudo apt-get update && sudo apt-get install -y cmake libsdl2-dev
+      - name: Hard-rule checks
+        run: python3 tools/check_rules.py
+      - name: Build desktop (warnings are errors)
+        run: |
+          cmake -S frontend -B build -DREDUX_PLATFORM=desktop -DCMAKE_C_FLAGS="-Werror"
+          cmake --build build
+      - name: Build stock platform (host compiler; catches compile errors only)
+        run: |
+          cmake -S frontend -B build-stock -DREDUX_PLATFORM=stock -DCMAKE_C_FLAGS="-Werror"
+          cmake --build build-stock
+      - name: Launcher tests
+        run: ./build/test_launcher
+      - name: Remap tests
+        run: |
+          if [ -x ./build/test_remap_device ]; then ./build/test_remap_device; fi
+      - name: Mock-up exit test (F1)
+        run: python3 frontend/tests/check_mockups.py ./build/rg34xxsp-redux
+
+  windows-tools:
+    # Host tools must run on Windows with the Python standard library alone.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tools compile on Windows
+        run: python -m compileall -q tools phase1-stock-tweaks
+      - name: Hard-rule checks on Windows
+        run: python tools/check_rules.py
