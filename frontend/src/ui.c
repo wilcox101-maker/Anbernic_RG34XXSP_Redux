@@ -81,7 +81,7 @@ static int list_count(void) {
 }
 
 static void switch_eng_tab(int delta) {
-    eng_tab = (eng_tab + delta + ENG_TAB_COUNT) % ENG_TAB_COUNT;
+    eng_tab = (eng_tab_t)((eng_tab + delta + ENG_TAB_COUNT) % ENG_TAB_COUNT);
     dirty = 1;
 }
 
@@ -165,10 +165,11 @@ static void list(int first_line, const char *const *items, int n) {
 
 static void draw_eng_tabs(void) {
     char line[GRID_COLS] = " ";
+    int active = (int)eng_tab;
     for (int i = 0; i < ENG_TAB_COUNT; i++) {
-        if (i == eng_tab) strcat(line, "\u2593");
+        if (i == active) strcat(line, "\u2593");
         strcat(line, eng_tabs[i]);
-        if (i == eng_tab) strcat(line, "\u2593");
+        if (i == active) strcat(line, "\u2593");
         strcat(line, "  ");
     }
     body(0, line);
