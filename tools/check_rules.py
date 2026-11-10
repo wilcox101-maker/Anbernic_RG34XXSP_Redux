@@ -45,6 +45,8 @@ def tracked_files():
 def allowed(line, name):
     return re.search(r"rules:\s*allow\s+" + re.escape(name) + r"\b", line) is not None
 
+SELF = "tools/check_rules.py"   # its own patterns and docs would match; skip only the line checks
+
 def check_file(path, problems):
     p = path.replace("\\", "/")
     ext = os.path.splitext(p)[1].lower()
@@ -88,6 +90,8 @@ def check_file(path, problems):
                     if top not in sys.stdlib_module_names:
                         problems.append(f"{p}:{node.lineno}: imports '{top}', not stdlib (rule: stdlib only)")
 
+    if p == SELF:
+        return
     text = data.decode("utf-8", errors="replace")
     in_script = p.startswith(SCRIPT_DIRS) and ext in SCRIPT_EXT or ext == ".sh"
     for i, line in enumerate(text.splitlines(), 1):
