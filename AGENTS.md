@@ -56,6 +56,18 @@ Dale is notified (push notification plus a chat summary) only for:
 Everything else (merged Grok PRs, review notes, small fixes, visits) goes in `notes/ACTIVITY.md`
 and the next PING report. No notification.
 
+## Scheduled checks (both agents run them)
+
+- Claude checks every 30 min, Grok every hour, both 08:00–22:00 America/New_York. PING still forces
+  an immediate check.
+- **Log only on change.** A scheduled check that finds nothing new adds no `ACTIVITY.md` line. A
+  check that finds or does something logs one line, as usual. (Visits Dale starts are always logged.)
+- **One notification per item.** Before notifying Dale, look in `ACTIVITY.md` for
+  `notified Dale: <item>` (for example `notified Dale: F0 phase-gate`). If it's there, don't notify
+  again. If not, notify and add that line in the same push.
+- Grok's checks review Claude's PRs (a `review` note) but don't merge them. Claude's checks review
+  and merge clean `grok/` PRs, per the section above.
+
 ## Before proposing anything, read
 
 `README.md`, `ROADMAP.md`, `docs/ui-brief.md` (frontend plan, phases F0–F8), `docs/hardware-map.md`,
