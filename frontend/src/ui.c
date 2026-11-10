@@ -1,14 +1,15 @@
-/* Screens and navigation for the F1 desktop prototype.
- * Layout follows docs/ui-spec.md: title row 0, box rows 1-28, help row 29. */
+/* Screens and navigation. F2: ROM select looks up the system and launches. */
 #include "ui.h"
 #include "grid.h"
 #include "platform.h"
+#include "launcher.h"
+#include "systems.h"
 #include <stdio.h>
 #include <string.h>
 
-#define HOLD_TO_ENTER_MS 2000   /* Engineering Mode: hold A this long (ui-spec flag 3) */
-#define IDLE_WAIT_MS     1000   /* wake once a second so the clock can roll over */
-#define HOLD_WAIT_MS     50     /* smooth progress bar while A is held */
+#define HOLD_TO_ENTER_MS 2000
+#define IDLE_WAIT_MS     1000
+#define HOLD_WAIT_MS     50
 
 static const char *main_items[] = {
     "Game Room", "Music", "Video", "Documents", "File Manager",
@@ -16,9 +17,18 @@ static const char *main_items[] = {
 };
 enum { MAIN_GAME_ROOM = 0, MAIN_SETTINGS = 7, MAIN_ENGINEERING = 8 };
 
+/* Demo ROMs. Real F2 reads the stock folders. System name drives the launch table. */
 static const char *rom_items[] = {
     "Advance Wars", "Fire Emblem", "Golden Sun", "Metroid Fusion", "Pokemon Emerald"
 };
+static const char *rom_paths[] = {
+    "/mnt/mmc/Roms/GBA/Advance Wars.gba",
+    "/mnt/mmc/Roms/GBA/Fire Emblem.gba",
+    "/mnt/mmc/Roms/GBA/Golden Sun.gba",
+    "/mnt/mmc/Roms/GBA/Metroid Fusion.gba",
+    "/mnt/mmc/Roms/GBA/Pokemon Emerald.gba"
+};
+static const char *rom_system = "GBA";
 static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "Network", "System", "Emulation"
 };
@@ -27,15 +37,17 @@ static const char *settings_items[] = {
 static screen_t screen;
 static int selected;
 static int dirty;
-static uint32_t a_down_at;       /* 0 = A not held (on the confirm screen) */
-static uint32_t hold_ms;         /* progress of the current hold */
+static int should_exit;
+static uint32_t a_down_at;
+static uint32_t hold_ms;
 static char last_clock[8];
 
 static void go(screen_t s) { screen = s; selected = 0; a_down_at = 0; hold_ms = 0; dirty = 1; }
 
-void ui_init(void) { go(SCREEN_MAIN); }
+void ui_init(void) { should_exit = 0; go(SCREEN_MAIN); }
 void ui_show(screen_t s) { go(s); }
 int ui_dirty(void) { return dirty; }
+int ui_should_exit(void) { return should_exit; }
 
 static int list_count(void) {
     switch (screen) {
@@ -49,7 +61,7 @@ static int list_count(void) {
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (screen == SCREEN_ENG_CONFIRM && btn == BTN_A) {
         if (pressed) { a_down_at = now_ms ? now_ms : 1; hold_ms = 0; }
-        else { a_down_at = 0; hold_ms = 0; }          /* released early: cancel */
+        else { a_down_at = 0; hold_ms = 0; }
         dirty = 1;
         return;
     }
@@ -65,7 +77,12 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         if (selected == MAIN_ENGINEERING) go(SCREEN_ENG_CONFIRM);
         return;
     }
-    /* Engineering pages: Left/Right switch between CPU and Battery. */
+    if (btn == BTN_A && screen == SCREEN_ROMS) {
+        const system_entry_t *sys = systems_lookup(rom_system);
+        if (sys && launcher_start(sys->target, sys->core_or_path, rom_paths[selected]) == 0)
+            should_exit = 1;
+        return;
+    }
     if ((btn == BTN_LEFT || btn == BTN_RIGHT) && (screen == SCREEN_CPU || screen == SCREEN_BATTERY)) {
         go(screen == SCREEN_CPU ? SCREEN_BATTERY : SCREEN_CPU);
         return;
@@ -88,7 +105,6 @@ uint32_t ui_wait_ms(void) {
     return (screen == SCREEN_ENG_CONFIRM && a_down_at) ? HOLD_WAIT_MS : IDLE_WAIT_MS;
 }
 
-/* Status, right-aligned on row 0. Each screen shows the fields its mock-up shows. */
 static void draw_status(int wifi, int cpu_temp) {
     char clock[8], s[64];
     platform_clock(clock, sizeof clock);
@@ -109,7 +125,6 @@ static void frame(const char *title, const char *help, int wifi, int cpu_temp) {
     grid_puts(0, ROW_HELP, help, 0);
 }
 
-/* Body text starts after the box's left border (column 0). */
 static void body(int line, const char *text) { grid_puts(1, ROW_BODY0 + line, text, 0); }
 
 static void list(int first_line, const char *const *items, int n) {

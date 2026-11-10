@@ -1,11 +1,12 @@
-/* RG34XXSP Redux frontend, F1 desktop prototype.
+/* RG34XXSP Redux frontend.
  *
  *   rg34xxsp-redux                     run in a 720x480 window
  *   rg34xxsp-redux --accent RRGGBB     choose the accent colour (default 00FFFF, BIOS cyan)
  *   rg34xxsp-redux --dump              print the five F0 screens as text and exit (tests)
  *
  * Redraws only when something changes (input, the hold-A timer, the clock),
- * so an idle menu costs almost nothing on battery. */
+ * so an idle menu costs almost nothing on battery.
+ * On device, a successful launch sets ui_should_exit(); main exits so loadapp.sh runs /tmp/.next. */
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,7 +78,7 @@ int main(int argc, char **argv) {
 
     ui_init();
     int running = 1;
-    while (running) {
+    while (running && !ui_should_exit()) {
         if (ui_dirty()) {
             ui_draw();
             grid_present(ren);
@@ -92,7 +93,7 @@ int main(int argc, char **argv) {
                     if (btn != BTN_NONE) ui_button(btn, e.type == SDL_KEYDOWN, SDL_GetTicks());
                 }
                 if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
-                    grid_present(ren);   /* window uncovered: repaint the last frame */
+                    grid_present(ren);
                     SDL_RenderPresent(ren);
                 }
             } while (SDL_PollEvent(&e));
@@ -103,5 +104,5 @@ int main(int argc, char **argv) {
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
     SDL_Quit();
-    return 0;
+    return ui_should_exit() ? 0 : 0;
 }
