@@ -5,6 +5,11 @@ handheld. Repo: https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux (GPL-
 Read `README.md`, `ROADMAP.md` and everything in `docs/` before proposing anything (this file is `docs/ui-brief.md`). Those files are the
 source of truth. This brief summarises them and adds the UI direction.
 
+**How decisions work:** Dale guides the UI at a high level: the look, priorities and what matters.
+You make the detailed design calls yourself, consistent with this brief. Bring Dale decisions only at
+phase gates, or when a choice changes what the user sees or gives up. Then offer 2–3 concrete
+options with a recommendation, not open questions.
+
 Your job is **the user-facing layer**: the launcher/frontend, its settings, and "Engineering Mode". The
 kernel, boot chain and system image are handled separately. Don't redesign them.
 
