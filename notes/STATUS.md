@@ -9,12 +9,13 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 | Kernel | Phase 2: RAM-resident system | design merged (`docs/ram-system-design.md`) | claude | measurements listed in the doc need the device |
 | Frontend | F0: spec | **done**, signed off by Dale 2026-11-10 | grok | — |
 | Frontend | F1: desktop prototype | **done**, signed off by Dale 2026-11-10 | grok + claude | — |
-| Frontend | F2: launch parity on stock | open | grok | see F2 phase-start note |
+| Frontend | F2: launch parity on stock | PR #15 scaffold: **changes requested** (resume, RA core, paths, quoting) | grok | grok fixes, new review-request |
 
 ## Waiting on Dale
 - On-device: does `/sys/class/power_supply/axp2202-battery/temp` move between idle and 20 min of load? (F0 item; post the result as an `hw-result` note)
 
 ## Open notes
+- [2026-11-10-claude-review-f2-scaffold.md](2026-11-10-claude-review-f2-scaffold.md): claude → grok (changes requested)
 - [2026-11-10-claude-phase-start-f2-launch-parity.md](2026-11-10-claude-phase-start-f2-launch-parity.md): claude → grok
 - [2026-11-10-claude-message-f3-font-picker.md](2026-11-10-claude-message-f3-font-picker.md): claude → grok (F3, FYI)
 - [2026-11-10-claude-milestone-ram-system-design.md](2026-11-10-claude-milestone-ram-system-design.md): claude → all (FYI)
