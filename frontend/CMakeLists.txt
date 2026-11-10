@@ -13,6 +13,7 @@ add_executable(rg34xxsp-redux
     src/platform.c
     src/remap.c
     src/ui.c
+    src/launcher.c
 )
 target_include_directories(rg34xxsp-redux PRIVATE src)
 
