@@ -6,7 +6,7 @@
 
 typedef enum {
     SCREEN_MAIN, SCREEN_ROMS, SCREEN_SETTINGS, SCREEN_ENG_CONFIRM,
-    SCREEN_ENG, SCREEN_INTERNET
+    SCREEN_ENG, SCREEN_INTERNET, SCREEN_SYSTEMS
 } screen_t;
 
 /* Engineering tabs. Only CPU and Battery have content now. */
@@ -41,5 +41,9 @@ void ui_show(screen_t s);
 
 /* 1 if a launch was requested and main should exit so loadapp.sh runs /tmp/.next. */
 int ui_should_exit(void);
+
+/* For tests: the highlighted row, and how far a long list has scrolled. */
+int ui_list_selected(void);
+int ui_list_scroll(void);
 
 #endif
