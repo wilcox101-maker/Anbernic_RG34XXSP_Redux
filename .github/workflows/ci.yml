@@ -65,12 +65,13 @@ jobs:
         with:
           platforms: arm64
       - name: Build aarch64 (REDUX_PLATFORM=stock)
-        # --network host: the container DNS failed to resolve ports.ubuntu.com (2026-11-11).
+        # --dns: name resolution inside the container failed on 2026-11-11 for every Ubuntu host,
+        # with or without host networking; public resolvers avoid the runner's resolver.
         # Error-Mode=any turns a failed apt fetch into an error so the retry loop retries; if
         # ports.ubuntu.com stays unreachable it falls back to the azure.ports.ubuntu.com mirror.
         # No apostrophes inside the sh -ec '...' script below: one ends the quoted script.
         run: |
-          docker run --rm --network host --platform linux/arm64 -v "$PWD":/src -w /src ubuntu:22.04 sh -ec '
+          docker run --rm --dns 1.1.1.1 --dns 8.8.8.8 --platform linux/arm64 -v "$PWD":/src -w /src ubuntu:22.04 sh -ec '
             export DEBIAN_FRONTEND=noninteractive
             ok=0
             for mirror in ports.ubuntu.com azure.ports.ubuntu.com; do
