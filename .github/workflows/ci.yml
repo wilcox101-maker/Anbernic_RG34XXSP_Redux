@@ -9,10 +9,18 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Install SDL2
-        run: sudo apt-get update && sudo apt-get install -y cmake libsdl2-dev
+        # Runner DNS failed on 2026-11-11 and apt hung; bound it and retry.
+        timeout-minutes: 8
+        run: |
+          for i in 1 2 3; do
+            sudo apt-get update -qq -o Acquire::Retries=3 -o APT::Update::Error-Mode=any && break
+            sleep 15
+          done
+          sudo apt-get install -y -qq -o Acquire::Retries=3 cmake libsdl2-dev
       - name: Hard-rule checks
         run: python3 tools/check_rules.py
       - name: Build desktop (warnings are errors)
