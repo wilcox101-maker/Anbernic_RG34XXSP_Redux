@@ -9,17 +9,18 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 | Kernel | Phase 2: RAM-resident system | design merged (`docs/ram-system-design.md`) | claude | measurements listed in the doc need the device |
 | Frontend | F0: spec | **done**, signed off by Dale 2026-11-10 | grok | — |
 | Frontend | F1: desktop prototype | **done**, signed off by Dale 2026-11-10 | grok + claude | — |
-| Frontend | F2: launch parity on stock | **menu runs on the device as the launcher** (2026-11-10 hw-result); ROM list merged (#43) | grok | Wi-Fi screen PR, plus this **Dale-only** back-to-stock draft (do not merge). Then Dale launches a real game → F2 sign-off |
+| Frontend | F2: launch parity on stock | **menu runs on the device as the launcher** (2026-11-10 hw-result); ROM list merged (#43); Wi-Fi merged (#48) | grok | Stock Menu is under Settings → System Defaults (follow-up after #49). Then BIOS-style UI. Dale still launches a real game → F2 sign-off |
 
 ## Waiting on Dale
 - Launch a real game from Redux on the device (last F2 test).
 - Battery thermistor: confirmed dummy (stays 300); nothing more needed.
 
 ## Queue (inbox #41, 2026-11-11, in order)
-1. Wi-Fi setup screen (grok) — separate PR on `grok/wifi-setup`. Password is not logged or stored by that UI.
-2. Back to stock menu (grok) — this draft. Dale-only: it writes `/mnt/vendor/ctrl/dmenu_ln` using dale-scripts S7. Do not merge.
-3. TF2 ROM scan of `/mnt/sdcard/Roms` — not started.
-4. Boot logo at 640×480 — not started. The installer is Dale-only.
+1. Wi-Fi setup screen — merged (#48). Password is not logged or stored by that UI.
+2. Back to stock — restore command is on main (#49). The entry is Settings → System Defaults → Stock Menu (this PR). Boot Screen and Reset All are shown and not selectable. Not run on the device.
+3. BIOS-style UI — not started. After this menu move, before TF2 and the boot logo.
+4. TF2 ROM scan of `/mnt/sdcard/Roms` — not started.
+5. Boot logo at 640×480 — not started. The installer is Dale-only.
 
 ## Queue (decided 2026-11-10, after the inbox items)
 1. Real ROM list (grok) — merged (#43)
@@ -29,7 +30,8 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 5. Graphical browser: NetSurf (framebuffer) proposed for Internet → Web browser; WPE/Cog for Phase 2. Not yet decided.
 
 ## Open notes
-- [2026-11-11-grok-review-request-back-to-stock.md](2026-11-11-grok-review-request-back-to-stock.md): grok → dale (DALE-ONLY, do not merge)
+- [2026-11-11-grok-review-request-system-defaults.md](2026-11-11-grok-review-request-system-defaults.md): grok → claude (Stock Menu moved; #49 already merged)
+- [2026-11-11-grok-review-request-back-to-stock.md](2026-11-11-grok-review-request-back-to-stock.md): closed (merged as #49; row has since moved)
 - [2026-11-10-grok-review-request-f2-rom-list.md](2026-11-10-grok-review-request-f2-rom-list.md): grok → claude (ROM list, merged with #43)
 - [2026-11-10-dale-hw-result-f2-menu-on-device.md](2026-11-10-dale-hw-result-f2-menu-on-device.md): dale → all (F2 menu on device)
 - [2026-11-10-dale-decision-eng-tabs-back.md](2026-11-10-dale-decision-eng-tabs-back.md), [text-size](2026-11-10-dale-decision-text-size.md), [power-management](2026-11-10-dale-decision-power-management.md): decisions → grok

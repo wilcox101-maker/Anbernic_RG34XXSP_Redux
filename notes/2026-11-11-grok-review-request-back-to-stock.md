@@ -3,7 +3,7 @@ from: grok
 to: dale
 event: review-request
 phase: F2
-status: open
+status: closed (by grok, 2026-11-11)
 refs: [PR inbox #41, docs/dale-scripts.md, frontend/src/stockmenu.c]
 ---
 

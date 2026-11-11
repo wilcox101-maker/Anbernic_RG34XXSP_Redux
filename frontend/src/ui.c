@@ -27,7 +27,8 @@ enum { MAIN_GAME_ROOM = 0, MAIN_INTERNET = 5, MAIN_NETWORK = 6, MAIN_SETTINGS = 
 static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "Network", "System", "Emulation"
 };
-enum { SETTINGS_NETWORK = 4 };
+enum { SETTINGS_NETWORK = 4, SETTINGS_SYSTEM = 5 };
+static const char *system_items[] = { "Stock Menu" };
 static const char *internet_items[] = {
     "YouTube (if feasible)", "Web browser (text)"
 };
@@ -101,7 +102,8 @@ static int list_count(void) {
     case SCREEN_ROMS:     return romscan_roms(sys_index);
     case SCREEN_SETTINGS: return COUNT(settings_items);
     case SCREEN_INTERNET: return COUNT(internet_items);
-    case SCREEN_WIFI:     return wifi_count() + 1;   /* last row: Back to stock menu */
+    case SCREEN_WIFI:     return wifi_count();
+    case SCREEN_SYSTEM_DEFAULTS: return COUNT(system_items);
     default:              return 0;
     }
 }
@@ -289,6 +291,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     }
     if (btn == LB_A && screen == SCREEN_SETTINGS) {
         if (selected == SETTINGS_NETWORK) { go(SCREEN_WIFI); wifi_rescan(); }
+        if (selected == SETTINGS_SYSTEM)  go(SCREEN_SYSTEM_DEFAULTS);
         return;
     }
     if (btn == LB_A && screen == SCREEN_SYSTEMS) {
@@ -302,13 +305,13 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             should_exit = 1;
         return;
     }
+    if (btn == LB_A && screen == SCREEN_SYSTEM_DEFAULTS) {
+        stock_msg[0] = '\0';
+        stock_started = 0;
+        go(SCREEN_STOCK_CONFIRM);
+        return;
+    }
     if (btn == LB_A && screen == SCREEN_WIFI) {
-        if (selected == wifi_count()) {
-            stock_msg[0] = '\0';
-            stock_started = 0;
-            go(SCREEN_STOCK_CONFIRM);
-            return;
-        }
         const wifi_ap_t *ap = wifi_ap(selected);
         if (!ap) return;
         if (ap->open) {
@@ -499,19 +502,14 @@ void ui_draw(void) {
     case SCREEN_WIFI: {
         frame("Wi-Fi", "A:Select  B:Back  Y:Scan", 1, 0);
         int n = wifi_count();
-        int rows = n + 1;
-        int window = rows < ROM_LIST_WINDOW ? rows : ROM_LIST_WINDOW;
+        int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
         for (int i = 0; i < window; i++) {
             int idx = scroll + i;
+            const wifi_ap_t *ap = wifi_ap(idx);
             char line[GRID_COLS];
-            if (idx == n) {
-                snprintf(line, sizeof line, "   Back to stock menu");
-            } else {
-                const wifi_ap_t *ap = wifi_ap(idx);
-                if (!ap) continue;
-                snprintf(line, sizeof line, "   %-24.24s %3d  %.12s",
-                         ap->ssid, ap->signal, ap->security);
-            }
+            if (!ap) continue;
+            snprintf(line, sizeof line, "   %-24.24s %3d  %.12s",
+                     ap->ssid, ap->signal, ap->security);
             body(i, line);
             if (idx == selected) grid_invert(ROW_BODY0 + i, 1, GRID_COLS - 2);
         }
@@ -523,8 +521,15 @@ void ui_draw(void) {
         }
         break;
     }
+    case SCREEN_SYSTEM_DEFAULTS:
+        frame("System Defaults", "A:Select  B:Back", 1, 0);
+        list(0, system_items, COUNT(system_items));
+        /* Grid has no grey. These two are drawn and left out of the list, so A cannot select them. */
+        body(1, "   Boot Screen   not yet");
+        body(2, "   Reset All     not yet");
+        break;
     case SCREEN_STOCK_CONFIRM:
-        frame("Back to stock menu", "A:Restore and reboot  B:Cancel", 1, 0);
+        frame("Stock Menu", "A:Restore and reboot  B:Cancel", 1, 0);
         body(0, "  Restores the stock launcher from dmenu_ln.bak.");
         body(1, "  Copies it to dmenu_ln.new, then renames that");
         body(2, "  over /mnt/vendor/ctrl/dmenu_ln, syncs, and reboots.");
