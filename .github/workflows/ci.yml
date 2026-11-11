@@ -66,12 +66,21 @@ jobs:
           platforms: arm64
       - name: Build aarch64 (REDUX_PLATFORM=stock)
         # --network host: the container DNS failed to resolve ports.ubuntu.com (2026-11-11).
-        # Error-Mode=any turns a failed apt fetch into an error so the retry loop retries.
+        # Error-Mode=any turns a failed apt fetch into an error so the retry loop retries; if
+        # ports.ubuntu.com stays unreachable it falls back to the azure.ports.ubuntu.com mirror.
         # No apostrophes inside the sh -ec '...' script below: one ends the quoted script.
         run: |
           docker run --rm --network host --platform linux/arm64 -v "$PWD":/src -w /src ubuntu:22.04 sh -ec '
             export DEBIAN_FRONTEND=noninteractive
-            for i in 1 2 3; do apt-get update -qq -o Acquire::Retries=3 -o APT::Update::Error-Mode=any && break; sleep 10; done
+            ok=0
+            for mirror in ports.ubuntu.com azure.ports.ubuntu.com; do
+              sed -i "s#http://[a-z.]*ports.ubuntu.com#http://$mirror#" /etc/apt/sources.list
+              for i in 1 2; do
+                if apt-get update -qq -o Acquire::Retries=3 -o APT::Update::Error-Mode=any; then ok=1; break 2; fi
+                sleep 10
+              done
+            done
+            [ $ok = 1 ] || { echo "no Ubuntu ports mirror reachable"; exit 1; }
             apt-get install -y -qq --no-install-recommends -o Acquire::Retries=3 cmake make gcc libc6-dev libsdl2-dev >/dev/null
             cmake -S frontend -B build-arm64 -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
             cmake --build build-arm64
