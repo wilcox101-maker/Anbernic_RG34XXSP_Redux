@@ -36,6 +36,8 @@ jobs:
           cmake --build build-stock
       - name: Launcher tests
         run: ./build/test_launcher
+      - name: Wi-Fi tests
+        run: ./build/test_wifi
       - name: Remap tests
         run: |
           if [ -x ./build/test_remap_device ]; then ./build/test_remap_device; fi
@@ -98,6 +100,7 @@ jobs:
             cmake --build build-arm64
             ./build-arm64/test_launcher
             ./build-arm64/test_remap_device
+            ./build-arm64/test_wifi
           '
       - name: Check it is an aarch64 ELF
         run: |
