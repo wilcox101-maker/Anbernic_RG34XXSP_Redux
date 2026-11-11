@@ -15,6 +15,9 @@ typedef enum {
     ENG_CPU = 0, ENG_BATTERY, ENG_THERMAL, ENG_DISPLAY, ENG_SYSTEM, ENG_TAB_COUNT
 } eng_tab_t;
 
+/* Resume file written just before /tmp/.next. On tmpfs, so a reboot clears it. */
+#define UI_RESUME_PATH "/tmp/redux.state"
+
 void ui_init(void);
 
 /* For tests: choose the Engineering tab; read the current screen and tab. */

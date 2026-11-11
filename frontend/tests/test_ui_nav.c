@@ -64,6 +64,7 @@ static int stock_hook(const char *command) {
 }
 
 int main(void) {
+    remove(UI_RESUME_PATH);
     unsetenv("REDUX_ROMS");
     ui_init();
     expect(ui_screen() == SCREEN_MAIN, "starts on Main");
@@ -113,6 +114,7 @@ int main(void) {
     if (nf) { if (!fgets(line, sizeof line, nf)) line[0] = 0; fclose(nf); }
     expect(strstr(line, "mgba_libretro.so") != NULL, "GBA launches with mgba");
     expect(strstr(line, "Advance Wars.gba") != NULL, "launch line names the selected ROM");
+    remove(UI_RESUME_PATH);   /* this launch is not the resume case; don't leak it */
 
     /* A long list scrolls so the selection stays on screen. */
     const char *longroot = "/tmp/redux-rom-long/GBA";
@@ -130,6 +132,18 @@ int main(void) {
     down(30);
     expect(ui_list_selected() == 30, "Down moves the selection to row 30");
     expect(ui_list_scroll() == 30 - ROM_LIST_WINDOW + 1, "the window scrolls to keep row 30 visible");
+    launcher_set_next_path("/tmp/redux-next-resume");
+    press(LB_A);
+    expect(ui_should_exit() == 1, "launching the scrolled row exits");
+    ui_init();
+    expect(ui_screen() == SCREEN_ROMS, "resume opens the same ROM list");
+    expect(ui_list_selected() == 30, "resume keeps the selected row");
+    expect(ui_list_scroll() == 30 - ROM_LIST_WINDOW + 1, "resume keeps the scroll");
+    {
+        FILE *sf = fopen(UI_RESUME_PATH, "r");
+        expect(sf == NULL, "resume file is removed after a valid read");
+        if (sf) fclose(sf);
+    }
     press(LB_UP);
     expect(ui_screen() == SCREEN_ROMS, "Up on a ROM list does not leave the screen");
 
@@ -147,6 +161,7 @@ int main(void) {
     if (nf) { if (!fgets(line, sizeof line, nf)) line[0] = 0; fclose(nf); }
     expect(strstr(line, "pcsx") != NULL && strstr(line, "castlevania.chd") != NULL,
            "PS ROM launches the standalone pcsx line");
+    remove(UI_RESUME_PATH);
 
     /* Network opens the Wi-Fi screen. The spawn hook stands in for nmcli. */
     wifi_set_spawn(nav_spawn);
@@ -267,6 +282,23 @@ int main(void) {
     stock_set_bak(1);
     press(LB_A);
     expect(stock_calls == 1 && stock_cmd_ok, "A on the confirm runs the atomic S7 command");
+
+    {
+        FILE *sf = fopen(UI_RESUME_PATH, "w");
+        if (sf) { fputs("roms\nMISSING\n0\n0\n", sf); fclose(sf); }
+        ui_init();
+        expect(ui_screen() == SCREEN_MAIN, "missing system starts on Main");
+        sf = fopen(UI_RESUME_PATH, "r");
+        expect(sf == NULL, "stale resume file is removed");
+        if (sf) fclose(sf);
+        sf = fopen(UI_RESUME_PATH, "w");
+        if (sf) { fputs("roms\nPCSX\n9\n0\n", sf); fclose(sf); }
+        ui_init();
+        expect(ui_screen() == SCREEN_MAIN, "row out of range starts on Main");
+        sf = fopen(UI_RESUME_PATH, "r");
+        expect(sf == NULL, "out-of-range resume file is removed");
+        if (sf) fclose(sf);
+    }
 
     wifi_set_spawn(NULL);
     stock_set_run(NULL);
