@@ -6,6 +6,7 @@
 #include "launcher.h"
 #include "systems.h"
 #include "romscan.h"
+#include "wifi.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -18,13 +19,14 @@ static const char *main_items[] = {
     "Game Room", "Music", "Video", "Documents", "File Manager",
     "Internet", "Network", "Settings", "Engineering Mode"
 };
-enum { MAIN_GAME_ROOM = 0, MAIN_INTERNET = 5, MAIN_SETTINGS = 7, MAIN_ENGINEERING = 8 };
+enum { MAIN_GAME_ROOM = 0, MAIN_INTERNET = 5, MAIN_NETWORK = 6, MAIN_SETTINGS = 7, MAIN_ENGINEERING = 8 };
 
 /* ROM names come from romscan (read-only). The desktop fixture recreates the
    five F0 names so this screen still matches the mock-up. */
 static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "Network", "System", "Emulation"
 };
+enum { SETTINGS_NETWORK = 4 };
 static const char *internet_items[] = {
     "YouTube (if feasible)", "Web browser (text)"
 };
@@ -38,6 +40,13 @@ static int scroll;
 static int sys_index;
 static int dirty;
 static int should_exit;
+static int key_row;
+static int key_col;
+static int key_shift;
+static int wifi_pick;
+static char wifi_pass[64];
+static int wifi_pass_len;
+static char wifi_msg[48];
 static uint32_t a_down_at;
 static uint32_t hold_ms;
 static char last_clock[8];
@@ -88,6 +97,7 @@ static int list_count(void) {
     case SCREEN_ROMS:     return romscan_roms(sys_index);
     case SCREEN_SETTINGS: return COUNT(settings_items);
     case SCREEN_INTERNET: return COUNT(internet_items);
+    case SCREEN_WIFI:     return wifi_count();
     default:              return 0;
     }
 }
@@ -107,6 +117,97 @@ static void switch_eng_tab(int delta) {
     dirty = 1;
 }
 
+/* On-screen keyboard. Letters, digits, and . - _ . Shift latches. The password
+   is stars on screen and is wiped on Back, on connect, and before this process
+   exits the keyboard. It is never written to a file here. */
+static const char *kb_rows[] = {
+    "1234567890",
+    "qwertyuiop",
+    "asdfghjkl",
+    "zxcvbnm.-_"
+};
+#define KB_ROWS 4
+static const char *kb_acts[] = { "space", "del", "shift", "OK" };
+#define KB_ACTS 4
+
+static void wipe_pass(void) {
+    volatile char *v = wifi_pass;
+    for (size_t i = 0; i < sizeof wifi_pass; i++) v[i] = 0;
+    wifi_pass_len = 0;
+}
+
+static void wifi_rescan(void) {
+    wifi_msg[0] = '\0';
+    if (wifi_scan() < 0) snprintf(wifi_msg, sizeof wifi_msg, "scan failed");
+    else if (wifi_count() == 0) snprintf(wifi_msg, sizeof wifi_msg, "no networks");
+    selected = 0;
+    scroll = 0;
+    dirty = 1;
+}
+
+static void wifi_type(char ch) {
+    if (wifi_pass_len + 1 < (int)sizeof wifi_pass) {
+        wifi_pass[wifi_pass_len++] = ch;
+        wifi_pass[wifi_pass_len] = '\0';
+    }
+    dirty = 1;
+}
+
+static void wifi_submit(void) {
+    const wifi_ap_t *ap = wifi_ap(wifi_pick);
+    const char *pw = wifi_pass_len ? wifi_pass : NULL;
+    int rc = ap ? wifi_connect(ap->ssid, pw) : -1;
+    wipe_pass();
+    snprintf(wifi_msg, sizeof wifi_msg, "%s", rc == 0 ? "connected" : "failed");
+    back();
+}
+
+static int kb_cols(int row) {
+    if (row >= 0 && row < KB_ROWS) return (int)strlen(kb_rows[row]);
+    if (row == KB_ROWS) return KB_ACTS;
+    return 0;
+}
+
+static void wifi_key_button(logical_button_t btn) {
+    int cols = kb_cols(key_row);
+    if (btn == LB_LEFT && cols)  { key_col = (key_col - 1 + cols) % cols; dirty = 1; }
+    if (btn == LB_RIGHT && cols) { key_col = (key_col + 1) % cols; dirty = 1; }
+    if (btn == LB_UP || btn == LB_DOWN) {
+        int rows = KB_ROWS + 1;
+        key_row = (key_row + (btn == LB_UP ? rows - 1 : 1)) % rows;
+        cols = kb_cols(key_row);
+        if (key_col >= cols) key_col = cols - 1;
+        dirty = 1;
+    }
+    if (btn == LB_B) { wipe_pass(); back(); return; }
+    if (btn == LB_START) { wifi_submit(); return; }
+    if (btn != LB_A) return;
+    if (key_row < KB_ROWS) {
+        char ch = kb_rows[key_row][key_col];
+        if (key_shift && ch >= 'a' && ch <= 'z') ch = (char)(ch - 'a' + 'A');
+        wifi_type(ch);
+        return;
+    }
+    if (key_col == 0) wifi_type(' ');
+    else if (key_col == 1) {
+        if (wifi_pass_len > 0) {
+            wifi_pass_len--;
+            wifi_pass[wifi_pass_len] = '\0';
+            dirty = 1;
+        }
+    } else if (key_col == 2) { key_shift = !key_shift; dirty = 1; }
+    else wifi_submit();
+}
+
+static void wifi_open_key(void) {
+    wifi_pick = selected;
+    key_row = 0;
+    key_col = 0;
+    key_shift = 0;
+    wipe_pass();
+    go(SCREEN_WIFI_KEY);
+}
+
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (screen == SCREEN_ENG_CONFIRM && btn == LB_A) {
         if (pressed) { a_down_at = now_ms ? now_ms : 1; hold_ms = 0; }
@@ -116,8 +217,12 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     }
     if (!pressed) return;
 
+    if (screen == SCREEN_WIFI_KEY) { wifi_key_button(btn); return; }
+
     if (screen == SCREEN_ENG && (btn == LB_L1 || btn == LB_LEFT))  { switch_eng_tab(-1); return; }
     if (screen == SCREEN_ENG && (btn == LB_R1 || btn == LB_RIGHT)) { switch_eng_tab(+1); return; }
+
+    if (screen == SCREEN_WIFI && btn == LB_Y) { wifi_rescan(); return; }
 
     int n = list_count();
     if (n && btn == LB_UP)   { selected = (selected - 1 + n) % n; clamp_scroll(); dirty = 1; }
@@ -128,6 +233,11 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         if (selected == MAIN_INTERNET)    go(SCREEN_INTERNET);
         if (selected == MAIN_SETTINGS)    go(SCREEN_SETTINGS);
         if (selected == MAIN_ENGINEERING) go(SCREEN_ENG_CONFIRM);
+        if (selected == MAIN_NETWORK)     { go(SCREEN_WIFI); wifi_rescan(); }
+        return;
+    }
+    if (btn == LB_A && screen == SCREEN_SETTINGS) {
+        if (selected == SETTINGS_NETWORK) { go(SCREEN_WIFI); wifi_rescan(); }
         return;
     }
     if (btn == LB_A && screen == SCREEN_SYSTEMS) {
@@ -139,6 +249,18 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         const char *path = romscan_rom_path(sys_index, selected);
         if (sys && path[0] && launcher_start(sys->target, sys->core_or_path, path) == 0)
             should_exit = 1;
+        return;
+    }
+    if (btn == LB_A && screen == SCREEN_WIFI) {
+        const wifi_ap_t *ap = wifi_ap(selected);
+        if (!ap) return;
+        if (ap->open) {
+            int rc = wifi_connect(ap->ssid, NULL);
+            snprintf(wifi_msg, sizeof wifi_msg, "%s", rc == 0 ? "connected" : "failed");
+            dirty = 1;
+        } else {
+            wifi_open_key();
+        }
         return;
     }
     if (btn == LB_B && screen != SCREEN_MAIN) back();
@@ -317,6 +439,83 @@ void ui_draw(void) {
             body(3, "  Not yet. This tab arrives with its phase.");
         }
         break;
+    case SCREEN_WIFI: {
+        frame("Wi-Fi", "A:Connect  B:Back  Y:Scan", 1, 0);
+        int n = wifi_count();
+        if (n == 0) body(0, "   (no networks)");
+        int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+        for (int i = 0; i < window; i++) {
+            int idx = scroll + i;
+            const wifi_ap_t *ap = wifi_ap(idx);
+            char line[GRID_COLS];
+            snprintf(line, sizeof line, "   %-24.24s %3d  %.12s",
+                     ap->ssid, ap->signal, ap->security);
+            body(i, line);
+            if (idx == selected) grid_invert(ROW_BODY0 + i, 1, GRID_COLS - 2);
+        }
+        if (wifi_truncated()) body(window, "   (list truncated)");
+        if (wifi_msg[0]) {
+            char line[GRID_COLS];
+            snprintf(line, sizeof line, "  %s", wifi_msg);
+            body(22, line);
+        }
+        break;
+    }
+    case SCREEN_WIFI_KEY: {
+        frame("Wi-Fi password", "A:Type  B:Back  Start:Connect", 1, 0);
+        const wifi_ap_t *ap = wifi_ap(wifi_pick);
+        char line[GRID_COLS];
+        snprintf(line, sizeof line, "  Network: %.48s", ap ? ap->ssid : "");
+        body(0, line);
+        char stars[62];
+        int ns = wifi_pass_len > 60 ? 60 : wifi_pass_len;
+        for (int i = 0; i < ns; i++) stars[i] = '*';
+        stars[ns] = '\0';
+        snprintf(line, sizeof line, "  Password: %s", stars);
+        body(1, line);
+        body(2, key_shift ? "  Shift: on" : "  Shift: off");
+        for (int r = 0; r < KB_ROWS; r++) {
+            char row[GRID_COLS];
+            int p = 0;
+            row[p++] = ' ';
+            row[p++] = ' ';
+            int mark = -1;
+            for (int c = 0; kb_rows[r][c] && p + 2 < GRID_COLS; c++) {
+                char ch = kb_rows[r][c];
+                if (key_shift && ch >= 'a' && ch <= 'z') ch = (char)(ch - 'a' + 'A');
+                if (key_row == r && key_col == c) mark = p;
+                row[p++] = ch;
+                row[p++] = ' ';
+            }
+            row[p] = '\0';
+            body(4 + r, row);
+            if (mark >= 0) {
+                int cell = 1 + mark;
+                grid_invert(ROW_BODY0 + 4 + r, cell, cell);
+            }
+        }
+        {
+            char row[GRID_COLS];
+            int p = 0;
+            int start_at[KB_ACTS], end_at[KB_ACTS];
+            row[p++] = ' ';
+            row[p++] = ' ';
+            for (int a = 0; a < KB_ACTS; a++) {
+                if (a && p + 1 < GRID_COLS) row[p++] = ' ';
+                start_at[a] = p;
+                for (const char *s = kb_acts[a]; *s && p + 1 < GRID_COLS; s++) row[p++] = *s;
+                end_at[a] = p - 1;
+            }
+            row[p] = '\0';
+            body(9, row);
+            if (key_row == KB_ROWS) {
+                int c0 = 1 + start_at[key_col];
+                int c1 = 1 + end_at[key_col];
+                grid_invert(ROW_BODY0 + 9, c0, c1);
+            }
+        }
+        break;
+    }
     }
     dirty = 0;
 }

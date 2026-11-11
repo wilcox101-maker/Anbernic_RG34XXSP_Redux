@@ -5,6 +5,8 @@
 #include "ui.h"
 #include "launcher.h"
 #include "romscan.h"
+#include "wifi.h"
+#include "grid.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +20,37 @@ static void down(int n) { while (n--) press(LB_DOWN); }
 static void write_empty(const char *path) {
     FILE *f = fopen(path, "w");
     if (f) fclose(f);
+}
+
+static char nav_saw_scan, nav_saw_pw, nav_pw_ok, nav_saw_ifname;
+static const char *nav_want_pw;
+
+static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
+    if (status) *status = 0;
+    if (argv[1] && strcmp(argv[1], "-t") == 0) {
+        static const char *const want[] = {
+            "/usr/bin/nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list", NULL
+        };
+        nav_saw_scan = 1;
+        for (int i = 0; want[i]; i++)
+            if (!argv[i] || strcmp(argv[i], want[i]) != 0) nav_saw_scan = 0;
+        if (out && out_n) snprintf(out, out_n, "Home:40:WPA2\nCafe:90:\n");
+        return 0;
+    }
+    nav_saw_pw = 0;
+    nav_pw_ok = 0;
+    nav_saw_ifname = 0;
+    for (int i = 0; argv[i]; i++) {
+        if (strcmp(argv[i], "password") == 0 && argv[i + 1]) {
+            nav_saw_pw = 1;
+            if (nav_want_pw && strcmp(argv[i + 1], nav_want_pw) == 0) nav_pw_ok = 1;
+        }
+        if (strcmp(argv[i], "ifname") == 0 && argv[i + 1] && strcmp(argv[i + 1], "wlan0") == 0)
+            nav_saw_ifname = 1;
+    }
+    if (!nav_want_pw) nav_pw_ok = !nav_saw_pw;
+    if (out && out_n) out[0] = 0;
+    return 0;
 }
 
 int main(void) {
@@ -104,6 +137,49 @@ int main(void) {
     if (nf) { if (!fgets(line, sizeof line, nf)) line[0] = 0; fclose(nf); }
     expect(strstr(line, "pcsx") != NULL && strstr(line, "castlevania.chd") != NULL,
            "PS ROM launches the standalone pcsx line");
+
+    /* Network opens the Wi-Fi screen. The spawn hook stands in for nmcli. */
+    wifi_set_spawn(nav_spawn);
+    ui_init();
+    down(6); press(LB_A);
+    expect(ui_screen() == SCREEN_WIFI, "A on Network opens Wi-Fi");
+    expect(nav_saw_scan == 1, "opening Wi-Fi scans with the nmcli list command");
+    expect(wifi_count() == 2, "the hook's two networks are listed");
+    press(LB_A);
+    expect(ui_screen() == SCREEN_WIFI_KEY, "a secured network opens the keyboard");
+    press(LB_A);                       /* key 1 */
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Password: *") != NULL, "the password is drawn as stars");
+        expect(strstr(dump, "Password: 1") == NULL, "the typed character is not drawn");
+    }
+    nav_want_pw = "1";
+    press(LB_START);
+    expect(ui_screen() == SCREEN_WIFI, "Start connects and returns to the list");
+    expect(nav_saw_pw == 1 && nav_pw_ok == 1 && nav_saw_ifname == 1,
+           "connect got the typed password and ifname wlan0");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Password") == NULL, "the list screen has no password");
+    }
+    press(LB_A); press(LB_A); press(LB_B);
+    expect(ui_screen() == SCREEN_WIFI, "B leaves the keyboard");
+    nav_want_pw = NULL;
+    nav_pw_ok = 0;
+    press(LB_DOWN); press(LB_A);       /* Cafe, empty security */
+    expect(ui_screen() == SCREEN_WIFI, "empty security connects without the keyboard");
+    expect(nav_pw_ok == 1 && nav_saw_pw == 0, "that connect has no password argument");
+
+    ui_init();
+    down(7); press(LB_A); down(4); press(LB_A);
+    expect(ui_screen() == SCREEN_WIFI, "Settings Network opens the same Wi-Fi screen");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_SETTINGS, "B from Wi-Fi returns to Settings");
+    wifi_set_spawn(NULL);
 
     printf("%d failed\n", fails);
     return fails ? 1 : 0;
