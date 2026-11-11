@@ -183,6 +183,12 @@ int main(void) {
     press(LB_DOWN); press(LB_A);       /* Cafe, empty security */
     expect(ui_screen() == SCREEN_WIFI, "empty security connects without the keyboard");
     expect(nav_pw_ok == 1 && nav_saw_pw == 0, "that connect has no password argument");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Back to stock") == NULL, "Wi-Fi list has no Back to stock row");
+    }
 
     ui_init();
     down(7); press(LB_A); down(4); press(LB_A);
@@ -238,14 +244,22 @@ int main(void) {
     stock_set_bak(0);
     stock_calls = 0;
     ui_init();
-    down(6); press(LB_A);
-    down(wifi_count());
-    press(LB_A);
-    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "last Wi-Fi row opens Back to stock");
+    down(7); press(LB_A); down(5); press(LB_A);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "Settings System opens System Defaults");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Stock Menu") != NULL, "Stock Menu is listed");
+        expect(strstr(dump, "Boot Screen") != NULL && strstr(dump, "not yet") != NULL,
+               "Boot Screen is shown and not yet");
+        expect(strstr(dump, "Reset All") != NULL, "Reset All is shown");
+    }
+    press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "only Stock Menu accepts A");
     press(LB_B);
-    expect(ui_screen() == SCREEN_WIFI, "B cancels Back to stock");
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B cancels back to System Defaults");
     expect(stock_calls == 0, "cancel does not run S7");
-    down(wifi_count());
     press(LB_A);
     press(LB_A);
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "missing backup stays on the confirm");
