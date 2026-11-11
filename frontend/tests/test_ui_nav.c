@@ -133,13 +133,13 @@ int main(void) {
     press(LB_UP);
     expect(ui_screen() == SCREEN_ROMS, "Up on a ROM list does not leave the screen");
 
-    /* Folder name PS is not a table key; the alias launches the PCSX entry. */
+    /* Folder name PS is not a table key; the alias launches the PS1 (RetroArch) entry. */
     mkdir("/tmp/redux-rom-alias", 0755);
     mkdir("/tmp/redux-rom-alias/PS", 0755);
     write_empty("/tmp/redux-rom-alias/PS/castlevania.chd");
     setenv("REDUX_ROMS", "/tmp/redux-rom-alias", 1);
     ui_init();
-    expect(romscan_systems() == 1 && strcmp(romscan_key(0), "PCSX") == 0, "PS folder maps to the PCSX entry");
+    expect(romscan_systems() == 1 && strcmp(romscan_key(0), "PS1") == 0, "PS folder maps to the PS1 entry");
     launcher_set_next_path("/tmp/redux-next-ps");
     press(LB_A); press(LB_A); press(LB_A);
     nf = fopen("/tmp/redux-next-ps", "r");

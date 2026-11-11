@@ -39,13 +39,18 @@ static const struct { const char *key; const char *title; } titles[] = {
     { "SMS", "Master System" }, { "PCE", "PC Engine" }, { "WS", "WonderSwan" },
     { "NGP", "Neo Geo Pocket" }, { "GBA_DGE", "Game Boy Advance" },
     { "GBC_DGE", "Game Boy Color" }, { "MD_DGE", "Mega Drive" },
+    { "GG", "Game Gear" }, { "PCECD", "PC Engine CD" }, { "NEOGEO", "Neo Geo" },
+    { "FBNEO", "FinalBurn Neo" }, { "CPS1", "CPS-1" }, { "CPS2", "CPS-2" }, { "CPS3", "CPS-3" },
 };
 
 /* Folder name on the card -> systems-table key, used only when the folder
    name itself is not already a key. Not verified against Dale's card listing. */
 static const struct { const char *folder; const char *key; } aliases[] = {
-    { "PS", "PCSX" }, { "PSX", "PCSX" }, { "GENESIS", "MD" }, { "MEGADRIVE", "MD" },
-    { "NEOGEO", "NGP" }, { "NGPC", "NGP" }, { "WSC", "WS" },
+    /* PS goes to RetroArch pcsx_rearmed: the standalone PCSX launch dropped
+       straight back to the menu on the device (2026-11-11). NEOGEO is the
+       arcade system with its own table entry, not Neo Geo Pocket. */
+    { "PS", "PS1" }, { "PSX", "PS1" }, { "GENESIS", "MD" }, { "MEGADRIVE", "MD" },
+    { "NGPC", "NGP" }, { "WSC", "WS" },
 };
 
 static void copy_trunc(char *dst, size_t n, const char *src) {
