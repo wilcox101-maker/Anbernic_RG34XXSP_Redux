@@ -68,8 +68,9 @@ jobs:
         run: |
           docker run --rm --platform linux/arm64 -v "$PWD":/src -w /src ubuntu:22.04 sh -ec '
             export DEBIAN_FRONTEND=noninteractive
-            apt-get update -qq
-            apt-get install -y -qq --no-install-recommends cmake make gcc libc6-dev libsdl2-dev >/dev/null
+            # The emulated container sometimes fails DNS for ports.ubuntu.com once; retry.
+            for i in 1 2 3; do apt-get update -qq -o Acquire::Retries=3 && break; sleep 10; done
+            apt-get install -y -qq --no-install-recommends -o Acquire::Retries=3 cmake make gcc libc6-dev libsdl2-dev >/dev/null
             cmake -S frontend -B build-arm64 -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror"
             cmake --build build-arm64
             ./build-arm64/test_launcher
