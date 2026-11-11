@@ -16,6 +16,7 @@ static int fails;
 static void expect(int cond, const char *what) { printf("%s %s\n", cond ? "ok  " : "FAIL", what); if (!cond) fails++; }
 static void press(logical_button_t b) { ui_button(b, 1, 1); ui_button(b, 0, 2); }
 static void down(int n) { while (n--) press(LB_DOWN); }
+static void tap(logical_button_t b, int n) { while (n--) press(b); }
 
 static void write_empty(const char *path) {
     FILE *f = fopen(path, "w");
@@ -179,6 +180,50 @@ int main(void) {
     expect(ui_screen() == SCREEN_WIFI, "Settings Network opens the same Wi-Fi screen");
     press(LB_B);
     expect(ui_screen() == SCREEN_SETTINGS, "B from Wi-Fi returns to Settings");
+
+    /* Symbol layer: type 0x20..0x5E (63 bytes, the password cap) and require
+       wifi_connect to receive that exact string. Not printed. */
+    ui_init();
+    down(6); press(LB_A); press(LB_A);
+    expect(ui_screen() == SCREEN_WIFI_KEY, "keyboard opens again for a symbol password");
+    tap(LB_DOWN, 4);
+    tap(LB_RIGHT, 3);
+    press(LB_A);                 /* sym, cursor stays on the sym key */
+    press(LB_DOWN);              /* first symbol row, column follows the sym key */
+    tap(LB_LEFT, 3);             /* column 0 is 0x20 */
+    for (int row = 0; row < 4; row++) {
+        for (int c = 0; c < 16; c++) {
+            press(LB_A);
+            if (c + 1 < 16) press(LB_RIGHT);
+        }
+        if (row + 1 < 4) {
+            press(LB_DOWN);
+            tap(LB_LEFT, 15);
+        }
+    }
+    {
+        char expect_pw[64];
+        char dump[8192];
+        for (int i = 0; i < 63; i++) expect_pw[i] = (char)(0x20 + i);
+        expect_pw[63] = '\0';
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        {
+            char *p = strstr(dump, "Password: ");
+            int stars = 0;
+            expect(p != NULL, "symbol password line is on screen");
+            if (p) {
+                p += 10; /* strlen("Password: ") */
+                while (*p == '*') { stars++; p++; }
+                expect(stars == 63, "symbol password is shown as 63 stars");
+                expect(*p != '!' && *p != '"' && *p != '\\', "symbols are not drawn in the password");
+            }
+        }
+        nav_want_pw = expect_pw;
+        press(LB_START);
+        expect(ui_screen() == SCREEN_WIFI, "Start sends the symbol password");
+        expect(nav_saw_pw == 1 && nav_pw_ok == 1, "wifi_connect got the exact symbol password");
+    }
     wifi_set_spawn(NULL);
 
     printf("%d failed\n", fails);

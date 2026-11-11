@@ -43,6 +43,7 @@ static int should_exit;
 static int key_row;
 static int key_col;
 static int key_shift;
+static int key_sym;
 static int wifi_pick;
 static char wifi_pass[64];
 static int wifi_pass_len;
@@ -117,18 +118,42 @@ static void switch_eng_tab(int delta) {
     dirty = 1;
 }
 
-/* On-screen keyboard. Letters, digits, and . - _ . Shift latches. The password
-   is stars on screen and is wiped on Back, on connect, and before this process
-   exits the keyboard. It is never written to a file here. */
+/* On-screen keyboard. The letter layer is a-z (shift latches), digits, and . - _ .
+   "sym" switches to every printable ASCII byte (0x20-0x7E) in order, 16 per row,
+   same 90x30 grid and one cell per key. The password is stars on screen and is
+   wiped on Back, on connect, and when leaving the keyboard. It is never written
+   to a file here. */
 static const char *kb_rows[] = {
     "1234567890",
     "qwertyuiop",
     "asdfghjkl",
     "zxcvbnm.-_"
 };
-#define KB_ROWS 4
-static const char *kb_acts[] = { "space", "del", "shift", "OK" };
-#define KB_ACTS 4
+#define KB_ALPHA_ROWS 4
+static const char *sym_rows[] = {
+    " !\"#$%&'()*+,-./",   /* 0x20-0x2F */
+    "0123456789:;<=>?",    /* 0x30-0x3F */
+    "@ABCDEFGHIJKLMNO",    /* 0x40-0x4F */
+    "PQRSTUVWXYZ[\\]^_",   /* 0x50-0x5F */
+    "`abcdefghijklmno",    /* 0x60-0x6F */
+    "pqrstuvwxyz{|}~"      /* 0x70-0x7E */
+};
+#define KB_SYM_ROWS 6
+_Static_assert(sizeof " !\"#$%&'()*+,-./" == 17, "sym row 0x20");
+_Static_assert(sizeof "0123456789:;<=>?" == 17, "sym row 0x30");
+_Static_assert(sizeof "@ABCDEFGHIJKLMNO" == 17, "sym row 0x40");
+_Static_assert(sizeof "PQRSTUVWXYZ[\\]^_" == 17, "sym row 0x50");
+_Static_assert(sizeof "`abcdefghijklmno" == 17, "sym row 0x60");
+_Static_assert(sizeof "pqrstuvwxyz{|}~" == 16, "sym row 0x70");
+static const char *kb_acts[] = { "space", "del", "shift", "sym", "OK" };
+#define KB_ACT_SPACE 0
+#define KB_ACT_DEL   1
+#define KB_ACT_SHIFT 2
+#define KB_ACT_SYM   3
+#define KB_ACT_OK    4
+#define KB_ACTS 5
+
+static int kb_char_rows(void) { return key_sym ? KB_SYM_ROWS : KB_ALPHA_ROWS; }
 
 static void wipe_pass(void) {
     volatile char *v = wifi_pass;
@@ -163,8 +188,9 @@ static void wifi_submit(void) {
 }
 
 static int kb_cols(int row) {
-    if (row >= 0 && row < KB_ROWS) return (int)strlen(kb_rows[row]);
-    if (row == KB_ROWS) return KB_ACTS;
+    if (row >= 0 && row < kb_char_rows())
+        return (int)strlen(key_sym ? sym_rows[row] : kb_rows[row]);
+    if (row == kb_char_rows()) return KB_ACTS;
     return 0;
 }
 
@@ -173,30 +199,35 @@ static void wifi_key_button(logical_button_t btn) {
     if (btn == LB_LEFT && cols)  { key_col = (key_col - 1 + cols) % cols; dirty = 1; }
     if (btn == LB_RIGHT && cols) { key_col = (key_col + 1) % cols; dirty = 1; }
     if (btn == LB_UP || btn == LB_DOWN) {
-        int rows = KB_ROWS + 1;
+        int rows = kb_char_rows() + 1;
         key_row = (key_row + (btn == LB_UP ? rows - 1 : 1)) % rows;
         cols = kb_cols(key_row);
-        if (key_col >= cols) key_col = cols - 1;
+        if (cols > 0 && key_col >= cols) key_col = cols - 1;
         dirty = 1;
     }
     if (btn == LB_B) { wipe_pass(); back(); return; }
     if (btn == LB_START) { wifi_submit(); return; }
     if (btn != LB_A) return;
-    if (key_row < KB_ROWS) {
-        char ch = kb_rows[key_row][key_col];
-        if (key_shift && ch >= 'a' && ch <= 'z') ch = (char)(ch - 'a' + 'A');
+    if (key_row < kb_char_rows()) {
+        char ch = (key_sym ? sym_rows[key_row] : kb_rows[key_row])[key_col];
+        if (!key_sym && key_shift && ch >= 'a' && ch <= 'z') ch = (char)(ch - 'a' + 'A');
         wifi_type(ch);
         return;
     }
-    if (key_col == 0) wifi_type(' ');
-    else if (key_col == 1) {
+    if (key_col == KB_ACT_SPACE) wifi_type(' ');
+    else if (key_col == KB_ACT_DEL) {
         if (wifi_pass_len > 0) {
             wifi_pass_len--;
             wifi_pass[wifi_pass_len] = '\0';
             dirty = 1;
         }
-    } else if (key_col == 2) { key_shift = !key_shift; dirty = 1; }
-    else wifi_submit();
+    } else if (key_col == KB_ACT_SHIFT) { key_shift = !key_shift; dirty = 1; }
+    else if (key_col == KB_ACT_SYM) {
+        key_sym = !key_sym;
+        key_row = kb_char_rows();
+        key_col = KB_ACT_SYM;
+        dirty = 1;
+    } else wifi_submit();
 }
 
 static void wifi_open_key(void) {
@@ -204,6 +235,7 @@ static void wifi_open_key(void) {
     key_row = 0;
     key_col = 0;
     key_shift = 0;
+    key_sym = 0;
     wipe_pass();
     go(SCREEN_WIFI_KEY);
 }
@@ -467,34 +499,39 @@ void ui_draw(void) {
         char line[GRID_COLS];
         snprintf(line, sizeof line, "  Network: %.48s", ap ? ap->ssid : "");
         body(0, line);
-        char stars[62];
-        int ns = wifi_pass_len > 60 ? 60 : wifi_pass_len;
+        char stars[64];
+        int ns = wifi_pass_len > 63 ? 63 : wifi_pass_len;
         for (int i = 0; i < ns; i++) stars[i] = '*';
         stars[ns] = '\0';
         snprintf(line, sizeof line, "  Password: %s", stars);
         body(1, line);
-        body(2, key_shift ? "  Shift: on" : "  Shift: off");
-        for (int r = 0; r < KB_ROWS; r++) {
-            char row[GRID_COLS];
-            int p = 0;
-            row[p++] = ' ';
-            row[p++] = ' ';
-            int mark = -1;
-            for (int c = 0; kb_rows[r][c] && p + 2 < GRID_COLS; c++) {
-                char ch = kb_rows[r][c];
-                if (key_shift && ch >= 'a' && ch <= 'z') ch = (char)(ch - 'a' + 'A');
-                if (key_row == r && key_col == c) mark = p;
-                row[p++] = ch;
-                row[p++] = ' ';
-            }
-            row[p] = '\0';
-            body(4 + r, row);
-            if (mark >= 0) {
-                int cell = 1 + mark;
-                grid_invert(ROW_BODY0 + 4 + r, cell, cell);
-            }
-        }
+        snprintf(line, sizeof line, "  Shift: %s   Sym: %s",
+                 key_shift ? "on" : "off", key_sym ? "on" : "off");
+        body(2, line);
         {
+            int nrows = kb_char_rows();
+            for (int r = 0; r < nrows; r++) {
+                const char *src = key_sym ? sym_rows[r] : kb_rows[r];
+                char row[GRID_COLS];
+                int p = 0;
+                row[p++] = ' ';
+                row[p++] = ' ';
+                int mark = -1;
+                for (int c = 0; src[c] && p + 2 < GRID_COLS; c++) {
+                    char ch = src[c];
+                    if (!key_sym && key_shift && ch >= 'a' && ch <= 'z')
+                        ch = (char)(ch - 'a' + 'A');
+                    if (key_row == r && key_col == c) mark = p;
+                    row[p++] = ch;
+                    row[p++] = ' ';
+                }
+                row[p] = '\0';
+                body(4 + r, row);
+                if (mark >= 0) {
+                    int cell = 1 + mark;
+                    grid_invert(ROW_BODY0 + 4 + r, cell, cell);
+                }
+            }
             char row[GRID_COLS];
             int p = 0;
             int start_at[KB_ACTS], end_at[KB_ACTS];
@@ -507,11 +544,11 @@ void ui_draw(void) {
                 end_at[a] = p - 1;
             }
             row[p] = '\0';
-            body(9, row);
-            if (key_row == KB_ROWS) {
+            body(4 + nrows, row);
+            if (key_row == nrows) {
                 int c0 = 1 + start_at[key_col];
                 int c1 = 1 + end_at[key_col];
-                grid_invert(ROW_BODY0 + 9, c0, c1);
+                grid_invert(ROW_BODY0 + 4 + nrows, c0, c1);
             }
         }
         break;
