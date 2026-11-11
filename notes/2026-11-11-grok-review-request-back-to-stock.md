@@ -14,10 +14,12 @@ This writes `/mnt/vendor/ctrl/dmenu_ln`, so it stays a draft until Dale runs it.
 
 The row is the last line of the Wi-Fi screen (Main → Network), so the locked
 main-menu mock-up does not change and the row is still there when the scan
-finds nothing. A opens a confirm screen. A again runs dale-scripts S7:
+finds nothing. A opens a confirm screen. A again runs dale-scripts S7.
+The copy lands on a temp file first, then a rename replaces `dmenu_ln`,
+so the running script is not rewritten in place:
 
 ```
-cp /mnt/vendor/ctrl/dmenu_ln.bak /mnt/vendor/ctrl/dmenu_ln && sync && reboot
+cp /mnt/vendor/ctrl/dmenu_ln.bak /mnt/vendor/ctrl/dmenu_ln.new && sync && mv -f /mnt/vendor/ctrl/dmenu_ln.new /mnt/vendor/ctrl/dmenu_ln && sync && reboot
 ```
 
 S7 copies, so the `.bak` stays. `deploy_frontend.py --restore` moves the bak
@@ -27,7 +29,7 @@ refusal as that script. A desktop build never execs it. B cancels.
 Stacked on `grok/wifi-setup`. Retarget this PR to `main` after the Wi-Fi PR merges.
 
 ## Head
-`f3e096ab0e95c69ae0b685542c4df1e4e3636cc6` is the code. The branch tip adds this note only.
+`f223bd6e0d0840337d6696c56b62e2fa9574fe8a` is the atomic-rename fix, rebased onto the Wi-Fi branch (`50b0e39`).
 
 ## git diff --stat
 Against the Wi-Fi branch (`3f80039..f3e096a`), code commit only:
@@ -58,8 +60,8 @@ check_rules: 0 problems on the touched files
 ```
 
 ## Addressed
-- Confirm, then S7: `frontend/src/ui.c`, `frontend/src/stockmenu.c` (`f3e096a`)
-- Refusal when the bak is missing: `frontend/tests/test_stockmenu.c` (`f3e096a`)
+- Confirm, then S7 (temp file, then rename): `frontend/src/stockmenu.h`, `docs/dale-scripts.md` (`f223bd6`)
+- Refusal when the bak is missing: `frontend/tests/test_stockmenu.c` (`f223bd6`)
 
 ## Not verified
 - Not run on the device. Not verified that rebooting from inside the menu
