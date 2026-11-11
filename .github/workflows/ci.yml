@@ -38,6 +38,8 @@ jobs:
         run: ./build/test_launcher
       - name: Wi-Fi tests
         run: ./build/test_wifi
+      - name: Back-to-stock command test
+        run: ./build/test_stockmenu
       - name: Remap tests
         run: |
           if [ -x ./build/test_remap_device ]; then ./build/test_remap_device; fi
@@ -101,6 +103,7 @@ jobs:
             ./build-arm64/test_launcher
             ./build-arm64/test_remap_device
             ./build-arm64/test_wifi
+            ./build-arm64/test_stockmenu
           '
       - name: Check it is an aarch64 ELF
         run: |

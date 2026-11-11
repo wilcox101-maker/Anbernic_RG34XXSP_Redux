@@ -6,6 +6,7 @@
 #include "launcher.h"
 #include "romscan.h"
 #include "wifi.h"
+#include "stockmenu.h"
 #include "grid.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +53,12 @@ static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
     if (!nav_want_pw) nav_pw_ok = !nav_saw_pw;
     if (out && out_n) out[0] = 0;
     return 0;
+}
+
+static int stock_calls;
+static int stock_hook(const char *command) {
+    stock_calls++;
+    return strcmp(command, STOCK_RESTORE_CMD) == 0 ? 0 : 1;
 }
 
 int main(void) {
@@ -224,7 +231,30 @@ int main(void) {
         expect(ui_screen() == SCREEN_WIFI, "Start sends the symbol password");
         expect(nav_saw_pw == 1 && nav_pw_ok == 1, "wifi_connect got the exact symbol password");
     }
+
+    stock_set_run(stock_hook);
+    stock_set_bak(0);
+    stock_calls = 0;
+    ui_init();
+    down(6); press(LB_A);
+    down(wifi_count());
+    press(LB_A);
+    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "last Wi-Fi row opens Back to stock");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_WIFI, "B cancels Back to stock");
+    expect(stock_calls == 0, "cancel does not run S7");
+    down(wifi_count());
+    press(LB_A);
+    press(LB_A);
+    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "missing backup stays on the confirm");
+    expect(stock_calls == 0, "missing dmenu_ln.bak does not run S7");
+    stock_set_bak(1);
+    press(LB_A);
+    expect(stock_calls == 1, "A on the confirm runs dale-scripts S7");
+
     wifi_set_spawn(NULL);
+    stock_set_run(NULL);
+    stock_set_bak(-1);
 
     printf("%d failed\n", fails);
     return fails ? 1 : 0;

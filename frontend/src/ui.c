@@ -7,6 +7,7 @@
 #include "systems.h"
 #include "romscan.h"
 #include "wifi.h"
+#include "stockmenu.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -48,6 +49,8 @@ static int wifi_pick;
 static char wifi_pass[64];
 static int wifi_pass_len;
 static char wifi_msg[48];
+static char stock_msg[48];
+static int stock_started;
 static uint32_t a_down_at;
 static uint32_t hold_ms;
 static char last_clock[8];
@@ -98,7 +101,7 @@ static int list_count(void) {
     case SCREEN_ROMS:     return romscan_roms(sys_index);
     case SCREEN_SETTINGS: return COUNT(settings_items);
     case SCREEN_INTERNET: return COUNT(internet_items);
-    case SCREEN_WIFI:     return wifi_count();
+    case SCREEN_WIFI:     return wifi_count() + 1;   /* last row: Back to stock menu */
     default:              return 0;
     }
 }
@@ -251,6 +254,22 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
 
     if (screen == SCREEN_WIFI_KEY) { wifi_key_button(btn); return; }
 
+    if (screen == SCREEN_STOCK_CONFIRM && btn == LB_A) {
+        if (!stock_started) {
+            int rc = stock_restore();
+            if (rc == 0) {
+                stock_started = 1;
+                snprintf(stock_msg, sizeof stock_msg, "rebooting");
+            } else if (rc == -2) {
+                snprintf(stock_msg, sizeof stock_msg, "no dmenu_ln.bak; refusing");
+            } else {
+                snprintf(stock_msg, sizeof stock_msg, "restore failed");
+            }
+        }
+        dirty = 1;
+        return;
+    }
+
     if (screen == SCREEN_ENG && (btn == LB_L1 || btn == LB_LEFT))  { switch_eng_tab(-1); return; }
     if (screen == SCREEN_ENG && (btn == LB_R1 || btn == LB_RIGHT)) { switch_eng_tab(+1); return; }
 
@@ -284,6 +303,12 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (btn == LB_A && screen == SCREEN_WIFI) {
+        if (selected == wifi_count()) {
+            stock_msg[0] = '\0';
+            stock_started = 0;
+            go(SCREEN_STOCK_CONFIRM);
+            return;
+        }
         const wifi_ap_t *ap = wifi_ap(selected);
         if (!ap) return;
         if (ap->open) {
@@ -472,20 +497,25 @@ void ui_draw(void) {
         }
         break;
     case SCREEN_WIFI: {
-        frame("Wi-Fi", "A:Connect  B:Back  Y:Scan", 1, 0);
+        frame("Wi-Fi", "A:Select  B:Back  Y:Scan", 1, 0);
         int n = wifi_count();
-        if (n == 0) body(0, "   (no networks)");
-        int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+        int rows = n + 1;
+        int window = rows < ROM_LIST_WINDOW ? rows : ROM_LIST_WINDOW;
         for (int i = 0; i < window; i++) {
             int idx = scroll + i;
-            const wifi_ap_t *ap = wifi_ap(idx);
             char line[GRID_COLS];
-            snprintf(line, sizeof line, "   %-24.24s %3d  %.12s",
-                     ap->ssid, ap->signal, ap->security);
+            if (idx == n) {
+                snprintf(line, sizeof line, "   Back to stock menu");
+            } else {
+                const wifi_ap_t *ap = wifi_ap(idx);
+                if (!ap) continue;
+                snprintf(line, sizeof line, "   %-24.24s %3d  %.12s",
+                         ap->ssid, ap->signal, ap->security);
+            }
             body(i, line);
             if (idx == selected) grid_invert(ROW_BODY0 + i, 1, GRID_COLS - 2);
         }
-        if (wifi_truncated()) body(window, "   (list truncated)");
+        if (wifi_truncated()) body(window < 22 ? window : 21, "   (list truncated)");
         if (wifi_msg[0]) {
             char line[GRID_COLS];
             snprintf(line, sizeof line, "  %s", wifi_msg);
@@ -493,6 +523,19 @@ void ui_draw(void) {
         }
         break;
     }
+    case SCREEN_STOCK_CONFIRM:
+        frame("Back to stock menu", "A:Restore and reboot  B:Cancel", 1, 0);
+        body(0, "  Restores the stock launcher from dmenu_ln.bak.");
+        body(1, "  Runs dale-scripts S7: copy the backup over");
+        body(2, "  /mnt/vendor/ctrl/dmenu_ln, sync, and reboot.");
+        body(3, "  The backup file is kept. Refuses if it is missing.");
+        body(5, "  A confirms. B cancels. This writes to the device.");
+        if (stock_msg[0]) {
+            char line[GRID_COLS];
+            snprintf(line, sizeof line, "  %s", stock_msg);
+            body(7, line);
+        }
+        break;
     case SCREEN_WIFI_KEY: {
         frame("Wi-Fi password", "A:Type  B:Back  Start:Connect", 1, 0);
         const wifi_ap_t *ap = wifi_ap(wifi_pick);
