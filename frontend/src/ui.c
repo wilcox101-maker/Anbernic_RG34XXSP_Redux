@@ -526,8 +526,8 @@ void ui_draw(void) {
     case SCREEN_STOCK_CONFIRM:
         frame("Back to stock menu", "A:Restore and reboot  B:Cancel", 1, 0);
         body(0, "  Restores the stock launcher from dmenu_ln.bak.");
-        body(1, "  Runs dale-scripts S7: copy the backup over");
-        body(2, "  /mnt/vendor/ctrl/dmenu_ln, sync, and reboot.");
+        body(1, "  Copies it to dmenu_ln.new, then renames that");
+        body(2, "  over /mnt/vendor/ctrl/dmenu_ln, syncs, and reboots.");
         body(3, "  The backup file is kept. Refuses if it is missing.");
         body(5, "  A confirms. B cancels. This writes to the device.");
         if (stock_msg[0]) {

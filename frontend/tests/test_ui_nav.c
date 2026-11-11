@@ -56,9 +56,11 @@ static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
 }
 
 static int stock_calls;
+static int stock_cmd_ok;
 static int stock_hook(const char *command) {
     stock_calls++;
-    return strcmp(command, STOCK_RESTORE_CMD) == 0 ? 0 : 1;
+    stock_cmd_ok = strcmp(command, STOCK_RESTORE_CMD) == 0;
+    return stock_cmd_ok ? 0 : 1;
 }
 
 int main(void) {
@@ -250,7 +252,7 @@ int main(void) {
     expect(stock_calls == 0, "missing dmenu_ln.bak does not run S7");
     stock_set_bak(1);
     press(LB_A);
-    expect(stock_calls == 1, "A on the confirm runs dale-scripts S7");
+    expect(stock_calls == 1 && stock_cmd_ok, "A on the confirm runs the atomic S7 command");
 
     wifi_set_spawn(NULL);
     stock_set_run(NULL);

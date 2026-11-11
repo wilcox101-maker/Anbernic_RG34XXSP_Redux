@@ -19,8 +19,8 @@ static int run(const char *command) {
 
 int main(void) {
     expect(strcmp(STOCK_RESTORE_CMD,
-                  "cp /mnt/vendor/ctrl/dmenu_ln.bak /mnt/vendor/ctrl/dmenu_ln && sync && reboot") == 0,
-           "command is dale-scripts S7");
+                  "cp /mnt/vendor/ctrl/dmenu_ln.bak /mnt/vendor/ctrl/dmenu_ln.new && sync && mv -f /mnt/vendor/ctrl/dmenu_ln.new /mnt/vendor/ctrl/dmenu_ln && sync && reboot") == 0,
+           "command copies to a temp file, then renames over dmenu_ln");
     stock_set_bak(0);
     stock_set_run(run);
     expect(stock_restore() == -2, "missing dmenu_ln.bak is refused");

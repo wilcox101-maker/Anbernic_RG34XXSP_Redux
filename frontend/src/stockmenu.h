@@ -1,14 +1,14 @@
 #ifndef REDUX_STOCKMENU_H
 #define REDUX_STOCKMENU_H
 
-/* Restore the stock launcher. The command is docs/dale-scripts.md S7:
-     cp /mnt/vendor/ctrl/dmenu_ln.bak /mnt/vendor/ctrl/dmenu_ln && sync && reboot
-   Refuses when dmenu_ln.bak is missing, same as deploy_frontend.py --restore.
-   S7 copies (the .bak stays). deploy --restore moves it; this menu follows S7.
-   Writes /mnt/vendor/ctrl/dmenu_ln. Dale-only. Not run on the device yet. */
+/* Restore the stock launcher. The command is docs/dale-scripts.md S7.
+   Copy to a temp file on the same filesystem, then rename over dmenu_ln.
+   The running script is not rewritten in place. Refuses when dmenu_ln.bak
+   is missing. The .bak stays. Writes /mnt/vendor/ctrl/dmenu_ln.
+   Dale-only. Not run on the device yet. */
 
 #define STOCK_RESTORE_CMD \
-    "cp /mnt/vendor/ctrl/dmenu_ln.bak /mnt/vendor/ctrl/dmenu_ln && sync && reboot"
+    "cp /mnt/vendor/ctrl/dmenu_ln.bak /mnt/vendor/ctrl/dmenu_ln.new && sync && mv -f /mnt/vendor/ctrl/dmenu_ln.new /mnt/vendor/ctrl/dmenu_ln && sync && reboot"
 
 typedef int (*stock_run_fn)(const char *command);
 

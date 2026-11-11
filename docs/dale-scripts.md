@@ -56,8 +56,12 @@ tail -30 /mnt/vendor/redux/redux.log
 ```
 
 **S7: back to the STOCK menu** (changes: restores the stock launcher, reboots)
+
+Copy to a temp file, then rename it over `dmenu_ln`. The script is still running
+when this happens; rewriting it in place can make that shell read the new file
+mid-script.
 ```
-cp /mnt/vendor/ctrl/dmenu_ln.bak /mnt/vendor/ctrl/dmenu_ln && sync && reboot
+cp /mnt/vendor/ctrl/dmenu_ln.bak /mnt/vendor/ctrl/dmenu_ln.new && sync && mv -f /mnt/vendor/ctrl/dmenu_ln.new /mnt/vendor/ctrl/dmenu_ln && sync && reboot
 ```
 
 **S8: back to the REDUX menu** (changes: switches the launcher to Redux with logging, reboots)
