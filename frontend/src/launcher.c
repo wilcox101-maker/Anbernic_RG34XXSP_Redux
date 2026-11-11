@@ -66,9 +66,11 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
 
         if (!elf_dir_for(target)) fputs(audiodev, f);
 
+        /* The stock launch scripts are bash (RA_launch.sh uses [[ ]] and declare -A);
+           plain sh fails on them at once. bash also runs any POSIX sh script. */
         if (target == LAUNCH_RETROARCH) {
             if (!core) { fclose(f); return -1; }
-            fprintf(f, "sh %s ", script);
+            fprintf(f, "/bin/bash %s ", script);
             quote(f, core);
             fputc(' ', f);
             /* RA_launch.sh: $1 core, $2 ROM, $3 "auto".
@@ -84,7 +86,7 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
             if (rom_path) quote(f, rom_path);
             fputc('\n', f);
         } else {
-            fprintf(f, "sh %s ", script);
+            fprintf(f, "/bin/bash %s ", script);
             if (rom_path) quote(f, rom_path);
             fputc('\n', f);
         }
