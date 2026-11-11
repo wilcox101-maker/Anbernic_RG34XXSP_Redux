@@ -28,6 +28,13 @@ jobs:
       - name: Remap tests
         run: |
           if [ -x ./build/test_remap_device ]; then ./build/test_remap_device; fi
+      - name: Boot screen renders from branding/
+        run: python3 tools/make_bootlogo.py --out build/bootlogo.bmp
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bootlogo-preview
+          path: build/bootlogo.bmp
+          retention-days: 30
       - name: Navigation test
         run: ./build/test_ui_nav
       - name: Mock-up exit test (F1)
@@ -45,6 +52,8 @@ jobs:
         run: python -m compileall -q tools phase1-stock-tweaks
       - name: Hard-rule checks on Windows
         run: python tools/check_rules.py
+      - name: Boot screen renders on Windows
+        run: python tools/make_bootlogo.py --out build/bootlogo.bmp
 
   arm64:
     # The device binary. Built inside an emulated arm64 Ubuntu 22.04 container, the same release as
