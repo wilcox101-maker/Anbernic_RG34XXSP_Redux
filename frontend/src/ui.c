@@ -78,10 +78,14 @@ static void go_replace(screen_t s) {
     screen = s; selected = 0; scroll = 0; a_down_at = 0; hold_ms = 0; dirty = 1;
 }
 
+static void clamp_scroll(void);
+static int resume_load(void);
+
 void ui_init(void) {
     romscan_init();
     should_exit = 0; back_top = 0; eng_tab = ENG_CPU; sys_index = 0; screen = SCREEN_MAIN;
     go_replace(SCREEN_MAIN);
+    resume_load();   /* valid resume replaces Main; the file is removed either way */
 }
 void ui_set_eng_tab(eng_tab_t t) { eng_tab = t; dirty = 1; }
 screen_t ui_screen(void) { return screen; }
@@ -116,6 +120,50 @@ static void clamp_scroll(void) {
     if (selected >= n) selected = n - 1;
     if (selected < scroll) scroll = selected;
     if (selected >= scroll + window) scroll = selected - window + 1;
+}
+
+/* Just before /tmp/.next: so the next start opens this list instead of Main.
+   Four lines: screen, system key, row, scroll. Only "roms" is restored. */
+static void resume_save(void) {
+    FILE *f = fopen(UI_RESUME_PATH, "w");
+    if (!f) return;
+    fprintf(f, "roms\n%s\n%d\n%d\n", romscan_key(sys_index), selected, scroll);
+    fclose(f);
+}
+
+static void resume_clear(void) { remove(UI_RESUME_PATH); }
+
+static int resume_load(void) {
+    FILE *f = fopen(UI_RESUME_PATH, "r");
+    if (!f) return 0;
+    char screen_tok[32], key[64], rowb[32], scrb[32];
+    int got = fgets(screen_tok, sizeof screen_tok, f)
+           && fgets(key, sizeof key, f)
+           && fgets(rowb, sizeof rowb, f)
+           && fgets(scrb, sizeof scrb, f);
+    fclose(f);
+    remove(UI_RESUME_PATH);
+    if (!got) return 0;
+    screen_tok[strcspn(screen_tok, "\r\n")] = 0;
+    key[strcspn(key, "\r\n")] = 0;
+    if (strcmp(screen_tok, "roms") != 0 || !key[0]) return 0;
+    int sys = -1;
+    for (int i = 0; i < romscan_systems(); i++)
+        if (strcmp(romscan_key(i), key) == 0) { sys = i; break; }
+    int row = -1, scr = 0;
+    if (sys < 0 || sscanf(rowb, "%d", &row) != 1) return 0;
+    if (row < 0 || row >= romscan_roms(sys)) return 0;
+    sscanf(scrb, "%d", &scr);
+    /* Same path as Game Room → Systems → ROM list, so B walks back through both. */
+    push_back(SCREEN_MAIN);
+    push_back(SCREEN_SYSTEMS);
+    screen = SCREEN_ROMS;
+    sys_index = sys;
+    selected = row;
+    scroll = scr < 0 ? 0 : scr;
+    clamp_scroll();
+    dirty = 1;
+    return 1;
 }
 
 static void switch_eng_tab(int delta) {
@@ -301,8 +349,13 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (btn == LB_A && screen == SCREEN_ROMS) {
         const system_entry_t *sys = systems_lookup(romscan_key(sys_index));
         const char *path = romscan_rom_path(sys_index, selected);
-        if (sys && path[0] && launcher_start(sys->target, sys->core_or_path, path) == 0)
-            should_exit = 1;
+        if (sys && path[0]) {
+            resume_save();
+            if (launcher_start(sys->target, sys->core_or_path, path) == 0)
+                should_exit = 1;
+            else
+                resume_clear();
+        }
         return;
     }
     if (btn == LB_A && screen == SCREEN_SYSTEM_DEFAULTS) {
