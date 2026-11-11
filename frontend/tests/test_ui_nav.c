@@ -132,6 +132,9 @@ int main(void) {
     down(30);
     expect(ui_list_selected() == 30, "Down moves the selection to row 30");
     expect(ui_list_scroll() == 30 - ROM_LIST_WINDOW + 1, "the window scrolls to keep row 30 visible");
+    press(LB_UP);
+    expect(ui_screen() == SCREEN_ROMS, "Up on a ROM list does not leave the screen");
+    press(LB_DOWN);
     launcher_set_next_path("/tmp/redux-next-resume");
     press(LB_A);
     expect(ui_should_exit() == 1, "launching the scrolled row exits");
@@ -144,8 +147,28 @@ int main(void) {
         expect(sf == NULL, "resume file is removed after a valid read");
         if (sf) fclose(sf);
     }
-    press(LB_UP);
-    expect(ui_screen() == SCREEN_ROMS, "Up on a ROM list does not leave the screen");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_SYSTEMS, "B after resume returns to Systems");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_MAIN, "B from Systems returns to Main");
+    {
+        FILE *sf = fopen(UI_RESUME_PATH, "w");
+        expect(sf != NULL, "can write an unknown-system resume file");
+        if (sf) { fputs("roms\nMISSING\n0\n0\n", sf); fclose(sf); }
+        ui_init();
+        expect(ui_screen() == SCREEN_MAIN, "unknown system starts on Main");
+        sf = fopen(UI_RESUME_PATH, "r");
+        expect(sf == NULL, "unknown-system resume file is removed");
+        if (sf) fclose(sf);
+        sf = fopen(UI_RESUME_PATH, "w");
+        expect(sf != NULL, "can write an out-of-range resume file");
+        if (sf) { fputs("roms\nGBA\n999\n0\n", sf); fclose(sf); }
+        ui_init();
+        expect(ui_screen() == SCREEN_MAIN, "row out of range starts on Main");
+        sf = fopen(UI_RESUME_PATH, "r");
+        expect(sf == NULL, "out-of-range resume file is removed");
+        if (sf) fclose(sf);
+    }
 
     /* Folder name PS is not a table key; the alias launches the PCSX entry. */
     mkdir("/tmp/redux-rom-alias", 0755);
@@ -282,23 +305,6 @@ int main(void) {
     stock_set_bak(1);
     press(LB_A);
     expect(stock_calls == 1 && stock_cmd_ok, "A on the confirm runs the atomic S7 command");
-
-    {
-        FILE *sf = fopen(UI_RESUME_PATH, "w");
-        if (sf) { fputs("roms\nMISSING\n0\n0\n", sf); fclose(sf); }
-        ui_init();
-        expect(ui_screen() == SCREEN_MAIN, "missing system starts on Main");
-        sf = fopen(UI_RESUME_PATH, "r");
-        expect(sf == NULL, "stale resume file is removed");
-        if (sf) fclose(sf);
-        sf = fopen(UI_RESUME_PATH, "w");
-        if (sf) { fputs("roms\nPCSX\n9\n0\n", sf); fclose(sf); }
-        ui_init();
-        expect(ui_screen() == SCREEN_MAIN, "row out of range starts on Main");
-        sf = fopen(UI_RESUME_PATH, "r");
-        expect(sf == NULL, "out-of-range resume file is removed");
-        if (sf) fclose(sf);
-    }
 
     wifi_set_spawn(NULL);
     stock_set_run(NULL);

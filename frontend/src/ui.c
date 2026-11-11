@@ -154,6 +154,9 @@ static int resume_load(void) {
     if (sys < 0 || sscanf(rowb, "%d", &row) != 1) return 0;
     if (row < 0 || row >= romscan_roms(sys)) return 0;
     sscanf(scrb, "%d", &scr);
+    /* Same path as Game Room → Systems → ROM list, so B walks back through both. */
+    push_back(SCREEN_MAIN);
+    push_back(SCREEN_SYSTEMS);
     screen = SCREEN_ROMS;
     sys_index = sys;
     selected = row;
