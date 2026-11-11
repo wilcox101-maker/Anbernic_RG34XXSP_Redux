@@ -16,6 +16,9 @@ jobs:
         # Runner DNS failed on 2026-11-11 and apt hung; bound it and retry.
         timeout-minutes: 8
         run: |
+          # The runner resolver failed for every Ubuntu host; the public resolvers that fixed arm64 work here too.
+          sudo rm -f /etc/resolv.conf
+          printf "nameserver 1.1.1.1\nnameserver 8.8.8.8\n" | sudo tee /etc/resolv.conf >/dev/null
           for i in 1 2 3; do
             sudo apt-get update -qq -o Acquire::Retries=3 -o APT::Update::Error-Mode=any && break
             sleep 15
