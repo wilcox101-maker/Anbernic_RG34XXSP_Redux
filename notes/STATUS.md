@@ -28,7 +28,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 2. System Tools (read-only, `sysinfo.c` data layer). **Grok**
 3. BIOS-style UI, colour presets, Settings → UI → Colors, Restart/Power Off with a 3 s hold
 4. App Center · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. TF2 scan · 8. 640×480 boot logo (Dale-only installer)
-- Backlog: chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
+- Backlog: ASCII art maker (App Center app; Dale 2026-11-12; scope to confirm: draw with the D-pad and/or convert an image to ASCII), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
 ## Open notes
 - [2026-11-12-claude-message-grok-next.md](2026-11-12-claude-message-grok-next.md): claude → grok (Wi-Fi part 2, System Tools)
