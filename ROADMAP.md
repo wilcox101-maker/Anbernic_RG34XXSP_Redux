@@ -46,6 +46,7 @@ only after it has been checked on the device.
 The full frontend on the stock card with the Phase 1 kernel tweaks, installable by someone other than
 Dale. No mainline kernel is needed.
 - [x] F0–F2: spec, desktop prototype, launch parity on stock
+- [ ] MAME launches through a stock RetroArch core (stock's `xmame.dge` path can't be used: stock .dge launches fail)
 - [ ] F3 settings parity, including from the queue: Wi-Fi Connecting/result screens, BIOS-style UI with
       colour presets, TF2 scan/hot-plug, Restart/Power Off with a 3 s hold
 - [ ] F4 power and lid: its exit test (50 lid cycles mid-game, no lost save, governor restored)
