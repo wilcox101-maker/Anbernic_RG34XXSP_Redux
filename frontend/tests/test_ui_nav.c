@@ -26,8 +26,10 @@ static void write_empty(const char *path) {
 
 static char nav_saw_scan, nav_saw_pw, nav_pw_ok, nav_saw_ifname;
 static const char *nav_want_pw;
+static char nav_busy[80];
 
 static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
+    snprintf(nav_busy, sizeof nav_busy, "%s", ui_last_busy());
     if (status) *status = 0;
     if (argv[1] && strcmp(argv[1], "-t") == 0) {
         static const char *const want[] = {
@@ -57,11 +59,16 @@ static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
 
 static int stock_calls;
 static int stock_cmd_ok;
+static char stock_busy[80];
 static int stock_hook(const char *command) {
     stock_calls++;
+    snprintf(stock_busy, sizeof stock_busy, "%s", ui_last_busy());
     stock_cmd_ok = strcmp(command, STOCK_RESTORE_CMD) == 0;
     return stock_cmd_ok ? 0 : 1;
 }
+
+static int presents;
+static void count_present(void) { presents++; }
 
 int main(void) {
     remove(UI_RESUME_PATH);
@@ -109,6 +116,20 @@ int main(void) {
     ui_init();
     press(LB_A); press(LB_A); press(LB_A);
     expect(ui_should_exit() == 1, "A on a ROM asks main to exit");
+    expect(strcmp(ui_last_busy(), "Loading ROM") == 0, "launch shows Loading ROM before exit");
+    {
+        char dump[8192];
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Advance Wars") != NULL, "splash names the game");
+        expect(strstr(dump, "RetroArch / mgba") != NULL, "splash names the engine");
+        expect(strstr(dump, "TF1") != NULL, "splash names the card");
+        expect(strstr(dump, "please wait") != NULL, "splash asks to wait");
+        expect(strstr(dump, "MENU") != NULL, "RetroArch splash has the menu tip");
+        expect(strstr(dump, "\u2593\u2593\u2593") == NULL, "splash has no progress bar");
+    }
+    FILE *sf = fopen(UI_RESUME_PATH, "r");
+    expect(sf != NULL, "launch still wrote the resume file");
+    if (sf) fclose(sf);
     FILE *nf = fopen("/tmp/redux-next-test", "r");
     char line[512] = "";
     if (nf) { if (!fgets(line, sizeof line, nf)) line[0] = 0; fclose(nf); }
@@ -192,6 +213,7 @@ int main(void) {
     down(6); press(LB_A);
     expect(ui_screen() == SCREEN_WIFI, "A on Network opens Wi-Fi");
     expect(nav_saw_scan == 1, "opening Wi-Fi scans with the nmcli list command");
+    expect(strcmp(nav_busy, "Scanning for Wi-Fi networks") == 0, "scan shows the busy screen first");
     expect(wifi_count() == 2, "the hook's two networks are listed");
     press(LB_L1); press(LB_R1);
     expect(ui_screen() == SCREEN_WIFI, "L1 and R1 stay on the Wi-Fi list");
@@ -212,6 +234,7 @@ int main(void) {
     expect(ui_screen() == SCREEN_WIFI, "Start connects and returns to the list");
     expect(nav_saw_pw == 1 && nav_pw_ok == 1 && nav_saw_ifname == 1,
            "connect got the typed password and ifname wlan0");
+    expect(strcmp(nav_busy, "Connecting to Home") == 0, "connect shows the busy screen first");
     {
         char dump[8192];
         ui_draw();
@@ -225,6 +248,7 @@ int main(void) {
     press(LB_DOWN); press(LB_A);       /* Cafe, empty security */
     expect(ui_screen() == SCREEN_WIFI, "empty security connects without the keyboard");
     expect(nav_pw_ok == 1 && nav_saw_pw == 0, "that connect has no password argument");
+    expect(strcmp(nav_busy, "Connecting to Cafe") == 0, "open-network connect shows the busy screen first");
     {
         char dump[8192];
         ui_draw();
@@ -331,10 +355,17 @@ int main(void) {
     ui_button(LB_A, 1, 12000);
     ui_tick(15000);
     expect(stock_calls == 1 && stock_cmd_ok, "holding A for 3 s runs the atomic S7 command");
+    expect(strcmp(stock_busy, "Restoring stock menu") == 0, "restore shows the busy screen first");
 
     wifi_set_spawn(NULL);
     stock_set_run(NULL);
     stock_set_bak(-1);
+
+    presents = 0;
+    ui_set_present(count_present);
+    ui_init();
+    expect(presents == PRESENT_BUFFERS, "startup scan is presented 3 times");
+    expect(strcmp(ui_last_busy(), "Scanning for ROMs") == 0, "startup scan shows Scanning for ROMs");
 
     printf("%d failed\n", fails);
     return fails ? 1 : 0;

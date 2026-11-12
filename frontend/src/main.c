@@ -23,7 +23,6 @@
 #define VIDEO_RETRY_MS 30000u      /* keep trying to open the display this long at boot */
 #define VIDEO_RETRY_STEP_MS 500u
 #define BOOT_REPAINT_MS 15000u   /* repaint about once a second for this long after start */
-#define PRESENT_BUFFERS 3   /* covers double and triple buffering */
 #define SCREEN_W (GRID_COLS * FONT_W)
 #define SCREEN_H (GRID_ROWS * FONT_H)
 
@@ -52,6 +51,16 @@ static int dump_screens(void) {
         grid_dump(buf, sizeof buf);
         printf("=== %s ===\n%s", shots[i].name, buf);
     }
+    ui_busy("Loading ROM",
+            "Game    Super Mario World\n"
+            "System  SNES\n"
+            "Engine  RetroArch / snes9x\n"
+            "Card    TF1\n"
+            "\n"
+            "Starting emulator, please wait...\n"
+            "Tip: press MENU in-game to open the RetroArch menu");
+    grid_dump(buf, sizeof buf);
+    printf("=== loading ===\n%s", buf);
     return 0;
 }
 
@@ -60,6 +69,14 @@ static void on_device_button(logical_button_t btn, int pressed) {
     ui_button(btn, pressed, SDL_GetTicks());
 }
 #endif
+
+static SDL_Renderer *g_ren;
+
+static void present_frame(void) {
+    if (!g_ren) return;
+    grid_present(g_ren);
+    SDL_RenderPresent(g_ren);
+}
 
 int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
@@ -89,6 +106,7 @@ int main(int argc, char **argv) {
             ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED) : NULL;
             if (!ren) ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE) : NULL;
             if (ren) {
+                g_ren = ren;
                 if (waited) fprintf(stderr, "video ready after %u ms of retries\n", (unsigned)waited);
                 break;
             }
@@ -107,6 +125,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "warning: could not open /dev/input/event1\n");
 #endif
 
+    ui_set_present(present_frame);
     ui_init();
     const uint32_t start_ms = SDL_GetTicks();
     int running = 1;
@@ -119,10 +138,7 @@ int main(int argc, char **argv) {
             /* Draw the same frame into every buffer the display backend flips between. On the
                device (Anbernic SDL 2.0.12, page-flipped framebuffer) presenting once left the
                previous frame in the other buffer, so two highlights showed (Dale, 2026-11-10). */
-            for (int i = 0; i < PRESENT_BUFFERS; i++) {
-                grid_present(ren);
-                SDL_RenderPresent(ren);
-            }
+            for (int i = 0; i < PRESENT_BUFFERS; i++) present_frame();
         }
         SDL_Event e;
         int have_event;
@@ -154,8 +170,14 @@ int main(int argc, char **argv) {
 #ifdef REDUX_PLATFORM_STOCK
     evdev_close();
 #endif
-    SDL_DestroyRenderer(ren);
-    SDL_DestroyWindow(win);
-    SDL_Quit();
+    /* A launch already presented the wait screen. Do not clear or present
+       again, and do not tear SDL down: that blanks the framebuffer before
+       the emulator takes it. Whether the image survives the handover is
+       still a device check. */
+    if (!ui_should_exit()) {
+        SDL_DestroyRenderer(ren);
+        SDL_DestroyWindow(win);
+        SDL_Quit();
+    }
     return 0;   /* on a launch, loadapp.sh now runs /tmp/.next */
 }

@@ -82,9 +82,125 @@ static void go_replace(screen_t s) {
 static void clamp_scroll(void);
 static int resume_load(void);
 
+static void (*present_one)(void);
+static char last_busy[80];
+
+void ui_set_present(void (*fn)(void)) { present_one = fn; }
+const char *ui_last_busy(void) { return last_busy; }
+
+static void box_char(int col, int row, const char *ch) { grid_puts(col, row, ch, 0); }
+
+void ui_busy(const char *title, const char *detail) {
+    char store[8][88];
+    int n = 0, saw_wait = 0;
+    if (!title) title = "";
+    snprintf(last_busy, sizeof last_busy, "%s", title);
+    if (detail && detail[0]) {
+        const char *p = detail;
+        while (n < 8) {
+            const char *nl = strchr(p, '\n');
+            size_t len = nl ? (size_t)(nl - p) : strlen(p);
+            if (len > 80) len = 80;
+            memcpy(store[n], p, len);
+            store[n][len] = '\0';
+            if (strstr(store[n], "wait")) saw_wait = 1;
+            n++;
+            if (!nl) break;
+            p = nl + 1;
+            if (!*p && nl) break;
+        }
+    }
+    if (!saw_wait && n < 8) snprintf(store[n++], sizeof store[0], "Please wait...");
+
+    int text_max = (int)strlen(title);
+    for (int i = 0; i < n; i++) {
+        int L = (int)strlen(store[i]);
+        if (L > text_max) text_max = L;
+    }
+    int inner = text_max + 2;          /* one space of padding on each side */
+    if (inner < 24) inner = 24;
+    if (inner > GRID_COLS - 6) inner = GRID_COLS - 6;
+    int box_w = inner + 2;
+    int top = (GRID_ROWS - (n + 2)) / 2;
+    int left = (GRID_COLS - box_w) / 2;
+    if (top < 0) top = 0;
+
+    grid_clear();
+    box_char(left, top, "┌");
+    box_char(left + 1, top, " ");   /* two spaces so the dump's ▓▓ mark is not the title */
+    box_char(left + 2, top, " ");
+    for (int c = 3; c < box_w - 1; c++) box_char(left + c, top, "─");
+    box_char(left + box_w - 1, top, "┐");
+    grid_invert(top, left, left + box_w - 1);
+    char tshow[64];
+    snprintf(tshow, sizeof tshow, "%s", title);
+    if ((int)strlen(tshow) > inner - 2) tshow[inner - 2] = '\0';
+    int tlen = (int)strlen(tshow);
+    int tcol = left + 3 + (box_w - 4 - tlen) / 2;
+    if (tcol < left + 3) tcol = left + 3;
+    grid_puts(tcol, top, tshow, 1);
+    for (int i = 0; i < n; i++) {
+        int r = top + 1 + i;
+        box_char(left, r, "│");
+        box_char(left + box_w - 1, r, "│");
+        if (!store[i][0]) {
+            for (int c = 1; c < box_w - 1; c++) box_char(left + c, r, "─");
+        } else {
+            grid_puts(left + 2, r, store[i], 0);
+        }
+    }
+    int bot = top + n + 1;
+    box_char(left, bot, "└");
+    for (int c = 1; c < box_w - 1; c++) box_char(left + c, bot, "─");
+    box_char(left + box_w - 1, bot, "┘");
+
+    dirty = 0;
+    if (present_one)
+        for (int i = 0; i < PRESENT_BUFFERS; i++) present_one();
+}
+
+static void engine_name(const system_entry_t *sys, char *out, size_t n) {
+    if (!sys) { snprintf(out, n, "unknown"); return; }
+    if (sys->target == LAUNCH_RETROARCH) {
+        const char *core = sys->core_or_path ? sys->core_or_path : "";
+        const char *cut = strstr(core, "_libretro");
+        char shortn[40];
+        size_t L = cut ? (size_t)(cut - core) : strlen(core);
+        if (L >= sizeof shortn) L = sizeof shortn - 1;
+        memcpy(shortn, core, L);
+        shortn[L] = '\0';
+        if (shortn[0]) snprintf(out, n, "RetroArch / %s", shortn);
+        else snprintf(out, n, "RetroArch");
+    } else if (sys->target == LAUNCH_PPSSPP) snprintf(out, n, "PPSSPP");
+    else if (sys->target == LAUNCH_DRASTIC) snprintf(out, n, "Drastic");
+    else if (sys->target == LAUNCH_PCSX) snprintf(out, n, "PCSX");
+    else if (sys->target == LAUNCH_PORTMASTER) snprintf(out, n, "PortMaster");
+    else snprintf(out, n, "Standalone");
+}
+
+static const char *card_of(const char *path) {
+    if (path && (strstr(path, "/mnt/sdcard") || strstr(path, "/sdcard/") || strstr(path, "TF2")))
+        return "TF2";
+    return "TF1";
+}
+
+static void show_loading(const system_entry_t *sys, const char *path) {
+    char engine[64], detail[512];
+    engine_name(sys, engine, sizeof engine);
+    const char *tip = (sys && sys->target == LAUNCH_RETROARCH)
+        ? "\nTip: press MENU in-game to open the RetroArch menu" : "";
+    snprintf(detail, sizeof detail,
+             "Game    %.48s\nSystem  %.32s\nEngine  %.48s\nCard    %s\n"
+             "\nStarting emulator, please wait...%s",
+             romscan_rom_name(sys_index, selected), romscan_title(sys_index),
+             engine, card_of(path), tip);
+    ui_busy("Loading ROM", detail);
+}
+
 void ui_init(void) {
-    romscan_init();
     should_exit = 0; back_top = 0; eng_tab = ENG_CPU; sys_index = 0; screen = SCREEN_MAIN;
+    ui_busy("Scanning for ROMs", NULL);
+    romscan_init();
     go_replace(SCREEN_MAIN);
     resume_load();   /* valid resume replaces Main; the file is removed either way */
 }
@@ -216,6 +332,7 @@ static void wipe_pass(void) {
 }
 
 static void wifi_rescan(void) {
+    ui_busy("Scanning for Wi-Fi networks", NULL);
     wifi_msg[0] = '\0';
     if (wifi_scan() < 0) snprintf(wifi_msg, sizeof wifi_msg, "scan failed");
     else if (wifi_count() == 0) snprintf(wifi_msg, sizeof wifi_msg, "no networks");
@@ -234,6 +351,9 @@ static void wifi_type(char ch) {
 
 static void wifi_submit(void) {
     const wifi_ap_t *ap = wifi_ap(wifi_pick);
+    char title[80];
+    snprintf(title, sizeof title, "Connecting to %.48s", ap ? ap->ssid : "");
+    ui_busy(title, NULL);
     const char *pw = wifi_pass_len ? wifi_pass : NULL;
     int rc = ap ? wifi_connect(ap->ssid, pw) : -1;
     wipe_pass();
@@ -362,9 +482,10 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         const char *path = romscan_rom_path(sys_index, selected);
         if (sys && path[0]) {
             resume_save();
-            if (launcher_start(sys->target, sys->core_or_path, path) == 0)
+            if (launcher_start(sys->target, sys->core_or_path, path) == 0) {
+                show_loading(sys, path);
                 should_exit = 1;
-            else
+            } else
                 resume_clear();
         }
         return;
@@ -379,6 +500,9 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         const wifi_ap_t *ap = wifi_ap(selected);
         if (!ap) return;
         if (ap->open) {
+            char title[80];
+            snprintf(title, sizeof title, "Connecting to %.48s", ap->ssid);
+            ui_busy(title, NULL);
             int rc = wifi_connect(ap->ssid, NULL);
             snprintf(wifi_msg, sizeof wifi_msg, "%s", rc == 0 ? "connected" : "failed");
             dirty = 1;
@@ -399,6 +523,7 @@ void ui_tick(uint32_t now_ms) {
     if (screen == SCREEN_STOCK_CONFIRM && a_down_at && !stock_started) {
         hold_ms = now_ms - a_down_at;
         if (hold_ms >= HOLD_DESTRUCT_MS) {
+            ui_busy("Restoring stock menu", NULL);
             int rc = stock_restore();
             a_down_at = 0;
             if (rc == 0) {

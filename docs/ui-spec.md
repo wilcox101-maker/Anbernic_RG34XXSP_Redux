@@ -317,6 +317,46 @@ A:Enter  B:Back
 
 ---
 
+## 7b. Mock-up 7 — Loading ROM
+
+Wait screen drawn by `ui_busy` before a blocking action. The title bar uses the pointer colour.
+No progress bar. The same window is used for the Wi-Fi scan, connect, ROM scan, and stock restore.
+
+```
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                  ┌▓▓───────────────────Loading ROM────────────────────┐                  
+                  │ Game    Super Mario World                          │                  
+                  │ System  SNES                                       │                  
+                  │ Engine  RetroArch / snes9x                         │                  
+                  │ Card    TF1                                        │                  
+                  │────────────────────────────────────────────────────│                  
+                  │ Starting emulator, please wait...                  │                  
+                  │ Tip: press MENU in-game to open the RetroArch menu │                  
+                  └────────────────────────────────────────────────────┘                  
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+```
+
+---
+
 ## 8. Settings schema (`settings.ini`)
 
 Defaults match stock where known. Stock values come from `/mnt/mod/ctrl/configs/system.cfg` (see `docs/stock-userspace.md`); where no stock value is documented, the key is marked *unverified*. File lives on the data partition.

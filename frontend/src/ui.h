@@ -18,6 +18,9 @@ typedef enum {
 /* Resume file written just before /tmp/.next. On tmpfs, so a reboot clears it. */
 #define UI_RESUME_PATH "/tmp/redux.state"
 
+/* Present a frame this many times so every page-flipped buffer gets it. */
+#define PRESENT_BUFFERS 3
+
 void ui_init(void);
 
 /* For tests: choose the Engineering tab; read the current screen and tab. */
@@ -45,6 +48,12 @@ void ui_show(screen_t s);
 
 /* 1 if a launch was requested and main should exit so loadapp.sh runs /tmp/.next. */
 int ui_should_exit(void);
+
+/* Draw a BIOS-style wait window and present it PRESENT_BUFFERS times.
+   detail may be several lines separated by '\n'. No progress bar. */
+void ui_set_present(void (*present_one)(void));
+void ui_busy(const char *title, const char *detail);
+const char *ui_last_busy(void);
 
 /* For tests: the highlighted row, and how far a long list has scrolled. */
 int ui_list_selected(void);
