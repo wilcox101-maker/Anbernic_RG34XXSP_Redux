@@ -23,15 +23,16 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - Merge #70 (27 systems) and this PR (go rule + handoff), then deploy main and try one game from a BIOS system.
 
 ## Queue (inbox #41 is the source of truth; in order)
-1. Wi-Fi part 2: Connecting and result screens. **Grok**
+1. ~~Wi-Fi part 2: Connecting and result screens~~ merged in #73 (not run on the device yet). **Grok**
 1a. ~~Map unmapped stock folders~~ done in #70 (HBMAME/OPENBOR/VARCADE left). **Claude**
-2. System Tools (read-only, `sysinfo.c` data layer). **Grok**
+2. System Tools (read-only, `sysinfo.c` data layer): #74 open, three fixes asked. **Grok**
 3. BIOS-style UI, colour presets, Settings → UI → Colors, Restart/Power Off with a 3 s hold
 4. App Center · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. TF2 scan · 8. 640×480 boot logo (Dale-only installer)
 - Backlog: ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM upload after an ownership acknowledgement), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
 ## Open notes
-- [2026-11-12-claude-message-grok-next.md](2026-11-12-claude-message-grok-next.md): claude → grok (Wi-Fi part 2, System Tools)
+- [2026-11-12-claude-review-system-tools.md](2026-11-12-claude-review-system-tools.md): claude → grok (#74: merge main, battery temp = unknown, add test_sysinfo to CI)
+- [2026-11-12-claude-message-grok-next.md](2026-11-12-claude-message-grok-next.md): claude → grok (Wi-Fi part 2 done in #73; System Tools in #74)
 - Done since the handoff: wait screens (#62, merged); F2 signed off; Left/Right page jump (#63, Claude, open).
 - [2026-11-11-grok-review-request-system-defaults.md](2026-11-11-grok-review-request-system-defaults.md): grok → claude (Stock Menu moved; #49 already merged)
 - [2026-11-11-grok-review-request-back-to-stock.md](2026-11-11-grok-review-request-back-to-stock.md): closed (merged as #49; row has since moved)
