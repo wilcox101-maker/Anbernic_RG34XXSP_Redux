@@ -492,17 +492,15 @@ int main(void) {
     press(LB_A);
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "a short A stays on the confirm");
     expect(stock_calls == 0, "a short A does not run S7");
-    press(LB_A);
     ui_button(LB_A, 1, 1000);
     ui_tick(3900);
     ui_button(LB_A, 0, 3900);
-    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "releasing at 2.9 s cancels");
+    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "releasing at 2.9 s stays on the confirm");
     expect(stock_calls == 0, "2.9 s does not run S7");
-    press(LB_A);
     ui_button(LB_A, 1, 5000);
     ui_tick(6000);
     ui_button(LB_B, 1, 6100);
-    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "another button during the hold cancels");
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "another button during the hold leaves");
     expect(stock_calls == 0, "cancel during the hold does not run S7");
     ui_button(LB_B, 0, 6200);
     ui_button(LB_A, 0, 6300);
@@ -514,6 +512,8 @@ int main(void) {
     expect(stock_calls == 0, "missing dmenu_ln.bak does not run S7");
     ui_button(LB_A, 0, 11100);
     stock_set_bak(1);
+    press(LB_B);
+    press(LB_A);
     ui_button(LB_A, 1, 12000);
     ui_tick(15000);
     expect(stock_calls == 1 && stock_cmd_ok, "holding A for 3 s runs the atomic S7 command");
