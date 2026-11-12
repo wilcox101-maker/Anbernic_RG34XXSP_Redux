@@ -393,6 +393,9 @@ int main(void) {
         char dump[8192];
         ui_draw();
         grid_dump(dump, sizeof dump);
+        if (strstr(dump, "192.168.1.20") == NULL) {
+            printf("RETRY DUMP:\n%s\nreason: %s\n", dump, wifi_last_reason());
+        }
         expect(strstr(dump, "192.168.1.20") != NULL, "retry shows the IP after nmcli succeeds");
     }
     press(LB_B);
