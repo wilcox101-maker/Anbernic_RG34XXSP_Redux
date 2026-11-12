@@ -54,7 +54,6 @@ RG34XXSP Redux
 │   ├── Audio
 │   ├── Input
 │   ├── Power & Lid
-│   ├── Network                (same screen as top-level Network)
 │   ├── System
 │   ├── Emulation
 │   └── UI                     (colour presets)
@@ -81,7 +80,7 @@ RG34XXSP Redux
 2. YouTube marked "if feasible", no earlier than F6.
 3. Engineering Mode requires deliberate confirm (hold A for 2 s or brief combo).
 4. SSH / Samba / WebUI default Off. First enable requires password. No default credentials. WebUI local-network only while On.
-5. Top-level Network and Settings → Network open the same screen (same keys).
+5. ~~Top-level Network and Settings → Network open the same screen.~~ Settings → Network removed as redundant (Dale, 2026-11-12); Network is on the main menu only.
 
 ---
 
@@ -178,10 +177,10 @@ Settings                                                            BAT 87% CHG 
 │   Audio                                                                                │
 │   Input                                                                                │
 │   Power & Lid                                                                          │
-│   Network                                                                              │
 │   System                                                                               │
 │   Emulation                                                                            │
 │   UI                                                                                   │
+│                                                                                        │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
@@ -434,7 +433,6 @@ discharge_temp_limit = 60 ; Redux default (typical Li-ion), not stock
 - Performance profiles are applied at launch and restored on exit.
 - Battery-heat guard is always active (even in Engineering Mode). Unverified thermistor shows "unknown" and falls back to SoC temperature.
 - Remap table is external to this file.
-- Top-level Network and Settings → Network share these keys.
 
 ---
 

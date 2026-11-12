@@ -27,3 +27,7 @@ __pycache__/
 
 # stock_inventory.py output (bootloader blob + extracted stock files)
 stock-inventory/
+
+# Local CMake build folders
+build/
+build-*/
