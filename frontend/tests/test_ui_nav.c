@@ -150,6 +150,25 @@ int main(void) {
     ui_init();
     press(LB_A); press(LB_A);
     expect(romscan_roms(0) == 40, "long folder scans 40 ROMs");
+    /* Left/Right page by the 20-row window and stop at the ends. */
+    press(LB_RIGHT);
+    expect(ui_list_selected() == 20 && ui_list_scroll() == 20, "Right pages to row 20");
+    press(LB_RIGHT);
+    expect(ui_list_selected() == 39 && ui_list_scroll() == 20, "Right stops on the last row");
+    press(LB_RIGHT);
+    expect(ui_list_selected() == 39 && ui_list_scroll() == 20, "Right on the last row does not wrap");
+    press(LB_LEFT);
+    expect(ui_list_selected() == 19 && ui_list_scroll() == 0, "Left pages back a window");
+    press(LB_LEFT);
+    expect(ui_list_selected() == 0 && ui_list_scroll() == 0, "Left stops on the first row");
+    down(5); press(LB_RIGHT);
+    expect(ui_list_selected() == 25 && ui_list_scroll() == 20, "the cursor keeps its row on screen");
+    press(LB_LEFT); press(LB_LEFT);
+    expect(ui_screen() == SCREEN_ROMS && ui_list_selected() == 0, "paging never leaves the ROM list");
+    press(LB_B);
+    press(LB_RIGHT);
+    expect(ui_screen() == SCREEN_SYSTEMS && ui_list_selected() == 0, "Right on a one-system list stays on it");
+    press(LB_A);
     down(30);
     expect(ui_list_selected() == 30, "Down moves the selection to row 30");
     expect(ui_list_scroll() == 30 - ROM_LIST_WINDOW + 1, "the window scrolls to keep row 30 visible");

@@ -239,6 +239,23 @@ static void clamp_scroll(void) {
     if (selected >= scroll + window) scroll = selected - window + 1;
 }
 
+/* Left/Right on the Game Room lists: move a whole window. The cursor keeps its row on
+   screen, like turning a page. Stops at the ends (no wrap), so it can't overshoot. */
+static void page(int dir) {
+    int n = list_count();
+    if (n < 1) return;
+    int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+    int last_top = n - window;
+    selected += dir * window;
+    scroll += dir * window;
+    if (selected < 0) selected = 0;
+    if (selected > n - 1) selected = n - 1;
+    if (scroll < 0) scroll = 0;
+    if (scroll > last_top) scroll = last_top;
+    clamp_scroll();
+    dirty = 1;
+}
+
 /* Just before /tmp/.next: so the next start opens this list instead of Main.
    Four lines: screen, system key, row, scroll. Only "roms" is restored. */
 static void resume_save(void) {
@@ -456,8 +473,13 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
 
     if (screen == SCREEN_WIFI && btn == LB_Y) { wifi_rescan(); return; }
 
+    if ((screen == SCREEN_ROMS || screen == SCREEN_SYSTEMS) && (btn == LB_LEFT || btn == LB_RIGHT)) {
+        page(btn == LB_RIGHT ? +1 : -1);
+        return;
+    }
+
     int n = list_count();
-    if (n && btn == LB_UP)   { selected = (selected - 1 + n) % n; clamp_scroll(); dirty = 1; }
+    if (n && btn == LB_UP)  { selected = (selected - 1 + n) % n; clamp_scroll(); dirty = 1; }
     if (n && btn == LB_DOWN) { selected = (selected + 1) % n; clamp_scroll(); dirty = 1; }
 
     if (btn == LB_A && screen == SCREEN_MAIN) {
@@ -638,7 +660,7 @@ void ui_draw(void) {
     }
     case SCREEN_ROMS:
         snprintf(t, sizeof t, "Game Room > Systems > %s", romscan_title(sys_index));
-        frame(t, "A:Launch  B:Back  X:Favorites  Y:Info  Start:Search  Select:Random", 1, 0);
+        frame(t, "A:Launch  B:Back  X:Favorites  Y:Info  Start:Search  Select:Random  Left/Right:Page", 1, 0);
         body(0, "  Search: _");
         list_scanned(2, 0);
         {
@@ -648,7 +670,7 @@ void ui_draw(void) {
         }
         break;
     case SCREEN_SYSTEMS:
-        frame("Game Room > Systems", "A:Enter  B:Back", 1, 0);
+        frame("Game Room > Systems", "A:Enter  B:Back  Left/Right:Page", 1, 0);
         if (romscan_systems() == 0) body(0, "   (no ROMs)");
         else list_scanned(0, 1);
         break;
