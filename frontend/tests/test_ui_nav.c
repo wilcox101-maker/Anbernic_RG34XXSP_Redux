@@ -394,9 +394,9 @@ int main(void) {
 
     ui_init();
     down(7); press(LB_A); down(4); press(LB_A);
-    expect(ui_screen() == SCREEN_WIFI, "Settings Network opens the same Wi-Fi screen");
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "Settings has no Network; row 4 is System");
     press(LB_B);
-    expect(ui_screen() == SCREEN_SETTINGS, "B from Wi-Fi returns to Settings");
+    expect(ui_screen() == SCREEN_SETTINGS, "B from System returns to Settings");
 
     /* Symbol layer: type 0x20..0x5E (63 bytes, the password cap) and require
        wifi_connect to receive that exact string. Not printed. */
@@ -446,7 +446,7 @@ int main(void) {
     stock_set_bak(0);
     stock_calls = 0;
     ui_init();
-    down(7); press(LB_A); down(5); press(LB_A);
+    down(7); press(LB_A); down(4); press(LB_A);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "Settings System opens System Defaults");
     {
         char dump[8192];
@@ -515,7 +515,7 @@ int main(void) {
     }
     sysinfo_set_root("/tmp/redux-sysinfo-nav");
     ui_init();
-    down(7); press(LB_A); down(5); press(LB_A); press(LB_DOWN); press(LB_A);
+    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_SYSINFO, "System Tools opens from System Defaults");
     {
         char dump[8192];
