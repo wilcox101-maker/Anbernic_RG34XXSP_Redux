@@ -31,8 +31,14 @@ static const char *nav_want_pw;
 static char nav_busy[80];
 static int nav_fail;
 
+static char nav_last_ssid[64] = "Home";
 static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
     snprintf(nav_busy, sizeof nav_busy, "%s", ui_last_busy());
+    if (argv[3] && strcmp(argv[3], "GENERAL.STATE,GENERAL.CONNECTION") == 0) {
+        if (status) *status = 0;
+        if (out && out_n) snprintf(out, out_n, "GENERAL.STATE:100 (connected)\nGENERAL.CONNECTION:%s\n", nav_last_ssid);
+        return 0;
+    }
     if (argv[3] && strcmp(argv[3], "IP4.ADDRESS") == 0) {
         if (status) *status = 0;
         if (out && out_n) snprintf(out, out_n, "IP4.ADDRESS[1]:192.168.1.20/24\n");
@@ -52,6 +58,8 @@ static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
     nav_saw_pw = 0;
     nav_pw_ok = 0;
     nav_saw_ifname = 0;
+    if (argv[1] && strcmp(argv[1], "dev") == 0 && argv[4])
+        snprintf(nav_last_ssid, sizeof nav_last_ssid, "%s", argv[4]);
     for (int i = 0; argv[i]; i++) {
         if (strcmp(argv[i], "password") == 0 && argv[i + 1]) {
             nav_saw_pw = 1;

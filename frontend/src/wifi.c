@@ -193,6 +193,68 @@ static void take_ip(const char *out) {
     }
 }
 
+static int output_has_error(const char *out) {
+    return out && strstr(out, "Error") != NULL;
+}
+
+/* nmcli exits 0 even when activation fails. Confirm the device is actually
+   on the SSID we asked for before treating the connect as a success. */
+static int verify_connected(const char *ssid) {
+    char *argv[] = {
+        "/usr/bin/nmcli", "-t", "-f", "GENERAL.STATE,GENERAL.CONNECTION",
+        "device", "show", "wlan0", NULL
+    };
+    char out[256];
+    int status = 1;
+    if (run_err(argv, out, sizeof out, &status) != 0 || status != 0) return 0;
+    /* -t device show prints one FIELD:value line per field (device, 2026-11-12):
+         GENERAL.STATE:100 (connected)
+         GENERAL.CONNECTION:<name>  */
+    int state_ok = 0, conn_ok = 0;
+    char *line = out;
+    while (*line) {
+        char *nl = strchr(line, '\n');
+        if (nl) *nl = '\0';
+        size_t n = strlen(line);
+        while (n && (line[n - 1] == '\r' || line[n - 1] == ' ')) line[--n] = '\0';
+        if (strncmp(line, "GENERAL.STATE:", 14) == 0)
+            state_ok = strncmp(line + 14, "100", 3) == 0;
+        else if (strncmp(line, "GENERAL.CONNECTION:", 19) == 0)
+            conn_ok = strcmp(line + 19, ssid) == 0;
+        if (!nl) break;
+        line = nl + 1;
+    }
+    return state_ok && conn_ok;
+}
+
+static int profile_exists(const char *ssid) {
+    char *argv[] = {
+        "/usr/bin/nmcli", "-t", "-f", "NAME", "connection", "show", NULL
+    };
+    char out[2048];
+    int status = 1;
+    if (run_err(argv, out, sizeof out, &status) != 0 || status != 0) return 0;
+    char *line = out;
+    while (*line) {
+        char *nl = strchr(line, '\n');
+        if (nl) *nl = '\0';
+        if (strcmp(line, ssid) == 0) return 1;
+        if (!nl) break;
+        line = nl + 1;
+    }
+    return 0;
+}
+
+static void read_ip(void) {
+    char *ip_argv[] = {
+        "/usr/bin/nmcli", "-t", "-f", "IP4.ADDRESS", "device", "show", "wlan0", NULL
+    };
+    char ip_out[256];
+    int ip_status = 1;
+    if (run_err(ip_argv, ip_out, sizeof ip_out, &ip_status) == 0 && ip_status == 0)
+        take_ip(ip_out);
+}
+
 int wifi_connect(const char *ssid, const char *password) {
     g_ip[0] = '\0';
     g_reason[0] = '\0';
@@ -205,8 +267,25 @@ int wifi_connect(const char *ssid, const char *password) {
     char out[512];
     copy_trunc(ssid_buf, sizeof ssid_buf, ssid);
     int status = 1;
-    int rc;
-    if (password && password[0]) {
+    int rc = 0;
+    int use_profile = 0;
+
+    if (password && password[0] && profile_exists(ssid_buf)) {
+        use_profile = 1;
+        copy_trunc(pass_buf, sizeof pass_buf, password);
+        char *mod_argv[] = {
+            "/usr/bin/nmcli", "con", "modify", "id", ssid_buf,
+            "wifi-sec.key-mgmt", "wpa-psk", "wifi-sec.psk", pass_buf, NULL
+        };
+        rc = run_err(mod_argv, out, sizeof out, &status);
+        wipe(pass_buf, sizeof pass_buf);
+        if (rc == 0 && status == 0 && !output_has_error(out)) {
+            char *up_argv[] = {
+                "/usr/bin/nmcli", "con", "up", "id", ssid_buf, NULL
+            };
+            rc = run_err(up_argv, out, sizeof out, &status);
+        }
+    } else if (password && password[0]) {
         copy_trunc(pass_buf, sizeof pass_buf, password);
         char *argv[] = {
             "/usr/bin/nmcli", "dev", "wifi", "connect", ssid_buf,
@@ -220,16 +299,16 @@ int wifi_connect(const char *ssid, const char *password) {
         };
         rc = run_err(argv, out, sizeof out, &status);
     }
-    if (rc != 0 || status != 0) {
+
+    if (rc != 0 || status != 0 || output_has_error(out)) {
         take_reason(rc == 0 ? out : "", password);
         return -1;
     }
-    char *ip_argv[] = {
-        "/usr/bin/nmcli", "-t", "-f", "IP4.ADDRESS", "device", "show", "wlan0", NULL
-    };
-    char ip_out[256];
-    int ip_status = 1;
-    if (run_err(ip_argv, ip_out, sizeof ip_out, &ip_status) == 0 && ip_status == 0)
-        take_ip(ip_out);
+    if (!verify_connected(ssid_buf)) {
+        copy_trunc(g_reason, sizeof g_reason, "not connected");
+        return -1;
+    }
+    read_ip();
+    (void)use_profile;
     return 0;
 }
