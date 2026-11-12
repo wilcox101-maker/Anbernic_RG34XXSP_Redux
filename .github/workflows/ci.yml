@@ -42,6 +42,8 @@ jobs:
         run: ./build/test_sysinfo
       - name: Back-to-stock command test
         run: ./build/test_stockmenu
+      - name: Volume tests
+        run: ./build/test_volume
       - name: Remap tests
         run: |
           if [ -x ./build/test_remap_device ]; then ./build/test_remap_device; fi
@@ -99,6 +101,7 @@ jobs:
           ./build-arm64/test_wifi
           ./build-arm64/test_sysinfo
           ./build-arm64/test_stockmenu
+          ./build-arm64/test_volume
       - name: Check it is an aarch64 ELF
         run: |
           python3 - build-arm64/rg34xxsp-redux <<'PY'
