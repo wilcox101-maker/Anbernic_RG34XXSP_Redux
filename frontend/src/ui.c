@@ -33,8 +33,23 @@ static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "System", "Emulation", "UI"
 };
 enum { SETTINGS_SYSTEM = 4, SETTINGS_UI = 6 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
-static const char *system_items[] = { "Stock Menu", "System Tools", "Restart", "Power Off" };
 enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3 };
+typedef struct { const char *label; int selectable; int action; } system_row_t;
+static const system_row_t system_rows[] = {
+    { "System Tools",         1, SYSTEM_TOOLS },
+    { "Restart",              1, SYSTEM_RESTART },
+    { "Power Off",            1, SYSTEM_POWEROFF },
+    { "Boot Screen   not yet", 0, -1 },
+    { "",                     0, -1 },
+    { "",                     0, -1 },
+    { "",                     0, -1 },
+    { "Stock Menu",           1, SYSTEM_STOCK },
+    { "Reset All     not yet", 0, -1 }
+};
+#define N_SYSTEM_ROWS ((int)(sizeof system_rows / sizeof system_rows[0]))
+static int system_selectable(int i) {
+    return i >= 0 && i < N_SYSTEM_ROWS && system_rows[i].selectable;
+}
 static const char *internet_items[] = {
     "YouTube (if feasible)", "Web browser (text)"
 };
@@ -277,7 +292,7 @@ static int list_count(void) {
     case SCREEN_UI_COLORS: return N_PRESETS;
     case SCREEN_INTERNET: return COUNT(internet_items);
     case SCREEN_WIFI:     return wifi_count();
-    case SCREEN_SYSTEM_DEFAULTS: return COUNT(system_items);
+    case SCREEN_SYSTEM_DEFAULTS: return N_SYSTEM_ROWS;
     default:              return 0;
     }
 }
@@ -518,9 +533,8 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
                 if (!a_down_at && !stock_started)
                     a_down_at = now_ms ? now_ms : 1;
             } else if (a_down_at && !stock_started) {
-                a_down_at = 0;
+                a_down_at = 0;   /* released before 3 s: stay, reset the bar */
                 hold_ms = 0;
-                back();
             }
         } else if (pressed) {
             a_down_at = 0;
@@ -550,8 +564,17 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     }
 
     int n = list_count();
-    if (n && btn == LB_UP)  { selected = (selected - 1 + n) % n; clamp_scroll(); dirty = 1; }
-    if (n && btn == LB_DOWN) { selected = (selected + 1) % n; clamp_scroll(); dirty = 1; }
+    if (n && (btn == LB_UP || btn == LB_DOWN)) {
+        int dir = btn == LB_DOWN ? 1 : -1;
+        int next = selected;
+        for (int i = 0; i < n; i++) {
+            next = (next + dir + n) % n;
+            if (screen != SCREEN_SYSTEM_DEFAULTS || system_selectable(next)) break;
+        }
+        selected = next;
+        clamp_scroll();
+        dirty = 1;
+    }
 
     if (btn == LB_A && screen == SCREEN_MAIN) {
         if (selected == MAIN_GAME_ROOM)   go(SCREEN_SYSTEMS);
@@ -590,17 +613,17 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (btn == LB_A && screen == SCREEN_SYSTEM_DEFAULTS) {
-        if (selected == SYSTEM_TOOLS) { go(SCREEN_SYSINFO); return; }
-        if (selected == SYSTEM_RESTART || selected == SYSTEM_POWEROFF) {
+        if (!system_selectable(selected)) return;
+        int action = system_rows[selected].action;
+        if (action == SYSTEM_TOOLS) { go(SCREEN_SYSINFO); return; }
+        if (action == SYSTEM_RESTART || action == SYSTEM_POWEROFF || action == SYSTEM_STOCK) {
             stock_msg[0] = '\0';
             stock_started = 0;
-            go(selected == SYSTEM_RESTART ? SCREEN_RESTART_CONFIRM : SCREEN_POWEROFF_CONFIRM);
+            go(action == SYSTEM_RESTART ? SCREEN_RESTART_CONFIRM
+               : action == SYSTEM_POWEROFF ? SCREEN_POWEROFF_CONFIRM
+               : SCREEN_STOCK_CONFIRM);
             return;
         }
-        if (selected != SYSTEM_STOCK) return;
-        stock_msg[0] = '\0';
-        stock_started = 0;
-        go(SCREEN_STOCK_CONFIRM);
         return;
     }
     if (btn == LB_A && screen == SCREEN_WIFI) {
@@ -888,10 +911,12 @@ void ui_draw(void) {
     }
     case SCREEN_SYSTEM_DEFAULTS:
         frame("System Defaults", "A:Select  B:Back", 1, 0);
-        list(0, system_items, COUNT(system_items));
-        /* Grid has no grey. These two are drawn and left out of the list, so A cannot select them. */
-        body(COUNT(system_items), "   Boot Screen   not yet");
-        body(COUNT(system_items) + 1, "   Reset All     not yet");
+        for (int i = 0; i < N_SYSTEM_ROWS; i++) {
+            char line[GRID_COLS];
+            snprintf(line, sizeof line, "   %s", system_rows[i].label);
+            body(i, line);
+            if (i == selected) grid_invert(ROW_BODY0 + i, 1, GRID_COLS - 2);
+        }
         break;
     case SCREEN_SYSINFO: {
         frame("System Tools", "B:Back", 1, 0);

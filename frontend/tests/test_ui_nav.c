@@ -469,11 +469,20 @@ int main(void) {
         char dump[8192];
         ui_draw();
         grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "System Tools") != NULL, "System Tools is first");
         expect(strstr(dump, "Stock Menu") != NULL, "Stock Menu is listed");
         expect(strstr(dump, "Boot Screen") != NULL && strstr(dump, "not yet") != NULL,
                "Boot Screen is shown and not yet");
         expect(strstr(dump, "Reset All") != NULL, "Reset All is shown");
     }
+    /* cursor skips Boot Screen, the blanks, and Reset All */
+    expect(ui_list_selected() == 0, "cursor starts on System Tools");
+    press(LB_DOWN); press(LB_DOWN); press(LB_DOWN);
+    expect(ui_list_selected() == 7, "three downs land on Stock Menu, skipping the rest");
+    press(LB_DOWN);
+    expect(ui_list_selected() == 0, "down from Stock Menu wraps to System Tools");
+    press(LB_UP);
+    expect(ui_list_selected() == 7, "up from System Tools wraps to Stock Menu");
     press(LB_A);
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "Stock Menu accepts A");
     press(LB_B);
@@ -481,8 +490,8 @@ int main(void) {
     expect(stock_calls == 0, "cancel does not run S7");
     press(LB_A);
     press(LB_A);
-    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "a single A press does not restore");
-    expect(stock_calls == 0, "a single A press does not run S7");
+    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "a short A stays on the confirm");
+    expect(stock_calls == 0, "a short A does not run S7");
     press(LB_A);
     ui_button(LB_A, 1, 1000);
     ui_tick(3900);
@@ -532,7 +541,7 @@ int main(void) {
     }
     sysinfo_set_root("/tmp/redux-sysinfo-nav");
     ui_init();
-    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_A);
+    down(7); press(LB_A); down(4); press(LB_A); press(LB_A);
     expect(ui_screen() == SCREEN_SYSINFO, "System Tools opens from System Defaults");
     {
         char dump[8192];
@@ -582,19 +591,21 @@ int main(void) {
     power_set_run(power_hook);
     power_calls = 0;
     ui_init();
-    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "Restart opens the confirm");
     press(LB_A);
-    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "one A on Restart cancels");
-    expect(power_calls == 0, "one A does not run reboot");
-    press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    expect(ui_screen() == SCREEN_RESTART_CONFIRM, "a short A stays on Restart confirm");
+    expect(power_calls == 0, "a short A does not run reboot");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B leaves Restart confirm");
+    press(LB_DOWN); press(LB_A);
     ui_button(LB_A, 1, 20000);
     ui_tick(22900);
     ui_button(LB_B, 1, 23000);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B during Restart hold cancels");
     expect(power_calls == 0, "cancelled Restart does not run");
     ui_button(LB_B, 0, 23100);
-    press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    press(LB_DOWN); press(LB_A);
     ui_button(LB_A, 1, 24000);
     ui_tick(27000);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "3 s hold stays on Restart confirm");
@@ -603,12 +614,14 @@ int main(void) {
 
     power_calls = 0;
     ui_init();
-    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_POWEROFF_CONFIRM, "Power Off opens the confirm");
     press(LB_A);
-    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "one A on Power Off cancels");
-    expect(power_calls == 0, "one A does not run poweroff");
-    press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    expect(ui_screen() == SCREEN_POWEROFF_CONFIRM, "a short A stays on Power Off confirm");
+    expect(power_calls == 0, "a short A does not run poweroff");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B leaves Power Off confirm");
+    press(LB_DOWN); press(LB_DOWN); press(LB_A);
     ui_button(LB_A, 1, 30000);
     ui_tick(33000);
     expect(power_calls == 1, "3 s hold runs poweroff once");
