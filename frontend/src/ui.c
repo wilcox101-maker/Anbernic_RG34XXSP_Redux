@@ -302,6 +302,11 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     }
     if (!pressed) return;
 
+    /* Shoulders are not Wi-Fi navigation. L2/R2 are not logical buttons, so they never get here. */
+    if ((screen == SCREEN_WIFI || screen == SCREEN_WIFI_KEY) &&
+        (btn == LB_L1 || btn == LB_R1))
+        return;
+
     if (screen == SCREEN_WIFI_KEY) { wifi_key_button(btn); return; }
 
     if (screen == SCREEN_STOCK_CONFIRM && btn == LB_A) {
