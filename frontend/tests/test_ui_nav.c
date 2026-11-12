@@ -36,7 +36,7 @@ static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
     snprintf(nav_busy, sizeof nav_busy, "%s", ui_last_busy());
     if (argv[3] && strcmp(argv[3], "GENERAL.STATE,GENERAL.CONNECTION") == 0) {
         if (status) *status = 0;
-        if (out && out_n) snprintf(out, out_n, "100:%s\n", nav_last_ssid);
+        if (out && out_n) snprintf(out, out_n, "GENERAL.STATE:100 (connected)\nGENERAL.CONNECTION:%s\n", nav_last_ssid);
         return 0;
     }
     if (argv[3] && strcmp(argv[3], "IP4.ADDRESS") == 0) {

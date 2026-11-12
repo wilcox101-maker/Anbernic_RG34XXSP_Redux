@@ -22,7 +22,7 @@ static const char *connect_body;
 static char saw_ip_query;
 
 static const char *profile_body;   /* NULL = no profiles; else NAME list */
-static const char *verify_body;    /* NULL = "100:Home" success */
+static const char *verify_body;    /* NULL = on Home, in the real `nmcli -t device show` format */
 static char saw_modify;
 static char saw_up;
 static char modify_password_ok;
@@ -48,7 +48,7 @@ static int spawn(char *const argv[], char *out, size_t out_n, int *status) {
     if (argv[3] && strcmp(argv[3], "GENERAL.STATE,GENERAL.CONNECTION") == 0) {
         if (status) *status = 0;
         if (out && out_n)
-            snprintf(out, out_n, "%s", verify_body ? verify_body : "100:Home\n");
+            snprintf(out, out_n, "%s", verify_body ? verify_body : "GENERAL.STATE:100 (connected)\nGENERAL.CONNECTION:Home\n");
         return 0;
     }
     if (argv[3] && strcmp(argv[3], "NAME") == 0) {
@@ -172,11 +172,14 @@ int main(void) {
 
     /* verify fails (wrong network or not 100): failure even if connect printed nothing. */
     connect_body = "";
-    verify_body = "30 (disconnected):\n";
+    verify_body = "GENERAL.STATE:30 (disconnected)\nGENERAL.CONNECTION:\n";
     expect(wifi_connect("Home", NULL) == -1, "STATE not 100 is a failure");
     expect(strcmp(wifi_last_reason(), "not connected") == 0, "verify failure reason");
-    verify_body = "100:Other\n";
+    verify_body = "GENERAL.STATE:100 (connected)\nGENERAL.CONNECTION:Other\n";
     expect(wifi_connect("Home", NULL) == -1, "connected to a different SSID is a failure");
+    /* The old "100:Home" shape (no field names) is not what the device prints: not a success. */
+    verify_body = "100:Home\n";
+    expect(wifi_connect("Home", NULL) == -1, "unlabelled 100:Home is not taken as connected");
     verify_body = NULL;
 
     /* saved profile + password: modify then up, then verify. */

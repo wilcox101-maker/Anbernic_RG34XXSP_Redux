@@ -207,20 +207,24 @@ static int verify_connected(const char *ssid) {
     char out[256];
     int status = 1;
     if (run_err(argv, out, sizeof out, &status) != 0 || status != 0) return 0;
-    const char *state = out;
-    while (*state == ' ' || *state == '\n' || *state == '\r') state++;
-    if (strncmp(state, "100", 3) != 0) return 0;
-    const char *colon = strchr(state, ':');
-    if (!colon) return 0;
-    const char *conn = colon + 1;
-    while (*conn == ' ') conn++;
-    char got[WIFI_SSID_MAX];
-    size_t n = 0;
-    while (conn[n] && conn[n] != '\n' && conn[n] != '\r' && n + 1 < sizeof got) n++;
-    memcpy(got, conn, n);
-    got[n] = '\0';
-    while (n && (got[n - 1] == ' ' || got[n - 1] == '\r')) got[--n] = '\0';
-    return strcmp(got, ssid) == 0;
+    /* -t device show prints one FIELD:value line per field (device, 2026-11-12):
+         GENERAL.STATE:100 (connected)
+         GENERAL.CONNECTION:<name>  */
+    int state_ok = 0, conn_ok = 0;
+    char *line = out;
+    while (*line) {
+        char *nl = strchr(line, '\n');
+        if (nl) *nl = '\0';
+        size_t n = strlen(line);
+        while (n && (line[n - 1] == '\r' || line[n - 1] == ' ')) line[--n] = '\0';
+        if (strncmp(line, "GENERAL.STATE:", 14) == 0)
+            state_ok = strncmp(line + 14, "100", 3) == 0;
+        else if (strncmp(line, "GENERAL.CONNECTION:", 19) == 0)
+            conn_ok = strcmp(line + 19, ssid) == 0;
+        if (!nl) break;
+        line = nl + 1;
+    }
+    return state_ok && conn_ok;
 }
 
 static int profile_exists(const char *ssid) {
