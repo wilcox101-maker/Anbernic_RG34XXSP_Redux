@@ -30,7 +30,9 @@ a fresh chat when **any** of these happens:
 
 Procedure: the agent updates the **Handoff** section of `notes/STATUS.md` (current state, device IP,
 deploy rule, lessons, decisions, queue) in a docs PR, and Dale merges it. Dale then opens a new chat
-in the project and sends: *"Read AGENTS.md and notes/STATUS.md, then continue."* Nothing else is
+in the project and sends: *"Approve repo push access. Read AGENTS.md and notes/STATUS.md, then
+continue."* The first part lets a new Claude chat attach the repo with write access before it
+starts (without it, Claude can only clone read-only and can't push, comment or log). Nothing else is
 needed; the inbox #41 and notes/ carry the detail. Before handing off, the agent either finishes
 reviewing any PR in flight or lists it in the handoff.
 The agent's last message in the old chat gives Dale an **archive name** to rename it with, in the
