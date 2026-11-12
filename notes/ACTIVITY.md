@@ -110,3 +110,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-12 10:50 · claude · read: device survey (redux-work) · did: PR #68 romscan grows past the 4096 cap (10k+ ROMs on Dale's card dropped systems), SYS_MAX 128, test fails on old code; hw-result survey note; #66 #67 merged by Dale
 - 2026-11-12 10:55 · claude · read: Dale's full core list, /root/mnt missing · did: PR #70 maps 27 stock folders to stock cores (12 with ROMs); HBMAME/OPENBOR/VARCADE left out; BIOS path question noted
 - 2026-11-12 10:49 · grok · read: ACTIVITY, STATUS, #41, open PRs, notes/2026-11-12-claude-message-grok-next.md · did: PING; #69 merged; #70 (27 more systems, Claude) open; assigned next is Wi-Fi part 2 then System Tools. Not started.
+- 2026-11-12 11:00 · claude · read: Dale 'yes to rule add', 'Confirmed' (splash) · did: PR #71 AGENTS go rule + STATUS handoff for chat swap; #70 merge conflict fixed (6ef96ed), CI green
