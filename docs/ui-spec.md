@@ -54,7 +54,7 @@ RG34XXSP Redux
 │   ├── Audio
 │   ├── Input
 │   ├── Power & Lid
-│   ├── System
+│   ├── System               (Stock Menu, System Tools, Restart, Power Off)
 │   ├── Emulation
 │   └── UI                     (colour presets)
 │
@@ -460,3 +460,24 @@ arrays at build time, keep their copyright/licence headers, and are listed in a 
 - No contradictions with `docs/ui-brief.md` or stock documentation.
 - Battery thermistor status remains explicitly unverified until the on-device check is complete.
 - Deliberate removals and Claude review flags are recorded.
+
+
+## 9. Restart and Power Off
+
+Settings → System lists Restart and Power Off after Stock Menu and System Tools. Each opens a confirm screen. Hold A for 3 seconds (HOLD_DESTRUCT_MS) to run; release A, or any other button, cancels. One tap of A does nothing. The hold bar is the same as Stock Menu.
+
+Restart runs `sync && reboot`. Power Off runs `sync && poweroff`. Desktop builds do not run either command; a test hook logs the command instead. Neither writes to /mnt/mmc.
+
+    Restart                                                             BAT 87% CHG WIFI 12:34
+      Runs sync, then reboot.
+      Hold A for 3 seconds. Release, or any other button, cancels.
+      [                                        ]
+    Hold A 3s:Restart  B:Cancel
+
+    Power Off                                                           BAT 87% CHG WIFI 12:34
+      Runs sync, then poweroff.
+      Hold A for 3 seconds. Release, or any other button, cancels.
+      [                                        ]
+    Hold A 3s:Power Off  B:Cancel
+
+Not run on the device yet. Dale merges this one and checks that Restart returns to Redux and Power Off powers the unit off.

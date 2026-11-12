@@ -8,6 +8,7 @@
 #include "romscan.h"
 #include "wifi.h"
 #include "stockmenu.h"
+#include "power.h"
 #include "sysinfo.h"
 #include <stdio.h>
 #include <string.h>
@@ -32,8 +33,8 @@ static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "System", "Emulation", "UI"
 };
 enum { SETTINGS_SYSTEM = 4, SETTINGS_UI = 6 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
-static const char *system_items[] = { "Stock Menu", "System Tools" };
-enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1 };
+static const char *system_items[] = { "Stock Menu", "System Tools", "Restart", "Power Off" };
+enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3 };
 static const char *internet_items[] = {
     "YouTube (if feasible)", "Web browser (text)"
 };
@@ -510,7 +511,8 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     /* One A tap must never run a destructive action. The clock starts at the
        first press; a repeat press does not move it. Release, or any other
        button, leaves the screen without running it. */
-    if (screen == SCREEN_STOCK_CONFIRM) {
+    if (screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
+        || screen == SCREEN_POWEROFF_CONFIRM) {
         if (btn == LB_A) {
             if (pressed) {
                 if (!a_down_at && !stock_started)
@@ -589,6 +591,12 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     }
     if (btn == LB_A && screen == SCREEN_SYSTEM_DEFAULTS) {
         if (selected == SYSTEM_TOOLS) { go(SCREEN_SYSINFO); return; }
+        if (selected == SYSTEM_RESTART || selected == SYSTEM_POWEROFF) {
+            stock_msg[0] = '\0';
+            stock_started = 0;
+            go(selected == SYSTEM_RESTART ? SCREEN_RESTART_CONFIRM : SCREEN_POWEROFF_CONFIRM);
+            return;
+        }
         if (selected != SYSTEM_STOCK) return;
         stock_msg[0] = '\0';
         stock_started = 0;
@@ -620,19 +628,28 @@ void ui_tick(uint32_t now_ms) {
         if (hold_ms >= HOLD_TO_ENTER_MS) go_replace(SCREEN_ENG);   /* B from Engineering -> Main */
         dirty = 1;
     }
-    if (screen == SCREEN_STOCK_CONFIRM && a_down_at && !stock_started) {
+    if ((screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
+         || screen == SCREEN_POWEROFF_CONFIRM) && a_down_at && !stock_started) {
         hold_ms = now_ms - a_down_at;
         if (hold_ms >= HOLD_DESTRUCT_MS) {
-            ui_busy("Restoring stock menu", NULL);
-            int rc = stock_restore();
             a_down_at = 0;
-            if (rc == 0) {
-                stock_started = 1;
-                snprintf(stock_msg, sizeof stock_msg, "rebooting");
-            } else if (rc == -2) {
-                snprintf(stock_msg, sizeof stock_msg, "no dmenu_ln.bak; refusing");
+            if (screen == SCREEN_STOCK_CONFIRM) {
+                ui_busy("Restoring stock menu", NULL);
+                int rc = stock_restore();
+                if (rc == 0) {
+                    stock_started = 1;
+                    snprintf(stock_msg, sizeof stock_msg, "rebooting");
+                } else if (rc == -2) {
+                    snprintf(stock_msg, sizeof stock_msg, "no dmenu_ln.bak; refusing");
+                } else {
+                    snprintf(stock_msg, sizeof stock_msg, "restore failed");
+                }
             } else {
-                snprintf(stock_msg, sizeof stock_msg, "restore failed");
+                int rc = (screen == SCREEN_RESTART_CONFIRM) ? power_reboot() : power_poweroff();
+                stock_started = 1;
+                snprintf(stock_msg, sizeof stock_msg, "%s",
+                         rc == 0 ? (screen == SCREEN_RESTART_CONFIRM ? "restarting" : "powering off")
+                                 : "failed");
             }
         }
         dirty = 1;
@@ -643,7 +660,8 @@ void ui_tick(uint32_t now_ms) {
 }
 
 uint32_t ui_wait_ms(void) {
-    if (a_down_at && (screen == SCREEN_ENG_CONFIRM || screen == SCREEN_STOCK_CONFIRM))
+    if (a_down_at && (screen == SCREEN_ENG_CONFIRM || screen == SCREEN_STOCK_CONFIRM
+        || screen == SCREEN_RESTART_CONFIRM || screen == SCREEN_POWEROFF_CONFIRM))
         return HOLD_WAIT_MS;
     return IDLE_WAIT_MS;
 }
@@ -886,6 +904,28 @@ void ui_draw(void) {
         }
         break;
     }
+    case SCREEN_RESTART_CONFIRM:
+        frame("Restart", "Hold A 3s:Restart  B:Cancel", 1, 0);
+        body(0, "  Runs sync, then reboot.");
+        body(2, "  Hold A for 3 seconds. Release, or any other button, cancels.");
+        draw_hold_bar(4, HOLD_DESTRUCT_MS);
+        if (stock_msg[0]) {
+            char line[GRID_COLS];
+            snprintf(line, sizeof line, "  %s", stock_msg);
+            body(6, line);
+        }
+        break;
+    case SCREEN_POWEROFF_CONFIRM:
+        frame("Power Off", "Hold A 3s:Power Off  B:Cancel", 1, 0);
+        body(0, "  Runs sync, then poweroff.");
+        body(2, "  Hold A for 3 seconds. Release, or any other button, cancels.");
+        draw_hold_bar(4, HOLD_DESTRUCT_MS);
+        if (stock_msg[0]) {
+            char line[GRID_COLS];
+            snprintf(line, sizeof line, "  %s", stock_msg);
+            body(6, line);
+        }
+        break;
     case SCREEN_STOCK_CONFIRM:
         frame("Stock Menu", "Hold A 3s:Restore  B:Cancel", 1, 0);
         body(0, "  Restores the stock launcher from dmenu_ln.bak.");

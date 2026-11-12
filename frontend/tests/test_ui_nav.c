@@ -8,6 +8,7 @@
 #include "systems.h"
 #include "wifi.h"
 #include "stockmenu.h"
+#include "power.h"
 #include "sysinfo.h"
 #include "grid.h"
 #include <stdio.h>
@@ -73,6 +74,14 @@ static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
         if (nav_fail) snprintf(out, out_n, "Error: Secrets were required, but not provided.\n");
         else out[0] = 0;
     }
+    return 0;
+}
+
+static int power_calls;
+static char power_cmd[64];
+static int power_hook(const char *cmd) {
+    power_calls++;
+    snprintf(power_cmd, sizeof power_cmd, "%s", cmd);
     return 0;
 }
 
@@ -465,8 +474,8 @@ int main(void) {
                "Boot Screen is shown and not yet");
         expect(strstr(dump, "Reset All") != NULL, "Reset All is shown");
     }
-    press(LB_DOWN); press(LB_DOWN); press(LB_A);
-    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "only Stock Menu accepts A");
+    press(LB_A);
+    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "Stock Menu accepts A");
     press(LB_B);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B cancels back to System Defaults");
     expect(stock_calls == 0, "cancel does not run S7");
@@ -568,6 +577,42 @@ int main(void) {
         expect(strstr(dump, "Amber  (current)") != NULL, "saved accent reloads as current");
     }
     remove("/tmp/redux.theme");
+
+    /* Restart / Power Off: one A does nothing; 3 s hold runs the hook once; B cancels. */
+    power_set_run(power_hook);
+    power_calls = 0;
+    ui_init();
+    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    expect(ui_screen() == SCREEN_RESTART_CONFIRM, "Restart opens the confirm");
+    press(LB_A);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "one A on Restart cancels");
+    expect(power_calls == 0, "one A does not run reboot");
+    press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    ui_button(LB_A, 1, 20000);
+    ui_tick(22900);
+    ui_button(LB_B, 1, 23000);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B during Restart hold cancels");
+    expect(power_calls == 0, "cancelled Restart does not run");
+    ui_button(LB_B, 0, 23100);
+    press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    ui_button(LB_A, 1, 24000);
+    ui_tick(27000);
+    expect(ui_screen() == SCREEN_RESTART_CONFIRM, "3 s hold stays on Restart confirm");
+    expect(power_calls == 1, "3 s hold runs the hook once");
+    expect(strcmp(power_cmd, "sync && reboot") == 0, "Restart runs sync && reboot");
+
+    power_calls = 0;
+    ui_init();
+    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    expect(ui_screen() == SCREEN_POWEROFF_CONFIRM, "Power Off opens the confirm");
+    press(LB_A);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "one A on Power Off cancels");
+    expect(power_calls == 0, "one A does not run poweroff");
+    press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    ui_button(LB_A, 1, 30000);
+    ui_tick(33000);
+    expect(power_calls == 1, "3 s hold runs poweroff once");
+    expect(strcmp(power_cmd, "sync && poweroff") == 0, "Power Off runs sync && poweroff");
 
     printf("%d failed\n", fails);
     return fails ? 1 : 0;
