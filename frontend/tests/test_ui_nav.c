@@ -33,6 +33,11 @@ static int nav_fail;
 
 static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
     snprintf(nav_busy, sizeof nav_busy, "%s", ui_last_busy());
+    if (argv[3] && strcmp(argv[3], "GENERAL.STATE,GENERAL.CONNECTION") == 0) {
+        if (status) *status = 0;
+        if (out && out_n) snprintf(out, out_n, "100:Home\n");
+        return 0;
+    }
     if (argv[3] && strcmp(argv[3], "IP4.ADDRESS") == 0) {
         if (status) *status = 0;
         if (out && out_n) snprintf(out, out_n, "IP4.ADDRESS[1]:192.168.1.20/24\n");
