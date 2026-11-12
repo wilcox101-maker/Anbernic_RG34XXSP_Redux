@@ -5,6 +5,7 @@
 #include "ui.h"
 #include "launcher.h"
 #include "romscan.h"
+#include "systems.h"
 #include "wifi.h"
 #include "stockmenu.h"
 #include "grid.h"
@@ -225,6 +226,40 @@ int main(void) {
     expect(strstr(line, "pcsx") != NULL && strstr(line, "castlevania.chd") != NULL,
            "PS ROM launches the standalone pcsx line");
     remove(UI_RESUME_PATH);
+
+    /* Stock folders added 2026-11-12: each key has a RetroArch core, and real folders are listed by name. */
+    {
+        static const char *keys[] = { "A2600", "A5200", "A7800", "A800", "LYNX", "ATARIST", "AMIGA",
+            "C64", "VIC20", "MSX", "DOS", "SCUMMVM", "EASYRPG", "ONS", "FDS", "GW", "POKE", "VB",
+            "PICO", "SEGA32X", "MDCD", "SATURN", "N64", "DREAMCAST", "NAOMI", "ATOMISWAVE", "NEOCD" };
+        int ok = 1;
+        for (size_t i = 0; i < sizeof keys / sizeof keys[0]; i++) {
+            const system_entry_t *e = systems_lookup(keys[i]);
+            if (!e || e->target != LAUNCH_RETROARCH || !e->core_or_path || !strstr(e->core_or_path, "_libretro.so")) {
+                ok = 0; fprintf(stderr, "no core for %s\n", keys[i]);
+            }
+        }
+        expect(ok, "all 27 new stock folders have a RetroArch core");
+        mkdir("/tmp/redux-rom-more", 0755);
+        const char *dirs[4] = { "N64", "DREAMCAST", "PICO", "A2600" };
+        const char *files[4] = { "mario.z64", "crazy.chd", "celeste.p8", "pitfall.a26" };
+        for (int i = 0; i < 4; i++) {
+            char path[96];
+            snprintf(path, sizeof path, "/tmp/redux-rom-more/%s", dirs[i]);
+            mkdir(path, 0755);
+            snprintf(path, sizeof path, "/tmp/redux-rom-more/%s/%s", dirs[i], files[i]);
+            write_empty(path);
+        }
+        setenv("REDUX_ROMS", "/tmp/redux-rom-more", 1);
+        ui_init();
+        int named = 0;
+        for (int s = 0; s < romscan_systems(); s++) {
+            const char *tl = romscan_title(s);
+            if (!strcmp(tl, "Nintendo 64") || !strcmp(tl, "Dreamcast") || !strcmp(tl, "PICO-8") ||
+                !strcmp(tl, "Atari 2600")) named++;
+        }
+        expect(romscan_systems() == 4 && named == 4, "N64, Dreamcast, PICO-8 and Atari 2600 are listed by name");
+    }
 
     /* More than the old 4096 cap across systems: every system and ROM is still listed. */
     {

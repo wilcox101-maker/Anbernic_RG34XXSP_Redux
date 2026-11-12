@@ -55,6 +55,15 @@ static const struct { const char *key; const char *title; } titles[] = {
     { "GG", "Game Gear" }, { "PCECD", "PC Engine CD" }, { "NEOGEO", "Neo Geo" },
     { "FBNEO", "FinalBurn Neo" }, { "CPS1", "CPS-1" }, { "CPS2", "CPS-2" }, { "CPS3", "CPS-3" },
     { "MAME", "MAME (Arcade)" },
+    { "A2600", "Atari 2600" }, { "A5200", "Atari 5200" }, { "A7800", "Atari 7800" },
+    { "A800", "Atari 800" }, { "LYNX", "Atari Lynx" }, { "ATARIST", "Atari ST" },
+    { "AMIGA", "Amiga" }, { "C64", "Commodore 64" }, { "VIC20", "Commodore VIC-20" },
+    { "MSX", "MSX" }, { "DOS", "DOS" }, { "SCUMMVM", "ScummVM" }, { "EASYRPG", "EasyRPG" },
+    { "ONS", "ONScripter" }, { "FDS", "Famicom Disk System" }, { "GW", "Game & Watch" },
+    { "POKE", "Pokemon Mini" }, { "VB", "Virtual Boy" }, { "PICO", "PICO-8" },
+    { "SEGA32X", "Sega 32X" }, { "MDCD", "Mega CD" }, { "SATURN", "Saturn" },
+    { "N64", "Nintendo 64" }, { "DREAMCAST", "Dreamcast" }, { "NAOMI", "NAOMI" },
+    { "ATOMISWAVE", "Atomiswave" }, { "NEOCD", "Neo Geo CD" },
 };
 
 /* Folder name on the card -> systems-table key, used only when the folder
