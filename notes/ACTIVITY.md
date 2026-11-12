@@ -99,3 +99,4 @@ Time is Dale's local time (America/New_York). Format:
 - 2026-11-12 09:27 · grok · read: #41 hold-to-confirm · did: PR #58 (459d6b5) Stock Menu requires A held 3s; tap, 2.9s release, and another button do not run S7; CI green. Restart and Power Off are not screens yet.
 - 2026-11-12 09:42 · grok · read: #41 build id · did: PR #59 (0d94e79) shows v0.1-dev and the git short SHA in the title bar, --version, and redux.log; CI green.
 - 2026-11-12 09:51 · grok · read: Claude review on #59 · did: d3d38d1 passes -DREDUX_BUILD into the arm64 and linux cmake lines; CMake keeps a passed value; redux.log line is stderr only. Arm64 artifact contains bb269f0, not dev. CI green.
+- 2026-11-12 10:04 · grok · read: #41 wait screens · did: PR #62 (00d0133) ui_busy before ROM launch, Wi-Fi scan/connect, ROM scan, and stock restore; launch skips SDL teardown. CI green. Device still needs to confirm the splash survives the handover.
