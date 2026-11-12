@@ -27,9 +27,9 @@ enum { MAIN_GAME_ROOM = 0, MAIN_INTERNET = 5, MAIN_NETWORK = 6, MAIN_SETTINGS = 
 /* ROM names come from romscan (read-only). The desktop fixture recreates the
    five F0 names so this screen still matches the mock-up. */
 static const char *settings_items[] = {
-    "Display", "Audio", "Input", "Power & Lid", "Network", "System", "Emulation"
+    "Display", "Audio", "Input", "Power & Lid", "System", "Emulation"
 };
-enum { SETTINGS_NETWORK = 4, SETTINGS_SYSTEM = 5 };
+enum { SETTINGS_SYSTEM = 4 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
 static const char *system_items[] = { "Stock Menu", "System Tools" };
 enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1 };
 static const char *internet_items[] = {
@@ -513,7 +513,6 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (btn == LB_A && screen == SCREEN_SETTINGS) {
-        if (selected == SETTINGS_NETWORK) { go(SCREEN_WIFI); wifi_rescan(); }
         if (selected == SETTINGS_SYSTEM)  go(SCREEN_SYSTEM_DEFAULTS);
         return;
     }
