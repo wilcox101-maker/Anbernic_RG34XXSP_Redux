@@ -38,6 +38,41 @@ Runs alongside the kernel phases. The full plan, UI rules and exit tests are in 
 - [ ] F3 includes the UI font picker: vga / spleen / unifont / thin / chunky ([docs/ui-spec.md §8a](docs/ui-spec.md))
 - [ ] F3 settings parity · F4 power and lid · F5 Engineering Mode · F6 features stock left out · F7 mainline port · F8 release
 
+## Release milestones
+Two targets. The phases above say *how* the work is done; these say *when it ships*. Each box is ticked
+only after it has been checked on the device.
+
+### Beta (v0.5): Redux on the stock kernel
+The full frontend on the stock card with the Phase 1 kernel tweaks, installable by someone other than
+Dale. No mainline kernel is needed.
+- [x] F0–F2: spec, desktop prototype, launch parity on stock
+- [ ] F3 settings parity, including from the queue: Wi-Fi Connecting/result screens, BIOS-style UI with
+      colour presets, TF2 scan/hot-plug, Restart/Power Off with a 3 s hold
+- [ ] F4 power and lid: its exit test (50 lid cycles mid-game, no lost save, governor restored)
+- [ ] F5 Engineering Mode inside the stock OPP tables (Expert Mode is **not** part of Beta)
+- [ ] F6 features stock left out, including from the queue: System Tools (read-only), App Center,
+      Ports/PortMaster, Terminal/htop
+- [ ] Phase 1 measurements, stock vs. Redux: boot time, idle drain, sustained-load temperature, button latency
+- [ ] Stock-card install: one explicit, opt-in installer, a documented way back to stock, the 640×480 boot logo
+- [ ] User docs that match what's on screen; README status updated to Beta
+- **Exit test:** a fresh copy of the stock card plus the installer boots to Redux. F3–F6 checklists pass on
+  the device. One week of daily use with no lost save and no unplanned trip back to stock.
+
+### 1.0: purpose-built OS on mainline
+- [ ] Phase 2 complete (mainline kernel, RAM-resident system, `SW_LID` wake)
+- [ ] F7: F2–F6 checklists pass again on mainline with no UI code changes outside the hardware layer
+- [ ] F8: install/update path for the new OS, measurements against stock and Beta, user docs
+- **Exit test:** a clean card boots mainline Redux to the menu, and every Beta checklist still passes
+
+### After 1.0 or alongside it (backlog, not gating either milestone)
+Expert Mode (above-factory settings behind its unlock), chiptune composer (LittleGPTracker port),
+hardware video decode for media, in-game HUD overlay, Wi-Fi idle scanning, features.ini. Items can move
+earlier once Beta is out, if they don't put its exit test at risk.
+
+### Progress estimate
+Rough, effort-weighted, as of 2026-11-12: **Beta ≈ 35%**, **1.0 ≈ 15%**. Phase 2 is the biggest
+unknown: it exists only as a design and nothing has booted yet. Update this line when a phase is signed off.
+
 ## Non-goals
 - Overclocking or undervolting past the stock OPP table **by default** (it is possible only through the opt-in Expert Mode; see notes/2026-11-12-dale-decision-expert-mode.md)
 - Bundling ROMs or copyrighted BIOS files
