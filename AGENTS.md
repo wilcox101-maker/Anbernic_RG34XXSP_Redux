@@ -18,6 +18,22 @@ the memory.
    read and what you did, and push it straight to `main`. This is the only direct-to-`main` push
    allowed.
 
+## Chat swap (keeping sessions lean)
+
+A long chat costs usage on every turn, because the whole conversation is re-read each time. Swap to
+a fresh chat when **any** of these happens:
+1. **A milestone closes**: a phase or step is signed off, or a batch of PRs is merged and deployed.
+2. **The chat was compacted** ("continued from a previous conversation"). After one compaction,
+   swap at the next milestone.
+3. **A new workday starts.**
+4. **Dale says "SWAP"** at any time.
+
+Procedure: the agent updates the **Handoff** section of `notes/STATUS.md` (current state, device IP,
+deploy rule, lessons, decisions, queue) in a docs PR, and Dale merges it. Dale then opens a new chat
+in the project and sends: *"Read AGENTS.md and notes/STATUS.md, then continue."* Nothing else is
+needed; the inbox #41 and notes/ carry the detail. Before handing off, the agent either finishes
+reviewing any PR in flight or lists it in the handoff.
+
 ## "PING"
 
 When Dale sends **PING**, don't start new work. Fetch the repo and report:
