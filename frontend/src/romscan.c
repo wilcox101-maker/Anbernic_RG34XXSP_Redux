@@ -7,8 +7,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#define SYS_MAX 64
-#define ROM_MAX 4096
+#define SYS_MAX 128
 #define KEY_MAX 32
 #define TITLE_MAX 64
 #define ROM_NAME_MAX 96
@@ -28,8 +27,22 @@ typedef struct {
 
 static sys_t g_sys[SYS_MAX];
 static int g_nsys;
-static rom_t g_rom[ROM_MAX];
+/* Grows as needed: Dale's card has well over 10,000 ROMs across 50+ folders, so a fixed
+   cap silently dropped whole systems (scan order decided which). */
+static rom_t *g_rom;
 static int g_nrom;
+static int g_cap;
+
+/* Room for one more ROM at index i. Returns 0 on success, -1 if out of memory. */
+static int rom_reserve(int i) {
+    if (i < g_cap) return 0;
+    int cap = g_cap ? g_cap * 2 : 1024;
+    rom_t *grown = realloc(g_rom, (size_t)cap * sizeof(rom_t));
+    if (!grown) return -1;
+    g_rom = grown;
+    g_cap = cap;
+    return 0;
+}
 
 static const struct { const char *key; const char *title; } titles[] = {
     { "GBA", "Game Boy Advance" }, { "GB", "Game Boy" }, { "GBC", "Game Boy Color" },
@@ -144,7 +157,7 @@ static int scan_dir(const char *dirpath, int begin) {
     while ((de = readdir(d)) != NULL) {
         if (de->d_name[0] == '.') continue;
         if (skipped_ext(de->d_name)) continue;
-        if (begin + n >= ROM_MAX) break;
+        if (rom_reserve(begin + n) != 0) break;
         char path[PATH_MAX_R];
         if (join2(path, sizeof path, dirpath, de->d_name) != 0) continue;
         struct stat st;

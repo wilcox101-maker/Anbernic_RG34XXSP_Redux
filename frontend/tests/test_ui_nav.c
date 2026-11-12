@@ -259,6 +259,27 @@ int main(void) {
                 !strcmp(tl, "Atari 2600")) named++;
         }
         expect(romscan_systems() == 4 && named == 4, "N64, Dreamcast, PICO-8 and Atari 2600 are listed by name");
+
+    /* More than the old 4096 cap across systems: every system and ROM is still listed. */
+    {
+        const char *sysn[3] = { "GB", "GBC", "NES" };
+        mkdir("/tmp/redux-rom-big", 0755);
+        for (int s = 0; s < 3; s++) {
+            char dir[64];
+            snprintf(dir, sizeof dir, "/tmp/redux-rom-big/%s", sysn[s]);
+            mkdir(dir, 0755);
+            for (int i = 0; i < 1500; i++) {
+                char path[128];
+                snprintf(path, sizeof path, "%s/Game %04d.rom", dir, i);
+                write_empty(path);
+            }
+        }
+        setenv("REDUX_ROMS", "/tmp/redux-rom-big", 1);
+        ui_init();
+        int total = 0;
+        for (int s = 0; s < romscan_systems(); s++) total += romscan_roms(s);
+        expect(romscan_systems() == 3, "all three big systems are listed");
+        expect(total == 4500, "4500 ROMs are listed, past the old 4096 cap");
     }
 
     /* The stock MAME folder is listed and launches through the mame2003_plus core. */
