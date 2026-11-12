@@ -8,6 +8,7 @@
 #include "romscan.h"
 #include "wifi.h"
 #include "stockmenu.h"
+#include "sysinfo.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -29,7 +30,8 @@ static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "Network", "System", "Emulation"
 };
 enum { SETTINGS_NETWORK = 4, SETTINGS_SYSTEM = 5 };
-static const char *system_items[] = { "Stock Menu" };
+static const char *system_items[] = { "Stock Menu", "System Tools" };
+enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1 };
 static const char *internet_items[] = {
     "YouTube (if feasible)", "Web browser (text)"
 };
@@ -513,6 +515,8 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (btn == LB_A && screen == SCREEN_SYSTEM_DEFAULTS) {
+        if (selected == SYSTEM_TOOLS) { go(SCREEN_SYSINFO); return; }
+        if (selected != SYSTEM_STOCK) return;
         stock_msg[0] = '\0';
         stock_started = 0;
         go(SCREEN_STOCK_CONFIRM);
@@ -763,9 +767,20 @@ void ui_draw(void) {
         frame("System Defaults", "A:Select  B:Back", 1, 0);
         list(0, system_items, COUNT(system_items));
         /* Grid has no grey. These two are drawn and left out of the list, so A cannot select them. */
-        body(1, "   Boot Screen   not yet");
-        body(2, "   Reset All     not yet");
+        body(COUNT(system_items), "   Boot Screen   not yet");
+        body(COUNT(system_items) + 1, "   Reset All     not yet");
         break;
+    case SCREEN_SYSINFO: {
+        frame("System Tools", "B:Back", 1, 0);
+        sysinfo_row_t rows[SYSINFO_MAX_ROWS];
+        int n = sysinfo_collect(rows, SYSINFO_MAX_ROWS);
+        for (int i = 0; i < n && i < BODY_ROWS; i++) {
+            char line[GRID_COLS];
+            snprintf(line, sizeof line, "  %-14.14s %.40s", rows[i].label, rows[i].value);
+            body(i, line);
+        }
+        break;
+    }
     case SCREEN_STOCK_CONFIRM:
         frame("Stock Menu", "Hold A 3s:Restore  B:Cancel", 1, 0);
         body(0, "  Restores the stock launcher from dmenu_ln.bak.");

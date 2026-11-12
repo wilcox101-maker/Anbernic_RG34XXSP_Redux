@@ -8,6 +8,7 @@
 #include "systems.h"
 #include "wifi.h"
 #include "stockmenu.h"
+#include "sysinfo.h"
 #include "grid.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -454,6 +455,37 @@ int main(void) {
     wifi_set_spawn(NULL);
     stock_set_run(NULL);
     stock_set_bak(-1);
+
+    mkdir("/tmp/redux-sysinfo-nav", 0755);
+    mkdir("/tmp/redux-sysinfo-nav/sys", 0755);
+    mkdir("/tmp/redux-sysinfo-nav/sys/class", 0755);
+    mkdir("/tmp/redux-sysinfo-nav/sys/class/power_supply", 0755);
+    mkdir("/tmp/redux-sysinfo-nav/sys/class/power_supply/axp2202-battery", 0755);
+    mkdir("/tmp/redux-sysinfo-nav/sys/devices", 0755);
+    mkdir("/tmp/redux-sysinfo-nav/sys/devices/system", 0755);
+    mkdir("/tmp/redux-sysinfo-nav/sys/devices/system/cpu", 0755);
+    mkdir("/tmp/redux-sysinfo-nav/sys/devices/system/cpu/cpu0", 0755);
+    mkdir("/tmp/redux-sysinfo-nav/sys/devices/system/cpu/cpu0/cpufreq", 0755);
+    {
+        FILE *f = fopen("/tmp/redux-sysinfo-nav/sys/class/power_supply/axp2202-battery/temp", "w");
+        if (f) { fputs("300\n", f); fclose(f); }
+        f = fopen("/tmp/redux-sysinfo-nav/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", "w");
+        if (f) { fputs("schedutil\n", f); fclose(f); }
+    }
+    sysinfo_set_root("/tmp/redux-sysinfo-nav");
+    ui_init();
+    down(7); press(LB_A); down(5); press(LB_A); press(LB_DOWN); press(LB_A);
+    expect(ui_screen() == SCREEN_SYSINFO, "System Tools opens from System Defaults");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "30.0 C") != NULL, "System Tools shows the battery temp");
+        expect(strstr(dump, "schedutil") != NULL, "System Tools shows the CPU governor");
+    }
+    press(LB_B);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B leaves System Tools");
+    sysinfo_set_root(NULL);
 
     presents = 0;
     ui_set_present(count_present);
