@@ -2,6 +2,7 @@
  *
  *   rg34xxsp-redux                     run in a 720x480 window
  *   rg34xxsp-redux --accent RRGGBB     choose the accent colour (default 00FFFF, BIOS cyan)
+ *   rg34xxsp-redux --version           print the build id and exit
  *   rg34xxsp-redux --dump              print the five F0 screens as text and exit (tests)
  *
  * Redraws only when something changes (input, the hold-A timer, the clock),
@@ -26,6 +27,20 @@
 #define PRESENT_BUFFERS 3   /* covers double and triple buffering */
 #define SCREEN_W (GRID_COLS * FONT_W)
 #define SCREEN_H (GRID_ROWS * FONT_H)
+#define REDUX_LOG_PATH "/mnt/vendor/redux/redux.log"
+
+static void print_build_id(FILE *out) {
+    fprintf(out, REDUX_ID_FMT "\n", REDUX_BUILD);
+}
+
+/* First line of this run. The wrapper also captures stderr into the same log. */
+static void log_build_id(void) {
+    print_build_id(stderr);
+    FILE *f = fopen(REDUX_LOG_PATH, "a");
+    if (!f) return;
+    print_build_id(f);
+    fclose(f);
+}
 
 static int parse_hex_color(const char *s, Uint8 *r, Uint8 *g, Uint8 *b) {
     if (!s || strlen(s) != 6) return -1;
@@ -64,6 +79,7 @@ static void on_device_button(logical_button_t btn, int pressed) {
 int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--dump")) { ui_init(); return dump_screens(); }
+        if (!strcmp(argv[i], "--version")) { print_build_id(stdout); return 0; }
         if (!strcmp(argv[i], "--accent") && i + 1 < argc) {
             Uint8 r, g, b;
             if (parse_hex_color(argv[++i], &r, &g, &b) != 0) {
@@ -73,9 +89,11 @@ int main(int argc, char **argv) {
             grid_set_accent(r, g, b);
             continue;
         }
-        fprintf(stderr, "usage: %s [--accent RRGGBB] [--dump]\n", argv[0]);
+        fprintf(stderr, "usage: %s [--accent RRGGBB] [--dump] [--version]\n", argv[0]);
         return 2;
     }
+
+    log_build_id();
 
     /* At boot the Mali kernel driver can still be loading when we start: SDL then fails with
        "Could not initialize EGL" (device log, 2026-11-10, start at 10.7 s). Exiting costs a 30 s

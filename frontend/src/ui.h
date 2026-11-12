@@ -4,6 +4,12 @@
 #include <stdint.h>
 #include "remap.h"
 
+/* Git short SHA from CMake, or "dev" when git is not available. */
+#ifndef REDUX_BUILD
+#define REDUX_BUILD "dev"
+#endif
+#define REDUX_ID_FMT "v0.1-dev - %s"
+
 typedef enum {
     SCREEN_MAIN, SCREEN_ROMS, SCREEN_SETTINGS, SCREEN_ENG_CONFIRM,
     SCREEN_ENG, SCREEN_INTERNET, SCREEN_SYSTEMS, SCREEN_WIFI, SCREEN_WIFI_KEY,
