@@ -92,6 +92,8 @@ RG34XXSP Redux
 
 Status format (right-aligned to column 90): `BAT 87% CHG WIFI CPU 54C 12:34`. Fields drop from the left when a screen needs the room.
 
+List movement: Up/Down move one row and wrap. On the Game Room lists (Systems and a system's ROMs), Left/Right move one page (the 20-row window) and stop at the first or last row instead of wrapping; the cursor keeps its row on screen. Engineering uses Left/Right for tabs; other screens leave them unused for now (for example, for changing values later).
+
 Every mock-up is exactly 30 rows × 90 columns: title (row 0), box top border (row 1), 26 body rows, box bottom border (row 28), help bar (row 29).
 
 ---
@@ -163,7 +165,7 @@ Game Room > Systems > Game Boy Advance                              BAT 87% CHG 
 │                                                                                        │
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-A:Launch  B:Back  X:Favorites  Y:Info  Start:Search  Select:Random
+A:Launch  B:Back  X:Favorites  Y:Info  Start:Search  Select:Random  Left/Right:Page
 ```
 
 ## 5. Mock-up 3 — Settings
