@@ -73,8 +73,10 @@ int main(void) {
     sysinfo_row_t rows[SYSINFO_MAX_ROWS];
     int n = sysinfo_collect(rows, SYSINFO_MAX_ROWS);
     expect(n == 14, "fourteen rows");
-    expect(value_of(rows, n, "Battery") && strcmp(value_of(rows, n, "Battery"), "30.0 C") == 0,
-           "battery temp is tenths of a degree");
+    expect(sysinfo_parse_batt_tenths("300\n") == 300, "300 is 30.0 C in tenths");
+    expect(sysinfo_parse_batt_tenths("nope") == -1, "a non-integer temp does not parse");
+    expect(value_of(rows, n, "Battery") && strcmp(value_of(rows, n, "Battery"), "unknown (no sensor)") == 0,
+           "battery temp is not shown; the sensor is a dummy");
     expect(value_of(rows, n, "CPU governor") && strcmp(value_of(rows, n, "CPU governor"), "schedutil") == 0,
            "governor");
     expect(value_of(rows, n, "CPU speed") && strcmp(value_of(rows, n, "CPU speed"), "1008 MHz") == 0,
@@ -98,7 +100,7 @@ int main(void) {
 
     sysinfo_set_root("/tmp/redux-sysinfo-missing");
     n = sysinfo_collect(rows, SYSINFO_MAX_ROWS);
-    expect(value_of(rows, n, "Battery") && strcmp(value_of(rows, n, "Battery"), "--") == 0,
+    expect(value_of(rows, n, "CPU governor") && strcmp(value_of(rows, n, "CPU governor"), "--") == 0,
            "a missing file is --");
     expect(value_of(rows, n, "/mnt/sdcard") && strcmp(value_of(rows, n, "/mnt/sdcard"), "--") == 0,
            "an unmounted card is --");

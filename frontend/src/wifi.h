@@ -37,7 +37,10 @@ const wifi_ap_t *wifi_ap(int i);
 
 /* `nmcli dev wifi connect <ssid> [password <password>] ifname wlan0`.
    password NULL or "" omits the password argument. Returns 0 when nmcli exits 0.
-   Not run on the device yet. */
+   On success wifi_last_ip() is the IPv4 address (no prefix); on failure
+   wifi_last_reason() is nmcli's text. Neither is printed. Not run on the device yet. */
 int wifi_connect(const char *ssid, const char *password);
+const char *wifi_last_ip(void);
+const char *wifi_last_reason(void);
 
 #endif

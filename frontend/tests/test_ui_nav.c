@@ -29,10 +29,16 @@ static void write_empty(const char *path) {
 static char nav_saw_scan, nav_saw_pw, nav_pw_ok, nav_saw_ifname;
 static const char *nav_want_pw;
 static char nav_busy[80];
+static int nav_fail;
 
 static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
     snprintf(nav_busy, sizeof nav_busy, "%s", ui_last_busy());
-    if (status) *status = 0;
+    if (argv[3] && strcmp(argv[3], "IP4.ADDRESS") == 0) {
+        if (status) *status = 0;
+        if (out && out_n) snprintf(out, out_n, "IP4.ADDRESS[1]:192.168.1.20/24\n");
+        return 0;
+    }
+    if (status) *status = nav_fail;
     if (argv[1] && strcmp(argv[1], "-t") == 0) {
         static const char *const want[] = {
             "/usr/bin/nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list", NULL
@@ -55,7 +61,10 @@ static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
             nav_saw_ifname = 1;
     }
     if (!nav_want_pw) nav_pw_ok = !nav_saw_pw;
-    if (out && out_n) out[0] = 0;
+    if (out && out_n) {
+        if (nav_fail) snprintf(out, out_n, "Error: Secrets were required, but not provided.\n");
+        else out[0] = 0;
+    }
     return 0;
 }
 
@@ -326,10 +335,20 @@ int main(void) {
     }
     nav_want_pw = "1";
     press(LB_START);
-    expect(ui_screen() == SCREEN_WIFI, "Start connects and returns to the list");
+    expect(ui_screen() == SCREEN_WIFI_RESULT, "Start opens the result screen");
+    expect(strcmp(ui_last_busy(), "Connecting") == 0, "connect shows Connecting first");
     expect(nav_saw_pw == 1 && nav_pw_ok == 1 && nav_saw_ifname == 1,
            "connect got the typed password and ifname wlan0");
-    expect(strcmp(nav_busy, "Connecting to Home") == 0, "connect shows the busy screen first");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Home") != NULL, "result names the network");
+        expect(strstr(dump, "192.168.1.20") != NULL, "result shows the IP");
+        expect(strstr(dump, "connected") != NULL, "result says connected");
+    }
+    press(LB_B);
+    expect(ui_screen() == SCREEN_WIFI, "B from the result returns to the list");
     {
         char dump[8192];
         ui_draw();
@@ -341,15 +360,37 @@ int main(void) {
     nav_want_pw = NULL;
     nav_pw_ok = 0;
     press(LB_DOWN); press(LB_A);       /* Cafe, empty security */
-    expect(ui_screen() == SCREEN_WIFI, "empty security connects without the keyboard");
+    expect(ui_screen() == SCREEN_WIFI_RESULT, "empty security connects without the keyboard");
+    expect(strcmp(ui_last_busy(), "Connecting") == 0, "open-network connect shows Connecting first");
     expect(nav_pw_ok == 1 && nav_saw_pw == 0, "that connect has no password argument");
-    expect(strcmp(nav_busy, "Connecting to Cafe") == 0, "open-network connect shows the busy screen first");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_WIFI, "B from an open-network result returns to the list");
     {
         char dump[8192];
         ui_draw();
         grid_dump(dump, sizeof dump);
         expect(strstr(dump, "Back to stock") == NULL, "Wi-Fi list has no Back to stock row");
     }
+    nav_fail = 1;
+    press(LB_UP); press(LB_A); press(LB_START);
+    expect(ui_screen() == SCREEN_WIFI_RESULT, "a failed connect opens the result");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Secrets were required") != NULL, "failure shows nmcli's reason");
+        expect(strstr(dump, "A:Retry") != NULL, "failure offers retry");
+    }
+    nav_fail = 0;
+    press(LB_A);
+    expect(ui_screen() == SCREEN_WIFI_RESULT, "retry stays on the result screen");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "192.168.1.20") != NULL, "retry shows the IP after nmcli succeeds");
+    }
+    press(LB_B);
 
     ui_init();
     down(7); press(LB_A); down(4); press(LB_A);
@@ -397,7 +438,7 @@ int main(void) {
         }
         nav_want_pw = expect_pw;
         press(LB_START);
-        expect(ui_screen() == SCREEN_WIFI, "Start sends the symbol password");
+        expect(ui_screen() == SCREEN_WIFI_RESULT, "Start sends the symbol password");
         expect(nav_saw_pw == 1 && nav_pw_ok == 1, "wifi_connect got the exact symbol password");
     }
 
@@ -480,7 +521,7 @@ int main(void) {
         char dump[8192];
         ui_draw();
         grid_dump(dump, sizeof dump);
-        expect(strstr(dump, "30.0 C") != NULL, "System Tools shows the battery temp");
+        expect(strstr(dump, "unknown (no sensor)") != NULL, "System Tools does not show the dummy battery temp");
         expect(strstr(dump, "schedutil") != NULL, "System Tools shows the CPU governor");
     }
     press(LB_B);

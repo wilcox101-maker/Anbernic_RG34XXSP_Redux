@@ -55,6 +55,12 @@ static int first_int(const char *text, int *out) {
     return 0;
 }
 
+int sysinfo_parse_batt_tenths(const char *text) {
+    int v = 0;
+    if (first_int(text, &v) != 0) return -1;
+    return v;
+}
+
 static int zone_index(const char *type) {
     if (!type || !type[0]) return -1;
     if (strstr(type, "battery")) return -1;
@@ -116,11 +122,8 @@ int sysinfo_collect(sysinfo_row_t *rows, int max) {
     if (!rows || max <= 0) return 0;
     char buf[256], value[SYSINFO_VALUE];
     int n = 0;
-    int batt = -1;
-    if (read_text("/sys/class/power_supply/axp2202-battery/temp", buf, sizeof buf) == 0)
-        first_int(buf, &batt);
-    fmt_x10(batt, value, sizeof value);
-    if (n < max) row(&rows[n++], "Battery", value);
+    /* axp2202 temp stays at 300. Do not present it as a reading. */
+    if (n < max) row(&rows[n++], "Battery", "unknown (no sensor)");
 
     buf[0] = '\0';
     if (read_text("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", buf, sizeof buf) == 0)
