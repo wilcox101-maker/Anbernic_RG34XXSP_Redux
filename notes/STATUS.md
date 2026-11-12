@@ -12,6 +12,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 | Frontend | F2: launch parity on stock | **games launch on the device** (RetroArch, PSP, PS1, Neo Geo, CPS; #50, #52), TF2 ROMs via REDUX_ROMS, resume-to-list (#53), Wi-Fi (#48, #54), Stock Menu with a 3 s hold (#51, #58), build ID (#59) | grok | F2 sign-off by Dale after the build with #58/#59 is deployed |
 
 ## Handoff (2026-11-12, Claude): start here in a new chat
+- Previous chat archived as: **Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI and Expert Mode plans**
 - **Deploy only from main's CI runs** (the arm64 artifact). The title bar shows `v0.1-dev - <sha>`; check it matches main.
 - Device at work: 172.16.3.178 (home Wi-Fi profile `home` is also saved). Dale's PC folder `Documents\GitHub\redux-work` is linked for logs.
 - Lessons: an old dmenu.bin got redeployed (hence the build ID). Redux kept reading buttons while SimpleTerminal ran over SSH and restored stock (hence the 3 s hold). RA_launch.sh must run with bash. The stock .dge launches fail, so those systems use RetroArch cores.

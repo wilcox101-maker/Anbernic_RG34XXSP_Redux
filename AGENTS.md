@@ -33,6 +33,10 @@ deploy rule, lessons, decisions, queue) in a docs PR, and Dale merges it. Dale t
 in the project and sends: *"Read AGENTS.md and notes/STATUS.md, then continue."* Nothing else is
 needed; the inbox #41 and notes/ carry the detail. Before handing off, the agent either finishes
 reviewing any PR in flight or lists it in the handoff.
+The agent's last message in the old chat gives Dale an **archive name** to rename it with, in the
+form `Redux <start date>→<end date>: <milestones>`, for example
+`Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI plan`. The same line goes in the
+handoff, so the next chat knows what the previous one covered.
 
 ## "PING"
 
