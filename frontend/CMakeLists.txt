@@ -26,6 +26,7 @@ add_executable(rg34xxsp-redux
     src/romscan.c
     src/wifi.c
     src/stockmenu.c
+    src/power.c
     src/sysinfo.c
 )
 target_include_directories(rg34xxsp-redux PRIVATE src)
@@ -91,7 +92,7 @@ add_executable(test_sysinfo tests/test_sysinfo.c src/sysinfo.c)
 target_include_directories(test_sysinfo PRIVATE src)
 
 # Navigation test (back stack, Engineering tabs). Links the UI with the desktop platform; no window.
-add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/grid.c src/font.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/sysinfo.c)
+add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/grid.c src/font.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/sysinfo.c)
 target_include_directories(test_ui_nav PRIVATE src)
 if(TARGET SDL2::SDL2)
     target_link_libraries(test_ui_nav PRIVATE SDL2::SDL2)
