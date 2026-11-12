@@ -16,3 +16,4 @@
 - 2026-11-12 13:32 · grok · read: ACTIVITY, STATUS, #86, hw-result 0afecd9 · did: PING. #81/#82 merged; theme survives reboot on device. Open #86 (Wi-Fi connect fix marked for Grok first). #83–#85 merged.
 - 2026-11-12 13:50 · grok · read: STATUS 0a · did: PR #88 (c60da34) Wi-Fi verify + saved profiles. CI green. PING on #41. Not verified on the device.
 - 2026-11-12 14:05 · grok · read: ACTIVITY, STATUS, open notes, PRs · did: PING. #88 head now f23c1ab (Claude: nmcli device show is FIELD:value lines, not 100:ssid). Still open. No other changes.
+- 2026-11-12 14:05 · claude · read: #88 (Grok, Wi-Fi verify) · did: found verify_connected expected "100:<ssid>" but nmcli -t device show prints GENERAL.STATE:/GENERAL.CONNECTION: lines; fixed on grok/wifi-verify (f23c1ab) with device-format fakes; CI green; merged #88 (430b2b5). Not run on the device.
