@@ -259,6 +259,7 @@ int main(void) {
                 !strcmp(tl, "Atari 2600")) named++;
         }
         expect(romscan_systems() == 4 && named == 4, "N64, Dreamcast, PICO-8 and Atari 2600 are listed by name");
+    }
 
     /* More than the old 4096 cap across systems: every system and ROM is still listed. */
     {
