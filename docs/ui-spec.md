@@ -54,7 +54,7 @@ RG34XXSP Redux
 │   ├── Audio
 │   ├── Input
 │   ├── Power & Lid
-│   ├── System               (Stock Menu, System Tools, Restart, Power Off)
+│   ├── System               (System Tools, Restart, Power Off, Boot Screen*, blanks, Stock Menu, Reset All*)
 │   ├── Emulation
 │   └── UI                     (colour presets)
 │
@@ -462,9 +462,23 @@ arrays at build time, keep their copyright/licence headers, and are listed in a 
 - Deliberate removals and Claude review flags are recorded.
 
 
-## 9. Restart and Power Off
+## 9. System layout and Restart / Power Off
 
-Settings → System lists Restart and Power Off after Stock Menu and System Tools. Each opens a confirm screen. Hold A for 3 seconds (HOLD_DESTRUCT_MS) to run; release A, or any other button, cancels. One tap of A does nothing. The hold bar is the same as Stock Menu.
+Settings → System, in order:
+
+    System Tools
+    Restart
+    Power Off
+    Boot Screen   not yet   (shown; cursor skips it)
+    <blank>                 (cursor skips)
+    <blank>
+    <blank>
+    Stock Menu
+    Reset All     not yet   (shown; cursor skips it)
+
+The cursor never lands on a blank row or a "not yet" item. Reset All (later) resets Redux's own settings in /mnt/data/redux/ to defaults. It never touches ROMs, saves, BIOS, Wi-Fi profiles or stock settings.
+
+Restart and Power Off each open a confirm screen. Hold A for 3 seconds (HOLD_DESTRUCT_MS) to run. A tap that releases before 3 s stays on the confirm and resets the hold bar; nothing runs. Only B or another button leaves. The hold bar is the same as Stock Menu.
 
 Restart runs `sync && reboot`. Power Off runs `sync && poweroff`. Desktop builds do not run either command; a test hook logs the command instead. Neither writes to /mnt/mmc.
 
