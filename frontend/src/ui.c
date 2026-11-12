@@ -711,14 +711,22 @@ static void frame(const char *title, const char *help, int wifi, int cpu_temp) {
 
 static void body(int line, const char *text) { grid_puts(1, ROW_BODY0 + line, text, 0); }
 
+/* "  [" starts at column 1, so the 40 fill cells are columns BAR_C0..BAR_C0+39.
+ * The filled run is drawn as inverted blanks, which grid_present paints in the
+ * accent colour -- the same colour as the selection bar. */
+#define BAR_WIDTH 40
+#define BAR_C0    4
+
 static void draw_hold_bar(int line, uint32_t total_ms) {
-    int width = 40;
-    int filled = total_ms ? (int)(hold_ms * (uint32_t)width / total_ms) : 0;
-    if (filled > width) filled = width;
-    char bar[4 + 40 * 3 + 2] = "  [";   /* "\u2593" is 3 bytes in UTF-8 */
-    for (int i = 0; i < width; i++) strcat(bar, i < filled ? "\u2593" : " ");
-    strcat(bar, "]");
+    int filled = total_ms ? (int)(hold_ms * (uint32_t)BAR_WIDTH / total_ms) : 0;
+    if (filled > BAR_WIDTH) filled = BAR_WIDTH;
+    char bar[3 + BAR_WIDTH + 2];
+    int n = snprintf(bar, sizeof bar, "  [");
+    for (int i = 0; i < BAR_WIDTH; i++) bar[n++] = ' ';
+    bar[n++] = ']';
+    bar[n] = '\0';
     body(line, bar);
+    if (filled > 0) grid_invert(ROW_BODY0 + line, BAR_C0, BAR_C0 + filled - 1);
 }
 
 static void list(int first_line, const char *const *items, int n) {
