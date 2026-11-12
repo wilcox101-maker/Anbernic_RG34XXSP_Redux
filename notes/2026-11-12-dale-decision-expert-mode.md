@@ -50,3 +50,26 @@ AGENTS.md hard rule; the factory envelope is now the *default*, not an absolute.
   the Phase 1 boot-image track. It's a **backlog** item: nothing starts without Dale.
 - Settings are stored in `/mnt/vendor/redux/expert.ini` (appfs), never on the Roms partitions.
 - Every Expert PR is **Dale-only** (it writes to the device or changes limits).
+
+## Discovery: breadcrumbs, never a tutorial (Dale, 2026-11-12)
+
+Dale: "hide it in the code with nods to who could find it." The UI never explains the code; these
+nods reward people who look. This note is the maintainer reference and the only plain description
+of the code. Build all of these together with Expert Mode, not before:
+
+- **Engineering Mode → CPU tab:** under `Max 1512 MHz (factory)`, a dim footer line:
+  `The classics never die.`
+- **Settings → System, description line on the last row while Expert is locked:**
+  `Some settings are reserved for those who remember.`
+- **Close but wrong:** if the first 8 inputs (the arrows) are right but the code then breaks, the
+  screen border flickers for one frame. No text, no sound.
+- **redux.log at start-up**, once: `redux: cheat engine idle  ^ ^ v v < > < > . .` (the last two
+  inputs are left as dots on purpose).
+- **`dmenu.bin --version`:** a second line `30 lives not included.`
+- **Source:** the sequence lives in `frontend/src/expert.c` as `static const logical_button_t
+  jungle_stage[]`, with the comment `/* You know this one. If not, this menu isn't for you. */`.
+  No other comment explains it.
+- **README footer:** one line, *"Old-school gamers know the way."*
+
+Rules for the nods: never name the game or the company, never spell out the full sequence
+outside this note and the source array, and a nod never skips any of the five gates.
