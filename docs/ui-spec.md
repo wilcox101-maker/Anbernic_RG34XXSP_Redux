@@ -99,7 +99,7 @@ Every mock-up is exactly 30 rows × 90 columns: title (row 0), box top border (r
 ## 3. Mock-up 1 — Main menu
 
 ```
-RG34XXSP Redux                                                      BAT 87% CHG WIFI 12:34
+RG34XXSP Redux  v0.1-dev - dev                                      BAT 87% CHG WIFI 12:34
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │▓▓ Game Room                                                                            │
 │   Music                                                                                │

@@ -33,6 +33,27 @@ if(REDUX_PLATFORM STREQUAL "stock")
     target_compile_definitions(rg34xxsp-redux PRIVATE REDUX_PLATFORM_STOCK)
 endif()
 
+# Short git SHA so a deployed dmenu.bin can be identified. "dev" if git is missing.
+# CI passes -DREDUX_BUILD=<sha>: the arm64 container has no git.
+if(NOT DEFINED REDUX_BUILD)
+    find_package(Git QUIET)
+    set(REDUX_BUILD "dev")
+    if(GIT_FOUND)
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} rev-parse --short=7 HEAD
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+            OUTPUT_VARIABLE REDUX_BUILD
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+            RESULT_VARIABLE REDUX_GIT_RC
+        )
+        if(NOT REDUX_GIT_RC EQUAL 0 OR REDUX_BUILD STREQUAL "")
+            set(REDUX_BUILD "dev")
+        endif()
+    endif()
+endif()
+target_compile_definitions(rg34xxsp-redux PRIVATE "REDUX_BUILD=\"${REDUX_BUILD}\"")
+
 # Newer SDL2 packages export targets; older ones only set variables.
 if(TARGET SDL2::SDL2)
     if(TARGET SDL2::SDL2main)

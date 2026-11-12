@@ -16,6 +16,16 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCREENS = ["main", "roms", "settings", "eng-cpu", "eng-battery", "internet"]   # order in the spec
 
 
+def mask_build(line):
+    """The title carries the git SHA. The spec shows the placeholder "dev"."""
+    def repl(m):
+        token = m.group(1)
+        if token == "dev":
+            return m.group(0)
+        return "v0.1-dev - " + "dev" + (" " * max(0, len(token) - 3))
+    return re.sub(r"v0\.1-dev - (\S+)", repl, line)
+
+
 def spec_mockups():
     text = (ROOT / "docs" / "ui-spec.md").read_text(encoding="utf-8")
     blocks = [b for b in re.findall(r"```\n(.*?)```", text, re.S) if "┌" in b]
@@ -43,7 +53,8 @@ def main():
     want, got = spec_mockups(), rendered(sys.argv[1])
     failures = 0
     for name in SCREENS:
-        w, g = want[name], got.get(name, [])
+        w = [mask_build(a) for a in want[name]]
+        g = [mask_build(b) for b in got.get(name, [])]
         bad = [(i, a, b) for i, (a, b) in enumerate(zip(w, g)) if a.rstrip() != b.rstrip()]
         if len(w) != 30 or len(g) != 30:
             bad.append((-1, f"{len(w)} rows in spec", f"{len(g)} rows rendered"))

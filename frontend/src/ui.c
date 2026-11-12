@@ -503,10 +503,14 @@ static void draw_eng_tabs(void) {
 void ui_draw(void) {
     char t[GRID_COLS];
     switch (screen) {
-    case SCREEN_MAIN:
-        frame("RG34XXSP Redux", "A:Select  B:Back  M:Menu  Start:Search", 1, 0);
+    case SCREEN_MAIN: {
+        char id[32], title[GRID_COLS];
+        snprintf(id, sizeof id, REDUX_ID_FMT, REDUX_BUILD);
+        snprintf(title, sizeof title, "RG34XXSP Redux  %s", id);
+        frame(title, "A:Select  B:Back  M:Menu  Start:Search", 1, 0);
         list(0, main_items, COUNT(main_items));
         break;
+    }
     case SCREEN_ROMS:
         snprintf(t, sizeof t, "Game Room > Systems > %s", romscan_title(sys_index));
         frame(t, "A:Launch  B:Back  X:Favorites  Y:Info  Start:Search  Select:Random", 1, 0);
