@@ -304,11 +304,33 @@ int main(void) {
     expect(stock_calls == 0, "cancel does not run S7");
     press(LB_A);
     press(LB_A);
-    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "missing backup stays on the confirm");
-    expect(stock_calls == 0, "missing dmenu_ln.bak does not run S7");
-    stock_set_bak(1);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "a single A press does not restore");
+    expect(stock_calls == 0, "a single A press does not run S7");
     press(LB_A);
-    expect(stock_calls == 1 && stock_cmd_ok, "A on the confirm runs the atomic S7 command");
+    ui_button(LB_A, 1, 1000);
+    ui_tick(3900);
+    ui_button(LB_A, 0, 3900);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "releasing at 2.9 s cancels");
+    expect(stock_calls == 0, "2.9 s does not run S7");
+    press(LB_A);
+    ui_button(LB_A, 1, 5000);
+    ui_tick(6000);
+    ui_button(LB_B, 1, 6100);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "another button during the hold cancels");
+    expect(stock_calls == 0, "cancel during the hold does not run S7");
+    ui_button(LB_B, 0, 6200);
+    ui_button(LB_A, 0, 6300);
+    press(LB_A);
+    ui_button(LB_A, 1, 8000);
+    ui_button(LB_A, 1, 10000);   /* a repeat press must not restart the 3 s clock */
+    ui_tick(11000);
+    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "a finished hold with no backup stays");
+    expect(stock_calls == 0, "missing dmenu_ln.bak does not run S7");
+    ui_button(LB_A, 0, 11100);
+    stock_set_bak(1);
+    ui_button(LB_A, 1, 12000);
+    ui_tick(15000);
+    expect(stock_calls == 1 && stock_cmd_ok, "holding A for 3 s runs the atomic S7 command");
 
     wifi_set_spawn(NULL);
     stock_set_run(NULL);

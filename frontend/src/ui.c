@@ -12,6 +12,7 @@
 #include <string.h>
 
 #define HOLD_TO_ENTER_MS 2000   /* Engineering Mode: hold A this long (ui-spec flag 3) */
+#define HOLD_DESTRUCT_MS 3000   /* destructive confirms: Stock Menu, and later Restart / Power Off */
 #define IDLE_WAIT_MS     1000   /* wake once a second so the clock can roll over */
 #define HOLD_WAIT_MS     50     /* smooth progress bar while A is held */
 #define BACK_MAX 8              /* back stack depth; deeper than any menu we have */
@@ -300,6 +301,27 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         dirty = 1;
         return;
     }
+    /* One A tap must never run a destructive action. The clock starts at the
+       first press; a repeat press does not move it. Release, or any other
+       button, leaves the screen without running it. */
+    if (screen == SCREEN_STOCK_CONFIRM) {
+        if (btn == LB_A) {
+            if (pressed) {
+                if (!a_down_at && !stock_started)
+                    a_down_at = now_ms ? now_ms : 1;
+            } else if (a_down_at && !stock_started) {
+                a_down_at = 0;
+                hold_ms = 0;
+                back();
+            }
+        } else if (pressed) {
+            a_down_at = 0;
+            hold_ms = 0;
+            back();
+        }
+        dirty = 1;
+        return;
+    }
     if (!pressed) return;
 
     /* Shoulders are not Wi-Fi navigation. L2/R2 are not logical buttons, so they never get here. */
@@ -308,22 +330,6 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
 
     if (screen == SCREEN_WIFI_KEY) { wifi_key_button(btn); return; }
-
-    if (screen == SCREEN_STOCK_CONFIRM && btn == LB_A) {
-        if (!stock_started) {
-            int rc = stock_restore();
-            if (rc == 0) {
-                stock_started = 1;
-                snprintf(stock_msg, sizeof stock_msg, "rebooting");
-            } else if (rc == -2) {
-                snprintf(stock_msg, sizeof stock_msg, "no dmenu_ln.bak; refusing");
-            } else {
-                snprintf(stock_msg, sizeof stock_msg, "restore failed");
-            }
-        }
-        dirty = 1;
-        return;
-    }
 
     if (screen == SCREEN_ENG && (btn == LB_L1 || btn == LB_LEFT))  { switch_eng_tab(-1); return; }
     if (screen == SCREEN_ENG && (btn == LB_R1 || btn == LB_RIGHT)) { switch_eng_tab(+1); return; }
@@ -390,13 +396,31 @@ void ui_tick(uint32_t now_ms) {
         if (hold_ms >= HOLD_TO_ENTER_MS) go_replace(SCREEN_ENG);   /* B from Engineering -> Main */
         dirty = 1;
     }
+    if (screen == SCREEN_STOCK_CONFIRM && a_down_at && !stock_started) {
+        hold_ms = now_ms - a_down_at;
+        if (hold_ms >= HOLD_DESTRUCT_MS) {
+            int rc = stock_restore();
+            a_down_at = 0;
+            if (rc == 0) {
+                stock_started = 1;
+                snprintf(stock_msg, sizeof stock_msg, "rebooting");
+            } else if (rc == -2) {
+                snprintf(stock_msg, sizeof stock_msg, "no dmenu_ln.bak; refusing");
+            } else {
+                snprintf(stock_msg, sizeof stock_msg, "restore failed");
+            }
+        }
+        dirty = 1;
+    }
     char c[8];
     platform_clock(c, sizeof c);
     if (strcmp(c, last_clock) != 0) dirty = 1;
 }
 
 uint32_t ui_wait_ms(void) {
-    return (screen == SCREEN_ENG_CONFIRM && a_down_at) ? HOLD_WAIT_MS : IDLE_WAIT_MS;
+    if (a_down_at && (screen == SCREEN_ENG_CONFIRM || screen == SCREEN_STOCK_CONFIRM))
+        return HOLD_WAIT_MS;
+    return IDLE_WAIT_MS;
 }
 
 static void draw_status(int wifi, int cpu_temp) {
@@ -420,6 +444,16 @@ static void frame(const char *title, const char *help, int wifi, int cpu_temp) {
 }
 
 static void body(int line, const char *text) { grid_puts(1, ROW_BODY0 + line, text, 0); }
+
+static void draw_hold_bar(int line, uint32_t total_ms) {
+    int width = 40;
+    int filled = total_ms ? (int)(hold_ms * (uint32_t)width / total_ms) : 0;
+    if (filled > width) filled = width;
+    char bar[4 + 40 * 3 + 2] = "  [";   /* "\u2593" is 3 bytes in UTF-8 */
+    for (int i = 0; i < width; i++) strcat(bar, i < filled ? "\u2593" : " ");
+    strcat(bar, "]");
+    body(line, bar);
+}
 
 static void list(int first_line, const char *const *items, int n) {
     int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
@@ -502,12 +536,7 @@ void ui_draw(void) {
         body(0, "  Engineering Mode shows live CPU, GPU, thermal and power controls.");
         body(1, "  Changes apply live and are only kept if you choose \"Save as profile\".");
         body(3, "  Hold A for 2 seconds to enter. Release to cancel.");
-        int width = 40, filled = (int)(hold_ms * (uint32_t)width / HOLD_TO_ENTER_MS);
-        if (filled > width) filled = width;
-        char bar[4 + 40 * 3 + 2] = "  [";   /* "\u2593" is 3 bytes in UTF-8 */
-        for (int i = 0; i < width; i++) strcat(bar, i < filled ? "\u2593" : " ");
-        strcat(bar, "]");
-        body(5, bar);
+        draw_hold_bar(5, HOLD_TO_ENTER_MS);
         break;
     }
     case SCREEN_ENG:
@@ -587,16 +616,17 @@ void ui_draw(void) {
         body(2, "   Reset All     not yet");
         break;
     case SCREEN_STOCK_CONFIRM:
-        frame("Stock Menu", "A:Restore and reboot  B:Cancel", 1, 0);
+        frame("Stock Menu", "Hold A 3s:Restore  B:Cancel", 1, 0);
         body(0, "  Restores the stock launcher from dmenu_ln.bak.");
         body(1, "  Copies it to dmenu_ln.new, then renames that");
         body(2, "  over /mnt/vendor/ctrl/dmenu_ln, syncs, and reboots.");
         body(3, "  The backup file is kept. Refuses if it is missing.");
-        body(5, "  A confirms. B cancels. This writes to the device.");
+        body(5, "  Hold A for 3 seconds. Release, or any other button, cancels.");
+        draw_hold_bar(7, HOLD_DESTRUCT_MS);
         if (stock_msg[0]) {
             char line[GRID_COLS];
             snprintf(line, sizeof line, "  %s", stock_msg);
-            body(7, line);
+            body(9, line);
         }
         break;
     case SCREEN_WIFI_KEY: {
