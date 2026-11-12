@@ -61,6 +61,8 @@ Agents also run this check after finishing any action, before reporting back, an
   review item it says "addressed in `<file>` (`<commit>`)". An item without that is treated as not
   done.
 - **One topic per PR, from the task list.** Work only on items listed for you in `notes/STATUS.md`.
+  **An item in `notes/STATUS.md` marked with your name is a go:** start it without waiting for
+  Dale, unless it falls under "Never merged without Dale" below (then prepare it and stop at the PR).
   Anything that writes to the device goes in its own PR for Dale.
 
 ## Reaching Claude
