@@ -11,6 +11,8 @@
 #include "sysinfo.h"
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 #define HOLD_TO_ENTER_MS 2000   /* Engineering Mode: hold A this long (ui-spec flag 3) */
 #define HOLD_DESTRUCT_MS 3000   /* destructive confirms: Stock Menu, and later Restart / Power Off */
@@ -59,7 +61,11 @@ static char wifi_retry[64];
 static char stock_msg[48];
 
 /* Colour presets (docs/ui-brief.md section 3). Default BIOS cyan. Saved to THEME_PATH. */
+#ifdef REDUX_PLATFORM_STOCK
+#define THEME_PATH "/mnt/data/redux/theme"
+#else
 #define THEME_PATH "/tmp/redux.theme"
+#endif
 typedef struct { const char *name; uint8_t r, g, b; } theme_preset_t;
 static const theme_preset_t presets[] = {
     { "BIOS cyan", 0, 255, 255 },
@@ -77,6 +83,9 @@ static void theme_apply(int i) {
 }
 
 static void theme_save(void) {
+#ifdef REDUX_PLATFORM_STOCK
+    if (mkdir("/mnt/data/redux", 0755) != 0 && errno != EEXIST) return;
+#endif
     FILE *f = fopen(THEME_PATH, "w");
     if (!f) return;
     fprintf(f, "%d\n", theme_index);
@@ -755,7 +764,7 @@ void ui_draw(void) {
             if (i == selected) grid_invert(ROW_BODY0 + i, 0, 1);
         }
         body(N_PRESETS + 1, "  Black background, white text, one accent.");
-        body(N_PRESETS + 2, "  Saved for the next launch.");
+        body(N_PRESETS + 2, "  Saved. Survives reboot on the device.");
         break;
     }
     case SCREEN_INTERNET:
