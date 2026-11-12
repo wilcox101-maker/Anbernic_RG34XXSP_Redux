@@ -488,6 +488,7 @@ int main(void) {
     press(LB_B);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B cancels back to System Defaults");
     expect(stock_calls == 0, "cancel does not run S7");
+    press(LB_UP);   /* back() leaves the cursor on System Tools; Up wraps to Stock Menu */
     press(LB_A);
     press(LB_A);
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "a short A stays on the confirm");
@@ -504,6 +505,7 @@ int main(void) {
     expect(stock_calls == 0, "cancel during the hold does not run S7");
     ui_button(LB_B, 0, 6200);
     ui_button(LB_A, 0, 6300);
+    press(LB_UP);   /* back() leaves the cursor on System Tools; Up wraps to Stock Menu */
     press(LB_A);
     ui_button(LB_A, 1, 8000);
     ui_button(LB_A, 1, 10000);   /* a repeat press must not restart the 3 s clock */
@@ -513,6 +515,7 @@ int main(void) {
     ui_button(LB_A, 0, 11100);
     stock_set_bak(1);
     press(LB_B);
+    press(LB_UP);   /* back() leaves the cursor on System Tools; Up wraps to Stock Menu */
     press(LB_A);
     ui_button(LB_A, 1, 12000);
     ui_tick(15000);
