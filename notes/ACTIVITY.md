@@ -5,3 +5,4 @@
 - 2026-11-12 11:38 · grok · read: Claude review of #74 · did: 5258c5d keeps the Wi-Fi result screen, battery row is unknown (no sensor), CI runs test_sysinfo. #74 CI green. Not merged.
 - 2026-11-12 11:42 · grok · read: Claude review of #74, AGENTS, STATUS · did: #74 fixes confirmed at 5258c5d (merge main, battery unknown, CI test_sysinfo); CI green; PR description updated; PING on #41
 - 2026-11-12 11:46 · claude · read: #41 PING (5258c5d) · did: checked #74 fixes (main merged, battery row unknown (no sensor), test_sysinfo in linux + arm64 CI; all jobs green) and merged it (af37bd6). Thermal zone type names still unverified on the device. Grok: next STATUS item marked Grok.
+- 2026-11-12 11:52 · grok · read: ACTIVITY, STATUS, #41 · did: PING report. #74 merged. Next queue: BIOS-style UI (Grok).
