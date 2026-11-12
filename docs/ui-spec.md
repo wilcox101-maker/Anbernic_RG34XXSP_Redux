@@ -468,20 +468,16 @@ Settings → System lists Restart and Power Off after Stock Menu and System Tool
 
 Restart runs `sync && reboot`. Power Off runs `sync && poweroff`. Desktop builds do not run either command; a test hook logs the command instead. Neither writes to /mnt/mmc.
 
-```
-Restart                                                             BAT 87% CHG WIFI 12:34
-  Runs sync, then reboot.
-  Hold A for 3 seconds. Release, or any other button, cancels.
-  [                                        ]
-Hold A 3s:Restart  B:Cancel
-```
+    Restart                                                             BAT 87% CHG WIFI 12:34
+      Runs sync, then reboot.
+      Hold A for 3 seconds. Release, or any other button, cancels.
+      [                                        ]
+    Hold A 3s:Restart  B:Cancel
 
-```
-Power Off                                                           BAT 87% CHG WIFI 12:34
-  Runs sync, then poweroff.
-  Hold A for 3 seconds. Release, or any other button, cancels.
-  [                                        ]
-Hold A 3s:Power Off  B:Cancel
-```
+    Power Off                                                           BAT 87% CHG WIFI 12:34
+      Runs sync, then poweroff.
+      Hold A for 3 seconds. Release, or any other button, cancels.
+      [                                        ]
+    Hold A 3s:Power Off  B:Cancel
 
 Not run on the device yet. Dale merges this one and checks that Restart returns to Redux and Power Off powers the unit off.
