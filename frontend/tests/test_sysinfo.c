@@ -50,13 +50,13 @@ int main(void) {
     put("/tmp/redux-sysinfo/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq", "1008000\n");
     put("/tmp/redux-sysinfo/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq", "480000\n");
     put("/tmp/redux-sysinfo/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", "1512000\n");
-    put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone0/type", "cpu\n");
+    put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone0/type", "cpu_thermal_zone\n");
     put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone0/temp", "41000\n");
-    put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone1/type", "gpu\n");
+    put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone1/type", "gpu_thermal_zone\n");
     put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone1/temp", "42000\n");
-    put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone2/type", "ve\n");
+    put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone2/type", "ve_thermal_zone\n");
     put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone2/temp", "39000\n");
-    put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone3/type", "ddr\n");
+    put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone3/type", "ddr_thermal_zone\n");
     put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone3/temp", "40000\n");
     put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone4/type", "axp2202-battery\n");
     put("/tmp/redux-sysinfo/sys/class/thermal/thermal_zone4/temp", "30000\n");
