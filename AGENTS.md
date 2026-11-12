@@ -101,7 +101,12 @@ and the next PING report. No notification.
 
 ## Hard rules
 
-- Stability first. No overclocking or undervolting past the stock OPP table.
+- Stability first. **By default** nothing runs past the stock OPP table: no overclocking or
+  undervolting. Settings above factory limits exist only behind **Expert Mode**
+  (`notes/2026-11-12-dale-decision-expert-mode.md`), with every safeguard in that note. Never
+  enable an above-factory setting by default, from a migration, or from any path other than the
+  Expert Mode unlock. The thermal emergency shutdown (critical trip point) is never changed, not
+  even in Expert Mode.
 - Never commit Anbernic binaries, ROMs, BIOS files or anything extracted from the stock image. The
   only exceptions are the text references already in `reference/` (decompiled DTS, kernel config,
   init script, u-boot env) and short quotes in docs (paths, config keys, a line or two).
