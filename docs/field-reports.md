@@ -22,7 +22,7 @@ Anbernic's site. Treat everything here as **reported, not verified** until it's 
   never drive an unknown panel.**
 
 ### What this means for the project
-- [ ] Get a stock image from a revised unit and diff its DTB, env and boot0 against `stock-202505`
+- [x] Diff a newer stock image's DTB and env against `stock-202505`: V1.0.6 (2026-05-26) adds strap-selected LPDDR3/LPDDR4 DRAM sets, a new `rg34xxsp_v1` panel driver and a non-removable TF1 ([note](../notes/2026-11-12-claude-message-stock-v106-diff.md)). boot0 not compared yet
 - [ ] Find a runtime way to tell boards apart (DRAM size and type from boot0/u-boot, panel ID over the panel bus)
 - [ ] Phase 1 patches only apply to the original board's `boot.img`, and must not be flashed to a revised unit
 

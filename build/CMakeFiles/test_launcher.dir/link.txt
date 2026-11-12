@@ -1,0 +1,1 @@
+/usr/bin/cc -Werror -O3 -DNDEBUG CMakeFiles/test_launcher.dir/tests/test_launcher.c.o CMakeFiles/test_launcher.dir/src/launcher.c.o -o test_launcher 

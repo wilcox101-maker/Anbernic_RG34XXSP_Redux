@@ -1,0 +1,1 @@
+/usr/bin/cc -Werror CMakeFiles/test_sysinfo.dir/tests/test_sysinfo.c.o CMakeFiles/test_sysinfo.dir/src/sysinfo.c.o -o test_sysinfo 

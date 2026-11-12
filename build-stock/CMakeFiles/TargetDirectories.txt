@@ -1,0 +1,9 @@
+/home/claude/anbernic_rg34xxsp_redux/build-stock/CMakeFiles/rg34xxsp-redux.dir
+/home/claude/anbernic_rg34xxsp_redux/build-stock/CMakeFiles/test_launcher.dir
+/home/claude/anbernic_rg34xxsp_redux/build-stock/CMakeFiles/test_remap_device.dir
+/home/claude/anbernic_rg34xxsp_redux/build-stock/CMakeFiles/test_wifi.dir
+/home/claude/anbernic_rg34xxsp_redux/build-stock/CMakeFiles/test_stockmenu.dir
+/home/claude/anbernic_rg34xxsp_redux/build-stock/CMakeFiles/test_sysinfo.dir
+/home/claude/anbernic_rg34xxsp_redux/build-stock/CMakeFiles/test_ui_nav.dir
+/home/claude/anbernic_rg34xxsp_redux/build-stock/CMakeFiles/edit_cache.dir
+/home/claude/anbernic_rg34xxsp_redux/build-stock/CMakeFiles/rebuild_cache.dir

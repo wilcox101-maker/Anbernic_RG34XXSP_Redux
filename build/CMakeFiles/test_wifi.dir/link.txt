@@ -1,0 +1,1 @@
+/usr/bin/cc -Werror -O3 -DNDEBUG CMakeFiles/test_wifi.dir/tests/test_wifi.c.o CMakeFiles/test_wifi.dir/src/wifi.c.o -o test_wifi 

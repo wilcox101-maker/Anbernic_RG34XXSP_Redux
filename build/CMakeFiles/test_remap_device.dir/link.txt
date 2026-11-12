@@ -1,0 +1,1 @@
+/usr/bin/cc -Werror -O3 -DNDEBUG CMakeFiles/test_remap_device.dir/tests/test_remap_device.c.o CMakeFiles/test_remap_device.dir/src/remap_device.c.o -o test_remap_device 

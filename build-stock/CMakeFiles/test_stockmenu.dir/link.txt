@@ -1,0 +1,1 @@
+/usr/bin/cc -Werror CMakeFiles/test_stockmenu.dir/tests/test_stockmenu.c.o CMakeFiles/test_stockmenu.dir/src/stockmenu.c.o -o test_stockmenu 
