@@ -22,7 +22,12 @@ The first piece of Redux is a lightweight C/SDL2 menu that **replaces only the s
   <img src="docs/img/redux-appcenter-amber.png" width="49%" alt="Redux App Center, Amber Monitor theme">
 </p>
 
-*Concept renders of the **planned** BIOS-style UI (not the current screens), at the device's native 720×480, in BIOS Blue (default) and Amber Monitor.*
+<p align="center">
+  <img src="docs/img/redux-loading-blue.png" width="49%" alt="Redux Loading ROM screen, BIOS Blue theme">
+  <img src="docs/img/redux-loading-amber.png" width="49%" alt="Redux Loading ROM screen, Amber Monitor theme">
+</p>
+
+*Concept renders of the **planned** BIOS-style UI (not the current screens), at the device's native 720×480, in BIOS Blue (default) and Amber Monitor: the main menu, App Center, and the Loading ROM screen shown while the emulator starts.*
 
 ### Why it's different (the goal)
 
