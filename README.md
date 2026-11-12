@@ -8,7 +8,9 @@ An operating system for the Anbernic RG34XXSP that lets the hardware perform the
 - **Remove what the stock OS wastes.** That covers input latency, a CPU pinned at full speed, ignored hardware (the clamshell lid sensor, the fuel gauge), slow boots, and filesystems that can corrupt.
 - **Stability first.** The system image is read-only and runs from RAM. User data is journaled with write barriers on. The stock SD card always stays a working fallback.
 
-## The Redux frontend: try it on stock firmware today
+## The Redux frontend (in development)
+
+> **Status: early development, no release yet.** Builds are for testers comfortable with SSH. A packaged installer comes later.
 
 The first piece of Redux is a lightweight C/SDL2 menu that **replaces only the stock launcher**. The stock Ubuntu 22.04, kernel and emulators stay as they are. There's no reflash, and it can be undone from the device itself.
 
@@ -20,9 +22,9 @@ The first piece of Redux is a lightweight C/SDL2 menu that **replaces only the s
   <img src="docs/img/redux-appcenter-amber.png" width="49%" alt="Redux App Center, Amber Monitor theme">
 </p>
 
-*Concept renders of the planned BIOS-style UI at the device's native 720×480, in BIOS Blue (default) and Amber Monitor.*
+*Concept renders of the **planned** BIOS-style UI (not the current screens), at the device's native 720×480, in BIOS Blue (default) and Amber Monitor.*
 
-### Why it's different
+### Why it's different (the goal)
 
 | | Redux frontend | Typical custom firmware |
 |---|---|---|
@@ -30,10 +32,10 @@ The first piece of Redux is a lightweight C/SDL2 menu that **replaces only the s
 | **Undo** | *Settings → System → System Defaults → Stock Menu* restores the stock launcher from the device | Reflash stock |
 | **Your existing setup** | Keeps stock RetroArch configs, saves, BIOS files and Stock OS Mod tools | Usually rebuilt from scratch |
 | **Game cards** | Read-only: never writes to, formats or resizes your ROM cards | Varies |
-| **Look** | Retro BIOS-setup interface with 10 colour presets, changeable on the device | Theme packs |
+| **Look** | Retro BIOS-setup interface with 10 colour presets, changeable on the device (planned) | Theme packs |
 | **Branding** | Boot screen and colours come from plain `.ini` files in [`branding/`](branding/) | Usually hard-coded |
-| **For tinkerers** | Engineering Mode tabs (CPU, battery, thermal), System Tools, htop | Rarely built in |
-| **Footprint** | One small binary, about 0% CPU while idle | Full frontends |
+| **For tinkerers** | Engineering Mode tabs (CPU, battery, thermal) today; System Tools and htop planned | Rarely built in |
+| **Footprint** | One ~56 KB binary; measured at ~0% CPU while idle in the menu | Full frontends |
 
 ### Colour presets
 
