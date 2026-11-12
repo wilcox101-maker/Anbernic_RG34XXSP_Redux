@@ -27,19 +27,14 @@
 #define PRESENT_BUFFERS 3   /* covers double and triple buffering */
 #define SCREEN_W (GRID_COLS * FONT_W)
 #define SCREEN_H (GRID_ROWS * FONT_H)
-#define REDUX_LOG_PATH "/mnt/vendor/redux/redux.log"
 
 static void print_build_id(FILE *out) {
     fprintf(out, REDUX_ID_FMT "\n", REDUX_BUILD);
 }
 
-/* First line of this run. The wrapper also captures stderr into the same log. */
+/* run.sh already sends stderr to redux.log, so this is the only write. */
 static void log_build_id(void) {
     print_build_id(stderr);
-    FILE *f = fopen(REDUX_LOG_PATH, "a");
-    if (!f) return;
-    print_build_id(f);
-    fclose(f);
 }
 
 static int parse_hex_color(const char *s, Uint8 *r, Uint8 *g, Uint8 *b) {
