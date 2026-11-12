@@ -66,8 +66,10 @@ static int zone_index(const char *type) {
     if (strstr(type, "battery")) return -1;
     if (strcmp(type, "cpu") == 0 || strncmp(type, "cpu", 3) == 0) return 0;
     if (strcmp(type, "gpu") == 0 || strncmp(type, "gpu", 3) == 0) return 1;
-    if (strcmp(type, "ve") == 0) return 2;
-    if (strcmp(type, "ddr") == 0) return 3;
+    /* Device names are cpu_thermal_zone, gpu_thermal_zone, ve_thermal_zone, ddr_thermal_zone
+       (Dale's unit, 2026-11-12). Match the prefix so "ve" never matches e.g. "vendor". */
+    if (strcmp(type, "ve") == 0 || strncmp(type, "ve_", 3) == 0) return 2;
+    if (strncmp(type, "ddr", 3) == 0) return 3;
     return -1;
 }
 
