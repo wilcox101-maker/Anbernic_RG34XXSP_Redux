@@ -35,10 +35,12 @@ int wifi_count(void);
 int wifi_truncated(void);
 const wifi_ap_t *wifi_ap(int i);
 
-/* `nmcli dev wifi connect <ssid> [password <password>] ifname wlan0`.
-   password NULL or "" omits the password argument. Returns 0 when nmcli exits 0.
-   On success wifi_last_ip() is the IPv4 address (no prefix); on failure
-   wifi_last_reason() is nmcli's text. Neither is printed. Not run on the device yet. */
+/* Connect to ssid. A saved profile matching the SSID plus a typed password
+   uses `nmcli con modify` + `nmcli con up`; otherwise `nmcli dev wifi connect`.
+   nmcli can exit 0 on activation failure, so output containing "Error" is a
+   failure, and success also requires device show to report STATE starting
+   with 100 and the asked-for SSID. IP4.ADDRESS is read only after that.
+   The password is never printed. Not verified on the device. */
 int wifi_connect(const char *ssid, const char *password);
 const char *wifi_last_ip(void);
 const char *wifi_last_reason(void);

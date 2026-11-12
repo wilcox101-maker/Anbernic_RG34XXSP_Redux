@@ -21,7 +21,41 @@ static const char *scan_body;
 static const char *connect_body;
 static char saw_ip_query;
 
+static const char *profile_body;   /* NULL = no profiles; else NAME list */
+static const char *verify_body;    /* NULL = "100:Home" success */
+static char saw_modify;
+static char saw_up;
+static char modify_password_ok;
+
 static int spawn(char *const argv[], char *out, size_t out_n, int *status) {
+    if (argv[1] && strcmp(argv[1], "con") == 0 && argv[2] && strcmp(argv[2], "modify") == 0) {
+        saw_modify = 1;
+        modify_password_ok = 0;
+        for (int i = 0; argv[i]; i++)
+            if (strcmp(argv[i], "wifi-sec.psk") == 0 && argv[i + 1]
+                && expect_pw && strcmp(argv[i + 1], expect_pw) == 0)
+                modify_password_ok = 1;
+        if (status) *status = 0;
+        if (out && out_n) out[0] = '\0';
+        return 0;
+    }
+    if (argv[1] && strcmp(argv[1], "con") == 0 && argv[2] && strcmp(argv[2], "up") == 0) {
+        saw_up = 1;
+        if (status) *status = spawn_status;
+        if (out && out_n) snprintf(out, out_n, "%s", connect_body ? connect_body : "");
+        return 0;
+    }
+    if (argv[3] && strcmp(argv[3], "GENERAL.STATE,GENERAL.CONNECTION") == 0) {
+        if (status) *status = 0;
+        if (out && out_n)
+            snprintf(out, out_n, "%s", verify_body ? verify_body : "100:Home\n");
+        return 0;
+    }
+    if (argv[3] && strcmp(argv[3], "NAME") == 0) {
+        if (status) *status = 0;
+        if (out && out_n) snprintf(out, out_n, "%s", profile_body ? profile_body : "");
+        return 0;
+    }
     if (argv[3] && strcmp(argv[3], "IP4.ADDRESS") == 0) {
         saw_ip_query = 1;
         if (status) *status = 0;
@@ -126,6 +160,36 @@ int main(void) {
     scan_body = big;
     expect(wifi_scan() == WIFI_MAX, "scan stops at WIFI_MAX");
     expect(wifi_truncated() == 1, "the extra network sets truncated");
+
+    /* nmcli exits 0 but prints Error: treat as failure, do not read IP. */
+    spawn_status = 0;
+    connect_body = "Error: Connection activation failed: (7) Secrets were required, but not provided.\n";
+    saw_ip_query = 0;
+    expect(wifi_connect("Home", NULL) == -1, "exit 0 with Error text is a failure");
+    expect(saw_ip_query == 0, "Error text skips the address query");
+    expect(strstr(wifi_last_reason(), "Secrets were required") != NULL,
+           "Error text becomes the reason");
+
+    /* verify fails (wrong network or not 100): failure even if connect printed nothing. */
+    connect_body = "";
+    verify_body = "30 (disconnected):\n";
+    expect(wifi_connect("Home", NULL) == -1, "STATE not 100 is a failure");
+    expect(strcmp(wifi_last_reason(), "not connected") == 0, "verify failure reason");
+    verify_body = "100:Other\n";
+    expect(wifi_connect("Home", NULL) == -1, "connected to a different SSID is a failure");
+    verify_body = NULL;
+
+    /* saved profile + password: modify then up, then verify. */
+    profile_body = "DLN_Guest\nHome\nDLN_TeamWireless\n";
+    expect_pw = "s3cret-test";
+    saw_modify = 0; saw_up = 0; saw_ip_query = 0;
+    connect_body = "";
+    expect(wifi_connect("Home", expect_pw) == 0, "saved profile uses modify + up");
+    expect(saw_modify == 1 && modify_password_ok == 1, "modify sets the typed password");
+    expect(saw_up == 1, "modify is followed by con up");
+    expect(saw_ip_query == 1, "verified profile connect reads the address");
+    expect(strcmp(wifi_last_ip(), "10.0.0.8") == 0, "profile connect keeps the address");
+    profile_body = NULL;
 
     printf("%d failed\n", fails);
     return fails ? 1 : 0;
