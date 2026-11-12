@@ -16,6 +16,8 @@ logical_button_t remap_device_key(int code) {
     case 312: return LB_MENU;   /* BTN_TL2 = Menu (also sends KEY_GOTO 354, ignored) */
     case 314: return LB_NONE;   /* BTN_SELECT = L2 */
     case 315: return LB_NONE;   /* BTN_START = R2 */
+    case 115: return LB_VOL_UP;   /* KEY_VOLUMEUP (device, 2026-11-12) */
+    case 114: return LB_VOL_DOWN; /* KEY_VOLUMEDOWN (device, 2026-11-12) */
     default:  return LB_NONE;
     }
 }

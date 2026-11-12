@@ -9,6 +9,7 @@
 #include "wifi.h"
 #include "stockmenu.h"
 #include "power.h"
+#include "volume.h"
 #include "sysinfo.h"
 #include "grid.h"
 #include <stdio.h>
@@ -74,6 +75,14 @@ static int nav_spawn(char *const argv[], char *out, size_t out_n, int *status) {
         if (nav_fail) snprintf(out, out_n, "Error: Secrets were required, but not provided.\n");
         else out[0] = 0;
     }
+    return 0;
+}
+
+static int vol_calls;
+static char vol_cmd[80];
+static int vol_hook(const char *cmd) {
+    vol_calls++;
+    snprintf(vol_cmd, sizeof vol_cmd, "%s", cmd);
     return 0;
 }
 
@@ -629,6 +638,33 @@ int main(void) {
     ui_tick(33000);
     expect(power_calls == 1, "3 s hold runs poweroff once");
     expect(strcmp(power_cmd, "sync && poweroff") == 0, "Power Off runs sync && poweroff");
+
+    /* Volume: a press shows VOL nn; it does not leave a confirm screen. */
+    volume_set_run(vol_hook);
+    volume_set_path("/tmp/redux-volume-nav");
+    unlink("/tmp/redux-volume-nav");
+    ui_init();
+    ui_button(LB_VOL_DOWN, 1, 1000);
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "VOL 30") != NULL, "vol down shows VOL 30");
+    }
+    expect(strcmp(vol_cmd, "amixer sset 'lineout volume' 30") == 0, "vol down runs amixer");
+    ui_tick(2500);
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "VOL ") == NULL, "VOL overlay clears after 1.5 s");
+    }
+    /* on a confirm screen, volume must not cancel */
+    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_A);
+    expect(ui_screen() == SCREEN_RESTART_CONFIRM, "on Restart confirm");
+    ui_button(LB_VOL_UP, 1, 3000);
+    expect(ui_screen() == SCREEN_RESTART_CONFIRM, "volume does not leave the confirm");
+    unlink("/tmp/redux-volume-nav");
 
     printf("%d failed\n", fails);
     return fails ? 1 : 0;
