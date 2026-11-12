@@ -13,13 +13,24 @@ AGENTS.md hard rule; the factory envelope is now the *default*, not an absolute.
 
 1. **Off by default.** No above-factory value ships enabled, and no migration or config file turns
    one on.
-2. **Hidden unlock: the classic 1980s cheat code** (Dale's choice). On *Settings → System*, enter
-   **↑ ↑ ↓ ↓ ← → ← → B A Start**, with no more than 1 s between presses (a wrong press or a pause
-   resets it), to reveal *Expert*. It's a nod to retro gaming that can't happen by accident. Docs and
-   UI call it "the classic code" and never use a company name. Then comes a full-screen warning (heat, instability, SD-card corruption, reduced
-   battery life, no support), and the user must **type `I UNDERSTAND`** on the on-screen keyboard.
+2. **Unlock: you have to really mean it** (Dale: "not earn it, but better really mean it").
+   Every gate below is required, in this order:
+   1. **The classic code** on *Settings → System*: **↑ ↑ ↓ ↓ ← → ← → B A Start**, with no more than
+      1 s between presses (a wrong press or a pause resets it). Docs and UI say "the classic code"
+      and never use a company name.
+   2. **A full warning that can't be skipped:** heat, instability, SD-card corruption, reduced
+      battery life and lifespan, no support. The Continue button stays disabled until the text has
+      been scrolled to the end **and** 15 s have passed.
+   3. **Type the full phrase** `I ACCEPT THE RISK TO MY DEVICE` on the on-screen keyboard. It must
+      match exactly; any mismatch cancels the whole unlock.
+   4. **Power check:** on the charger, or battery at 50 % or more. Otherwise refuse and explain why.
+   5. **Cooling-off reboot:** the unlock is written, but *Expert* only appears **after the next
+      reboot**, so nothing above factory can be changed in the same sitting as the unlock.
+   Any B press during steps 2-4 cancels the unlock and starts it over from the code.
 3. **Per-change confirmation.** Each risky setting (CPU max above 1512 MHz, GPU clock,
-   undervolt, raised throttle points) has its own confirm screen.
+   undervolt, raised throttle points) has its own confirm screen, which shows the old and new
+   value and requires **holding A for 5 s**. One step at a time: a value can only move one
+   frequency step per apply.
 4. **Keep-or-revert.** After a change is applied, a 30 s countdown asks "Keep these settings?".
    No answer means it reverts automatically.
 5. **Boot fallback.** New expert settings are trial-booted once. If that boot doesn't reach the
