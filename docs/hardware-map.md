@@ -39,16 +39,22 @@ Where they differ from what the DT says, the device wins; the DT value is noted.
 | D-pad Left / Right | PA8 / PA9 | EV_ABS | ABS_HAT0X (16) −1 / +1 |
 | A | PA0 | EV_KEY | BTN_SOUTH (304) |
 | B | PA1 | EV_KEY | BTN_EAST (305) |
-| X | PA3 | EV_KEY | BTN_C (306) |
-| Y | PA2 | EV_KEY | BTN_NORTH (307) |
+| X | PA3 | EV_KEY | BTN_NORTH (307) |
+| Y | PA2 | EV_KEY | BTN_C (306) |
 | L1 | PA10 | EV_KEY | BTN_WEST (308) |
 | R1 | PA12 | EV_KEY | BTN_Z (309) |
-| L2 | PA11 | EV_KEY | BTN_TL (310) ⚠ DT: BTN_SELECT |
-| R2 | PA7 | EV_KEY | BTN_TR (311) ⚠ DT: BTN_START |
-| Select | PA5 | EV_KEY | BTN_SELECT (314) ⚠ DT: BTN_TL |
-| Start | PA4 | EV_KEY | BTN_START (315) ⚠ DT: BTN_TR |
-| Menu | PE3 | EV_KEY | BTN_TL2 (312) |
-| L3 / R3 | PE8 / PE9 | EV_KEY | BTN_TR2 (313) / BTN_MODE (316), probably real now the sticks are confirmed |
+| L2 | PA11 | EV_KEY | BTN_SELECT (314) |
+| R2 | PA7 | EV_KEY | BTN_START (315) |
+| Select | PA5 | EV_KEY | BTN_TL (310) |
+| Start | PA4 | EV_KEY | BTN_TR (311) |
+| Menu | PE3 | EV_KEY | BTN_TL2 (312), followed by KEY_GOTO (354) |
+| L3 / R3 | PE8 / PE9 | EV_KEY | BTN_TR2 (313) / BTN_MODE (316), confirmed 2026-11-12 |
+| Volume + / − | — | EV_KEY | KEY_VOLUMEUP (115) / KEY_VOLUMEDOWN (114), on event1 |
+
+**Correction (2026-11-12):** Dale's evtest (Select, Start, L2, R2, Menu pressed in order) gave 310, 311,
+314, 315, 312. The device follows the DT. The 2026-11-10 table had Select/L2 and Start/R2 swapped, which
+is why Start did nothing in Redux. A full sweep the same day (A, B, X, Y, L1, R1, L2, R2, L3, R3, D-pad,
+volume) also showed **X = 307 and Y = 306**, the reverse of the old table. Everything else matched.
 
 ⚠ = the decompiled DT and the device disagree. Both orders are still not standard gamepad codes, so
 every frontend needs a remap table; we'll emit standard Linux gamepad codes instead. The DT columns

@@ -13,6 +13,12 @@ int main(void) {
     /* Key mapping */
     check(remap_device_key(304) == LB_A, "BTN_SOUTH -> A");
     check(remap_device_key(312) == LB_MENU, "BTN_TL2 -> Menu");
+    check(remap_device_key(307) == LB_X, "BTN_NORTH -> X (device, 2026-11-12)");
+    check(remap_device_key(306) == LB_Y, "BTN_C -> Y (device, 2026-11-12)");
+    check(remap_device_key(310) == LB_SELECT, "BTN_TL -> Select (device, 2026-11-12)");
+    check(remap_device_key(311) == LB_START, "BTN_TR -> Start (device, 2026-11-12)");
+    check(remap_device_key(314) == LB_NONE, "BTN_SELECT is L2 -> none");
+    check(remap_device_key(315) == LB_NONE, "BTN_START is R2 -> none");
     check(remap_device_key(999) == LB_NONE, "unknown key");
 
     /* Axis thresholds (press at 1500, release below) */
