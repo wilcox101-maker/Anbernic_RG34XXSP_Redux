@@ -11,6 +11,8 @@ static wifi_ap_t g_ap[WIFI_MAX];
 static int g_count;
 static int g_truncated;
 static wifi_spawn_fn g_spawn;
+static char g_ip[48];
+static char g_reason[96];
 
 static void copy_trunc(char *dst, size_t n, const char *src) {
     size_t i = 0;
@@ -59,15 +61,16 @@ int wifi_parse_line(const char *line, wifi_ap_t *ap) {
     return 0;
 }
 
-static int default_spawn(char *const argv[], char *out, size_t out_n, int *status) {
+static int default_spawn_mode(char *const argv[], char *out, size_t out_n, int *status, int keep_err) {
     int fd[2];
     if (pipe(fd) != 0) return -1;
     pid_t pid = fork();
     if (pid < 0) { close(fd[0]); close(fd[1]); return -1; }
     if (pid == 0) {
-        int devnull = open("/dev/null", O_WRONLY);
+        int devnull = keep_err ? -1 : open("/dev/null", O_WRONLY);
         dup2(fd[1], STDOUT_FILENO);
-        if (devnull >= 0) dup2(devnull, STDERR_FILENO);
+        if (keep_err) dup2(fd[1], STDERR_FILENO);
+        else if (devnull >= 0) dup2(devnull, STDERR_FILENO);
         close(fd[0]); close(fd[1]);
         if (devnull >= 0) close(devnull);
         setenv("LC_ALL", "C", 1);   /* nmcli follows the locale; stock is zh */
@@ -91,11 +94,21 @@ static int default_spawn(char *const argv[], char *out, size_t out_n, int *statu
     return 0;
 }
 
+static int default_spawn(char *const argv[], char *out, size_t out_n, int *status) {
+    return default_spawn_mode(argv, out, out_n, status, 0);
+}
+
 void wifi_set_spawn(wifi_spawn_fn fn) { g_spawn = fn; }
 
 static int run(char *const argv[], char *out, size_t n, int *status) {
     wifi_spawn_fn fn = g_spawn ? g_spawn : default_spawn;
     return fn(argv, out, n, status);
+}
+
+/* Connect and the address query. stderr is the failure reason; the test hook covers both. */
+static int run_err(char *const argv[], char *out, size_t n, int *status) {
+    if (g_spawn) return g_spawn(argv, out, n, status);
+    return default_spawn_mode(argv, out, n, status, 1);
 }
 
 int wifi_scan(void) {
@@ -137,10 +150,59 @@ const wifi_ap_t *wifi_ap(int i) {
     return (i >= 0 && i < g_count) ? &g_ap[i] : NULL;
 }
 
+const char *wifi_last_ip(void) { return g_ip; }
+const char *wifi_last_reason(void) { return g_reason; }
+
+static void take_reason(const char *out, const char *password) {
+    g_reason[0] = '\0';
+    if (!out) return;
+    while (*out == '\n' || *out == '\r') out++;
+    if (strncmp(out, "Error: ", 7) == 0) out += 7;
+    size_t n = 0;
+    while (out[n] && out[n] != '\n' && out[n] != '\r' && n + 1 < sizeof g_reason) n++;
+    memcpy(g_reason, out, n);
+    g_reason[n] = '\0';
+    if (!g_reason[0]) copy_trunc(g_reason, sizeof g_reason, "failed");
+    if (password && password[0] && strstr(g_reason, password))
+        copy_trunc(g_reason, sizeof g_reason, "failed");
+}
+
+static void take_ip(const char *out) {
+    g_ip[0] = '\0';
+    if (!out) return;
+    const char *p = out;
+    while (*p) {
+        char line[128];
+        size_t n = 0;
+        while (p[n] && p[n] != '\n' && n + 1 < sizeof line) n++;
+        memcpy(line, p, n);
+        line[n] = '\0';
+        p += n;
+        if (*p == '\n') p++;
+        const char *addr = strrchr(line, ':');
+        addr = addr ? addr + 1 : line;
+        while (*addr == ' ') addr++;
+        if (!strchr(addr, '.')) continue;
+        size_t i = 0;
+        while (addr[i] && addr[i] != '/' && addr[i] != ' ' && i + 1 < sizeof g_ip) {
+            g_ip[i] = addr[i];
+            i++;
+        }
+        g_ip[i] = '\0';
+        return;
+    }
+}
+
 int wifi_connect(const char *ssid, const char *password) {
-    if (!ssid || !ssid[0]) return -1;
+    g_ip[0] = '\0';
+    g_reason[0] = '\0';
+    if (!ssid || !ssid[0]) {
+        copy_trunc(g_reason, sizeof g_reason, "failed");
+        return -1;
+    }
     char ssid_buf[WIFI_SSID_MAX];
     char pass_buf[128];
+    char out[512];
     copy_trunc(ssid_buf, sizeof ssid_buf, ssid);
     int status = 1;
     int rc;
@@ -150,13 +212,24 @@ int wifi_connect(const char *ssid, const char *password) {
             "/usr/bin/nmcli", "dev", "wifi", "connect", ssid_buf,
             "password", pass_buf, "ifname", "wlan0", NULL
         };
-        rc = run(argv, NULL, 0, &status);
+        rc = run_err(argv, out, sizeof out, &status);
         wipe(pass_buf, sizeof pass_buf);
     } else {
         char *argv[] = {
             "/usr/bin/nmcli", "dev", "wifi", "connect", ssid_buf, "ifname", "wlan0", NULL
         };
-        rc = run(argv, NULL, 0, &status);
+        rc = run_err(argv, out, sizeof out, &status);
     }
-    return (rc == 0 && status == 0) ? 0 : -1;
+    if (rc != 0 || status != 0) {
+        take_reason(rc == 0 ? out : "", password);
+        return -1;
+    }
+    char *ip_argv[] = {
+        "/usr/bin/nmcli", "-t", "-f", "IP4.ADDRESS", "device", "show", "wlan0", NULL
+    };
+    char ip_out[256];
+    int ip_status = 1;
+    if (run_err(ip_argv, ip_out, sizeof ip_out, &ip_status) == 0 && ip_status == 0)
+        take_ip(ip_out);
+    return 0;
 }

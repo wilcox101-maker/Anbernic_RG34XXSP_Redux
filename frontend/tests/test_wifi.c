@@ -18,8 +18,16 @@ static char connect_password_ok;
 static const char *expect_pw;
 static int spawn_status;
 static const char *scan_body;
+static const char *connect_body;
+static char saw_ip_query;
 
 static int spawn(char *const argv[], char *out, size_t out_n, int *status) {
+    if (argv[3] && strcmp(argv[3], "IP4.ADDRESS") == 0) {
+        saw_ip_query = 1;
+        if (status) *status = 0;
+        if (out && out_n) snprintf(out, out_n, "IP4.ADDRESS[1]:10.0.0.8/24\n");
+        return 0;
+    }
     if (status) *status = spawn_status;
     if (argv[1] && strcmp(argv[1], "-t") == 0) {
         static const char *const want[] = {
@@ -49,7 +57,7 @@ static int spawn(char *const argv[], char *out, size_t out_n, int *status) {
             connect_ifname_ok = 1;
     }
     if (!expect_pw) connect_password_ok = !connect_has_password;
-    if (out && out_n) out[0] = '\0';
+    if (out && out_n) snprintf(out, out_n, "%s", connect_body ? connect_body : "");
     return 0;
 }
 
@@ -89,6 +97,9 @@ int main(void) {
     expect(connect_ifname_ok, "connect names ifname wlan0");
     expect(connect_has_password == 1 && connect_password_ok == 1,
            "password argument matches, and is not printed");
+    expect(saw_ip_query == 1, "a successful connect asks nmcli for the address");
+    expect(strcmp(wifi_last_ip(), "10.0.0.8") == 0, "the address drops the prefix length");
+    expect(wifi_last_reason()[0] == '\0', "success has no failure reason");
 
     expect_pw = NULL;
     expect(wifi_connect("Home", NULL) == 0, "open connect returns 0");
@@ -96,7 +107,15 @@ int main(void) {
            "no password argument when the password is empty");
 
     spawn_status = 1;
+    connect_body = "Error: Secrets were required, but not provided.\n";
     expect(wifi_connect("Home", "") == -1, "non-zero nmcli status is a failure");
+    expect(strcmp(wifi_last_reason(), "Secrets were required, but not provided.") == 0,
+           "failure keeps nmcli's reason");
+    expect(wifi_last_ip()[0] == '\0', "failure has no address");
+    connect_body = "Error: bad s3cret-test password\n";
+    expect(wifi_connect("Home", "s3cret-test") == -1, "a reason that echoes the password is refused");
+    expect(strcmp(wifi_last_reason(), "failed") == 0, "the password is not kept in the reason");
+    connect_body = NULL;
     expect(wifi_scan() == -1, "non-zero scan status is a failure");
     spawn_status = 0;
 

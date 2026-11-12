@@ -51,6 +51,9 @@ static int wifi_pick;
 static char wifi_pass[64];
 static int wifi_pass_len;
 static char wifi_msg[48];
+static char wifi_result_ssid[WIFI_SSID_MAX];
+static int wifi_result_ok;
+static char wifi_retry[64];
 static char stock_msg[48];
 static int stock_started;
 static uint32_t a_down_at;
@@ -348,6 +351,28 @@ static void wipe_pass(void) {
     wifi_pass_len = 0;
 }
 
+static void wipe_retry(void) {
+    volatile char *v = wifi_retry;
+    for (size_t i = 0; i < sizeof wifi_retry; i++) v[i] = 0;
+}
+
+static void wifi_show_result(const char *ssid, int rc) {
+    snprintf(wifi_result_ssid, sizeof wifi_result_ssid, "%s", ssid ? ssid : "");
+    wifi_result_ok = rc == 0;
+    if (rc == 0) wipe_retry();
+    if (screen == SCREEN_WIFI_KEY) back();
+    if (screen != SCREEN_WIFI_RESULT) go(SCREEN_WIFI_RESULT);
+    else dirty = 1;
+}
+
+static void wifi_begin(const wifi_ap_t *ap, const char *pw) {
+    wipe_retry();
+    if (pw && pw[0]) snprintf(wifi_retry, sizeof wifi_retry, "%s", pw);
+    ui_busy("Connecting", ap ? ap->ssid : "");
+    int rc = ap ? wifi_connect(ap->ssid, (pw && pw[0]) ? pw : NULL) : -1;
+    wifi_show_result(ap ? ap->ssid : "", rc);
+}
+
 static void wifi_rescan(void) {
     ui_busy("Scanning for Wi-Fi networks", NULL);
     wifi_msg[0] = '\0';
@@ -368,14 +393,9 @@ static void wifi_type(char ch) {
 
 static void wifi_submit(void) {
     const wifi_ap_t *ap = wifi_ap(wifi_pick);
-    char title[80];
-    snprintf(title, sizeof title, "Connecting to %.48s", ap ? ap->ssid : "");
-    ui_busy(title, NULL);
     const char *pw = wifi_pass_len ? wifi_pass : NULL;
-    int rc = ap ? wifi_connect(ap->ssid, pw) : -1;
+    wifi_begin(ap, pw);
     wipe_pass();
-    snprintf(wifi_msg, sizeof wifi_msg, "%s", rc == 0 ? "connected" : "failed");
-    back();
 }
 
 static int kb_cols(int row) {
@@ -521,18 +541,17 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (btn == LB_A && screen == SCREEN_WIFI) {
         const wifi_ap_t *ap = wifi_ap(selected);
         if (!ap) return;
-        if (ap->open) {
-            char title[80];
-            snprintf(title, sizeof title, "Connecting to %.48s", ap->ssid);
-            ui_busy(title, NULL);
-            int rc = wifi_connect(ap->ssid, NULL);
-            snprintf(wifi_msg, sizeof wifi_msg, "%s", rc == 0 ? "connected" : "failed");
-            dirty = 1;
-        } else {
-            wifi_open_key();
-        }
+        if (ap->open) wifi_begin(ap, NULL);
+        else wifi_open_key();
         return;
     }
+    if (screen == SCREEN_WIFI_RESULT && btn == LB_A && !wifi_result_ok) {
+        ui_busy("Connecting", wifi_result_ssid);
+        int rc = wifi_connect(wifi_result_ssid, wifi_retry[0] ? wifi_retry : NULL);
+        wifi_show_result(wifi_result_ssid, rc);
+        return;
+    }
+    if (btn == LB_B && screen == SCREEN_WIFI_RESULT) wipe_retry();
     if (btn == LB_B && screen != SCREEN_MAIN) back();
 }
 
@@ -756,6 +775,24 @@ void ui_draw(void) {
             char line[GRID_COLS];
             snprintf(line, sizeof line, "  %s", wifi_msg);
             body(22, line);
+        }
+        break;
+    }
+    case SCREEN_WIFI_RESULT: {
+        frame(wifi_result_ok ? "Connected" : "Not connected",
+              wifi_result_ok ? "B:Back" : "A:Retry  B:Back", 1, 0);
+        char line[GRID_COLS];
+        snprintf(line, sizeof line, "  Network:  %.48s", wifi_result_ssid);
+        body(0, line);
+        body(1, wifi_result_ok ? "  Status:   connected" : "  Status:   failed");
+        if (wifi_result_ok) {
+            const char *ip = wifi_last_ip();
+            snprintf(line, sizeof line, "  IP:       %.48s", (ip && ip[0]) ? ip : "none");
+            body(2, line);
+        } else {
+            const char *why = wifi_last_reason();
+            snprintf(line, sizeof line, "  Reason:   %.60s", (why && why[0]) ? why : "failed");
+            body(2, line);
         }
         break;
     }
