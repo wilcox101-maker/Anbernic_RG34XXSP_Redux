@@ -8,11 +8,14 @@ logical_button_t remap_device_key(int code) {
     case 307: return LB_Y;      /* BTN_NORTH */
     case 308: return LB_L1;     /* BTN_WEST = L1 */
     case 309: return LB_R1;     /* BTN_Z = R1 */
-    case 310: return LB_NONE;   /* BTN_TL = L2 */
-    case 311: return LB_NONE;   /* BTN_TR = R2 */
-    case 312: return LB_MENU;   /* BTN_TL2 = Menu */
-    case 314: return LB_SELECT; /* BTN_SELECT */
-    case 315: return LB_START;  /* BTN_START */
+    /* Dale's evtest, 2026-11-12 (Select, Start, L2, R2 in order): the device follows the DT,
+       not the 2026-11-10 table. Select and Start send BTN_TL/BTN_TR; L2 and R2 send
+       BTN_SELECT/BTN_START. */
+    case 310: return LB_SELECT; /* BTN_TL = Select */
+    case 311: return LB_START;  /* BTN_TR = Start */
+    case 312: return LB_MENU;   /* BTN_TL2 = Menu (also sends KEY_GOTO 354, ignored) */
+    case 314: return LB_NONE;   /* BTN_SELECT = L2 */
+    case 315: return LB_NONE;   /* BTN_START = R2 */
     default:  return LB_NONE;
     }
 }
