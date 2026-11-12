@@ -20,3 +20,4 @@
 - 2026-11-12 14:12 · grok · read: TASK 1 power menu · did: PR #89 (c813f2c) Restart/Power Off 3s hold. CI green. CHECKPOINT 1a, waiting on Dale.
 - 2026-11-12 15:01 · claude · read: Dale SWAP · did: handoff in #90 (STATUS). In flight: nothing of Claude's open; Grok on 3a/3b after Dale relays #89 results. Chat archived as: Redux 2026-11-12→11-12: device test, button remap, Wi-Fi verify, stock V1.0.6 diff, power menu
 - 2026-11-12 15:05 · grok · read: ACTIVITY, STATUS, open notes, PRs · did: PING. #89 merged (power menu Restart/Power Off PASS on device). Open #90 (Claude SWAP handoff), #91 (system layout + short-A stays). New hw-result note on grok/system-layout.
+- 2026-11-12 15:05 · grok · read: #89 device result · did: PR #91 (ea42c1a) system layout + short-A stays. CI green. PING on #41. CHECKPOINT, waiting on Dale.
