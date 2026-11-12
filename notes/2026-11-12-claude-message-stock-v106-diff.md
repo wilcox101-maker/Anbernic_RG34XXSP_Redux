@@ -31,6 +31,14 @@ initramfs with `rg34xxsp-fw-sd_202505` (read-only, on Dale's PC; nothing extract
    `status` disabled → okay. TF1 hot-plug detection is gone in V1.0.6.
 4. **Battery capacity:** `pmu_battery_cap` 3000 → 3300 mAh.
 
+## Bootloader (added after Dale pointed to the 2025 `RG34XXSP.img` on his PC)
+- **boot0** differs from 2025 (git id `749c1f9a` → `ac58e911`). New strings show it now selects a
+  `dram_para` set at boot, except on wake from standby. Its own log line confirms the type codes:
+  `DRAM Type =%d (3:DDR3,4:DDR4,7:LPDDR3,8:LPDDR4)`.
+- **u-boot** was rebuilt (2018.05, `Apr 14 2025` → `May 26 2026`). Its own DTB has the same four
+  changes as the kernel DTB (DRAM straps and sets, panel driver, TF1, battery capacity).
+- **monitor** (ATF) and **dtbo** are byte-identical.
+
 ## What it means for us
 - **A Redux `boot.img` built from the 2025 DTB must never go on a revised board.** It names the old
   panel driver and only has DDR3 DRAM sets. This turns the existing field-reports rule into something
@@ -41,7 +49,7 @@ initramfs with `rg34xxsp-fw-sd_202505` (read-only, on Dale's PC; nothing extract
 - The strap GPIOs (PH6/7/8/10) are a candidate runtime board-ID for Redux, alongside MemTotal.
 
 ## Not verified
-- Nothing here has run on a device. The type 7/8 meaning comes from Allwinner's code convention, and
-  "LPDDR3 board" is inferred, not measured.
-- boot0 and u-boot weren't compared: the 2025 image's first 36 MiB isn't on Dale's PC (only V1.0.6's).
+- Nothing here has run on a device. The type codes are confirmed by boot0's own string. Which revised
+  board has which memory is inferred, not measured.
+- It's not known whether V1.0.6 boot0 still picks the DDR3 set on Dale's original board.
 - appfs/rootfs (launcher, RetroArch) weren't compared yet.
