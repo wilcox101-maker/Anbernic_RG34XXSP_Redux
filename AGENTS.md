@@ -28,7 +28,11 @@ a fresh chat when **any** of these happens:
 3. **A new workday starts.**
 4. **Dale says "SWAP"** at any time.
 
-Procedure: the agent updates the **Handoff** section of `notes/STATUS.md` (current state, device IP,
+**Dale approves every swap.** For triggers 1 to 3, the agent does not swap on its own. It asks
+*"Swap now? (reason)"* and waits. Dale replies **SWAP** to approve, or **NO SWAP** to keep going.
+Trigger 4 is Dale's approval already. Without Dale's SWAP, the agent keeps working in the current chat.
+
+Procedure (after Dale's SWAP): the agent updates the **Handoff** section of `notes/STATUS.md` (current state, device IP,
 deploy rule, lessons, decisions, queue) in a docs PR, and Dale merges it. Dale then opens a new chat
 in the project and sends: *"Read AGENTS.md and notes/STATUS.md, then continue."* Nothing else is
 needed; the inbox #41 and notes/ carry the detail. Before handing off, the agent either finishes
@@ -37,6 +41,14 @@ The agent's last message in the old chat gives Dale an **archive name** to renam
 form `Redux <start date>→<end date>: <milestones>`, for example
 `Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI plan`. The same line goes in the
 handoff, so the next chat knows what the previous one covered.
+
+## Dale's comments on GitHub
+
+Dale and Grok both post from the account `wilcox101-maker`. To tell them apart:
+- Grok's status comments start with **`PING:`**.
+- Dale starts his own comments with **`DALE:`**, for example `DALE: #89 tested OK on device` or
+  `DALE: SWAP`.
+Agents treat only `DALE:` comments, merges and reviews from that account as Dale's own words.
 
 ## "PING"
 
