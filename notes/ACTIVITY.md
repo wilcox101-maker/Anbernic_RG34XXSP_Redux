@@ -1,1 +1,1 @@
-PLACEHOLDER_FIX
+PLACEHOLDER_FIX- 2026-11-12 11:15 · claude · read: Dale decisions · did: #41 decisions: PC link = full file manager (option A, hard-rule change pending Dale); Contra code = Expert Mode shortcut, thermals untouched by any unlock, undocumented; ROM upload gated by one-time ownership acknowledgement
