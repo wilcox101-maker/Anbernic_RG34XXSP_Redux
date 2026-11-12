@@ -23,11 +23,18 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - Merge #70 (27 systems) and this PR (go rule + handoff), then deploy main and try one game from a BIOS system.
 
 ## Queue (inbox #41 is the source of truth; in order)
-1. ~~Wi-Fi part 2: Connecting and result screens~~ merged in #73 (not run on the device yet). **Grok**
+1. ~~Wi-Fi part 2: Connecting and result screens~~ merged in #73 (device test 2026-11-12: connect fails, see 0a). **Grok**
+0a. **Wi-Fi connect fix, do this first.** **Grok**, branch `grok/wifi-verify`. From [the 0afecd9 device test](2026-11-12-dale-hw-result-build-0afecd9.md):
+   (1) nmcli exits 0 on activation failure. Treat output containing "Error" as failure, then verify with
+   `nmcli -t -f GENERAL.STATE,GENERAL.CONNECTION device show wlan0` (STATE starts "100" and the connection is the SSID asked for); read IP4.ADDRESS only after that.
+   (2) Saved profiles exist (DLN_Guest, DLN_TeamWireless, SAND_BOX, home x2): if one matches the SSID and a password was typed, `nmcli con modify id <ssid> wifi-sec.key-mgmt wpa-psk wifi-sec.psk <pw>` then `nmcli con up id <ssid>`. Never log or show the password.
+   (3) Merge scan rows to one per SSID, keeping the strongest signal.
+   (4) Fake-spawn tests for each case. Not verified on the device; say so.
 1a. ~~Map unmapped stock folders~~ done in #70 (HBMAME/OPENBOR/VARCADE left). **Claude**
 2. ~~System Tools (read-only, `sysinfo.c` data layer)~~ merged in #74 (thermal zone names not checked on the device). **Grok**
-3. BIOS-style UI, colour presets, Settings → UI → Colors, Restart/Power Off with a 3 s hold. **Grok** (Restart/Power Off in its own PR, for Dale)
+3. ~~BIOS-style UI, colour presets, Settings → UI → Colors~~ merged in #81/#82 (persists across reboot on the device). Next: **Restart/Power Off with a 3 s hold**, its own PR for Dale. **Grok**, after 0a
 4. App Center · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. TF2 scan · 8. 640×480 boot logo (Dale-only installer)
+- Open with Dale: what L3/R3 (313/316) should do; they're unmapped for now.
 - Backlog: ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM upload after an ownership acknowledgement), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
 ## Open notes
