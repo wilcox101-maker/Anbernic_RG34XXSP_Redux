@@ -13,8 +13,10 @@ AGENTS.md hard rule; the factory envelope is now the *default*, not an absolute.
 
 1. **Off by default.** No above-factory value ships enabled, and no migration or config file turns
    one on.
-2. **Hidden unlock.** *Settings → System → Expert* appears only after holding **L1 + R1 + Select
-   for 5 s**. Then comes a full-screen warning (heat, instability, SD-card corruption, reduced
+2. **Hidden unlock: the classic 1980s cheat code** (Dale's choice). On *Settings → System*, enter
+   **↑ ↑ ↓ ↓ ← → ← → B A Start**, with no more than 1 s between presses (a wrong press or a pause
+   resets it), to reveal *Expert*. It's a nod to retro gaming that can't happen by accident. Docs and
+   UI call it "the classic code" and never use a company name. Then comes a full-screen warning (heat, instability, SD-card corruption, reduced
    battery life, no support), and the user must **type `I UNDERSTAND`** on the on-screen keyboard.
 3. **Per-change confirmation.** Each risky setting (CPU max above 1512 MHz, GPU clock,
    undervolt, raised throttle points) has its own confirm screen.
