@@ -8,6 +8,61 @@ An operating system for the Anbernic RG34XXSP that lets the hardware perform the
 - **Remove what the stock OS wastes.** That covers input latency, a CPU pinned at full speed, ignored hardware (the clamshell lid sensor, the fuel gauge), slow boots, and filesystems that can corrupt.
 - **Stability first.** The system image is read-only and runs from RAM. User data is journaled with write barriers on. The stock SD card always stays a working fallback.
 
+## The Redux frontend: try it on stock firmware today
+
+The first piece of Redux is a lightweight C/SDL2 menu that **replaces only the stock launcher**. The stock Ubuntu 22.04, kernel and emulators stay as they are. There's no reflash, and it can be undone from the device itself.
+
+<p align="center">
+  <img src="docs/img/redux-main-blue.png" width="49%" alt="Redux main menu, BIOS Blue theme">
+  <img src="docs/img/redux-appcenter-blue.png" width="49%" alt="Redux App Center, BIOS Blue theme">
+  <br>
+  <img src="docs/img/redux-main-amber.png" width="49%" alt="Redux main menu, Amber Monitor theme">
+  <img src="docs/img/redux-appcenter-amber.png" width="49%" alt="Redux App Center, Amber Monitor theme">
+</p>
+
+*Concept renders of the planned BIOS-style UI at the device's native 720×480, in BIOS Blue (default) and Amber Monitor.*
+
+### Why it's different
+
+| | Redux frontend | Typical custom firmware |
+|---|---|---|
+| **Install** | Replaces only the stock menu program | Reflash a whole OS image |
+| **Undo** | *Settings → System → System Defaults → Stock Menu* restores the stock launcher from the device | Reflash stock |
+| **Your existing setup** | Keeps stock RetroArch configs, saves, BIOS files and Stock OS Mod tools | Usually rebuilt from scratch |
+| **Game cards** | Read-only: never writes to, formats or resizes your ROM cards | Varies |
+| **Look** | Retro BIOS-setup interface with 10 colour presets, changeable on the device | Theme packs |
+| **Branding** | Boot screen and colours come from plain `.ini` files in [`branding/`](branding/) | Usually hard-coded |
+| **For tinkerers** | Engineering Mode tabs (CPU, battery, thermal), System Tools, htop | Rarely built in |
+| **Footprint** | One small binary, about 0% CPU while idle | Full frontends |
+
+### Colour presets
+
+Ten built-in schemes named after the displays of 1975 to the 1990s. Pick one under *Settings → UI → Colors*, or add your own in `branding/theme.ini`.
+
+<p align="center"><img src="docs/img/redux-color-presets.png" width="80%" alt="Ten Redux colour presets"></p>
+
+### Frontend status
+
+**Working today:**
+- Game list from both TF1 and TF2
+- RetroArch launching: GB/GBC/GBA, Mega Drive, SNES/SFC, Master System/Game Gear, PC Engine, WonderSwan, PS1, Neo Geo, CPS and more
+- PSP launching
+- Returns to the same game list after you quit
+- Wi-Fi setup with a full on-screen keyboard
+- Engineering Mode tabs
+- Restore the stock menu from Settings
+- Rebrandable boot screen
+
+**Next:**
+- BIOS-style UI with colour presets
+- System Tools
+- App Center (runs `Roms/APPS` tools)
+- htop
+- Boot-logo installer
+- Lid and power management
+
+*Not affiliated with or endorsed by Anbernic. Device names are used only to identify compatible hardware.*
+
 ## Status
 
 | Phase | Goal | State |
