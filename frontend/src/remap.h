@@ -16,7 +16,9 @@ typedef enum {
     LB_R1,
     LB_MENU,
     LB_START,
-    LB_SELECT
+    LB_SELECT,
+    LB_VOL_UP,
+    LB_VOL_DOWN
 } logical_button_t;
 
 /* Map a raw SDL keycode to a logical button. Returns LB_NONE if unmapped. */

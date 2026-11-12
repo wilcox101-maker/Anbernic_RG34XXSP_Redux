@@ -9,6 +9,7 @@
 #include "wifi.h"
 #include "stockmenu.h"
 #include "power.h"
+#include "volume.h"
 #include "sysinfo.h"
 #include <stdio.h>
 #include <string.h>
@@ -120,6 +121,7 @@ static void theme_load(void) {
 
 static int stock_started;
 static uint32_t a_down_at;
+static uint32_t vol_until;   /* show VOL nn until this time */
 static uint32_t hold_ms;
 static char last_clock[8];
 static screen_t back_stack[BACK_MAX];
@@ -266,6 +268,7 @@ static void show_loading(const system_entry_t *sys, const char *path) {
 void ui_init(void) {
     should_exit = 0; back_top = 0; eng_tab = ENG_CPU; sys_index = 0; screen = SCREEN_MAIN;
     theme_load();
+    volume_load();
     ui_busy("Scanning for ROMs", NULL);
     romscan_init();
     go_replace(SCREEN_MAIN);
@@ -517,6 +520,12 @@ static void wifi_open_key(void) {
 }
 
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
+    if ((btn == LB_VOL_UP || btn == LB_VOL_DOWN) && pressed) {
+        volume_step(btn == LB_VOL_UP ? +1 : -1);
+        vol_until = (now_ms ? now_ms : 1) + 1500;
+        dirty = 1;
+        return;
+    }
     if (screen == SCREEN_ENG_CONFIRM && btn == LB_A) {
         if (pressed) { a_down_at = now_ms ? now_ms : 1; hold_ms = 0; }
         else { a_down_at = 0; hold_ms = 0; }          /* released early: cancel */
@@ -604,6 +613,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         const char *path = romscan_rom_path(sys_index, selected);
         if (sys && path[0]) {
             resume_save();
+            volume_apply();
             if (launcher_start(sys->target, sys->core_or_path, path) == 0) {
                 show_loading(sys, path);
                 should_exit = 1;
@@ -646,6 +656,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
 }
 
 void ui_tick(uint32_t now_ms) {
+    if (vol_until && now_ms >= vol_until) { vol_until = 0; dirty = 1; }
     if (screen == SCREEN_ENG_CONFIRM && a_down_at) {
         hold_ms = now_ms - a_down_at;
         if (hold_ms >= HOLD_TO_ENTER_MS) go_replace(SCREEN_ENG);   /* B from Engineering -> Main */
@@ -683,6 +694,7 @@ void ui_tick(uint32_t now_ms) {
 }
 
 uint32_t ui_wait_ms(void) {
+    if (vol_until) return 100;
     if (a_down_at && (screen == SCREEN_ENG_CONFIRM || screen == SCREEN_STOCK_CONFIRM
         || screen == SCREEN_RESTART_CONFIRM || screen == SCREEN_POWEROFF_CONFIRM))
         return HOLD_WAIT_MS;
@@ -697,6 +709,7 @@ static void draw_status(int wifi, int cpu_temp) {
     if (platform_battery_charging()) n += snprintf(s + n, sizeof s - n, " CHG");
     if (wifi && platform_wifi_connected()) n += snprintf(s + n, sizeof s - n, " WIFI");
     if (cpu_temp) n += snprintf(s + n, sizeof s - n, " CPU %dC", platform_cpu_temp_c());
+    if (vol_until) n += snprintf(s + n, sizeof s - n, " VOL %d", volume_get());
     snprintf(s + n, sizeof s - n, " %s", clock);
     grid_puts_right(ROW_TITLE, s);
 }
