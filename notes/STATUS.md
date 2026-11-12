@@ -9,7 +9,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 | Kernel | Phase 2: RAM-resident system | design merged (`docs/ram-system-design.md`) | claude | measurements listed in the doc need the device |
 | Frontend | F0: spec | **done**, signed off by Dale 2026-11-10 | grok | — |
 | Frontend | F1: desktop prototype | **done**, signed off by Dale 2026-11-10 | grok + claude | — |
-| Frontend | F2: launch parity on stock | **games launch on the device** (RetroArch, PSP, PS1, Neo Geo, CPS; #50, #52), TF2 ROMs via REDUX_ROMS, resume-to-list (#53), Wi-Fi (#48, #54), Stock Menu with a 3 s hold (#51, #58), build ID (#59) | grok | F2 sign-off by Dale after the build with #58/#59 is deployed |
+| Frontend | F2: launch parity on stock | **done**, signed off by Dale 2026-11-12 ([note](2026-11-12-dale-phase-gate-f2-signed-off.md)) | grok | device check: Loading ROM splash survives the hand-off (#62) |
 
 ## Handoff (2026-11-12, Claude): start here in a new chat
 - Previous chat archived as: **Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI and Expert Mode plans**
@@ -19,17 +19,18 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - Decisions this session: BIOS-style UI with 10 era-named colour presets (#41); App Center (top-level `APPS/*.sh` and `<dir>/launch.sh`); Ports/PortMaster with a FAT notice; System Tools (read-only) before the BIOS UI; Expert Mode policy (#56, five-gate unlock plus breadcrumbs, backlog); README is honest about status (#57).
 
 ## Waiting on Dale
-- Merge #59, deploy main's build, sign off F2.
+- Merge #63 (Left/Right page jump on the Game Room lists) and this sign-off PR.
+- Device check: the Loading ROM wait screen stays up until the emulator draws.
 
 ## Queue (inbox #41 is the source of truth; in order)
-1. Wait screens everywhere (`ui_busy`), Loading ROM first. Grok is on it.
-2. Wi-Fi part 2: Connecting and result screens.
-3. System Tools (read-only, `sysinfo.c` data layer)
-4. BIOS-style UI, colour presets, Settings → UI → Colors, Restart/Power Off with a 3 s hold
-5. App Center · 6. Ports/PortMaster · 7. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 8. TF2 scan · 9. 640×480 boot logo (Dale-only installer)
+1. Wi-Fi part 2: Connecting and result screens.
+2. System Tools (read-only, `sysinfo.c` data layer)
+3. BIOS-style UI, colour presets, Settings → UI → Colors, Restart/Power Off with a 3 s hold
+4. App Center · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. TF2 scan · 8. 640×480 boot logo (Dale-only installer)
 - Backlog: power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
 ## Open notes
+- Done since the handoff: wait screens (#62, merged); F2 signed off; Left/Right page jump (#63, Claude, open).
 - [2026-11-11-grok-review-request-system-defaults.md](2026-11-11-grok-review-request-system-defaults.md): grok → claude (Stock Menu moved; #49 already merged)
 - [2026-11-11-grok-review-request-back-to-stock.md](2026-11-11-grok-review-request-back-to-stock.md): closed (merged as #49; row has since moved)
 - [2026-11-10-grok-review-request-f2-rom-list.md](2026-11-10-grok-review-request-f2-rom-list.md): grok → claude (ROM list, merged with #43)
