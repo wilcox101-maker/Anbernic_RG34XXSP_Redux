@@ -55,7 +55,8 @@ RG34XXSP Redux
 │   ├── Input
 │   ├── Power & Lid
 │   ├── System
-│   └── Emulation
+│   ├── Emulation
+│   └── UI                     (colour presets)
 │
 └── Engineering Mode           (deliberate confirm required)
     ├── CPU
@@ -178,7 +179,7 @@ Settings                                                            BAT 87% CHG 
 │   Power & Lid                                                                          │
 │   System                                                                               │
 │   Emulation                                                                            │
-│                                                                                        │
+│   UI                                                                                   │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
@@ -364,7 +365,8 @@ Defaults match stock where known. Stock values come from `/mnt/mod/ctrl/configs/
 
 ```ini
 [display]
-brightness = 128          ; stock default unverified
+brightness = 128
+accent = cyan            ; cyan | amber | green | white  (default BIOS cyan)          ; stock default unverified
 font = vga                ; vga | spleen | unifont | thin | chunky (see "UI fonts" below)
 hdmi_enabled = 0
 integer_scale = 1
