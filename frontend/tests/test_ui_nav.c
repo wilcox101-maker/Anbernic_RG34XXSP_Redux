@@ -534,6 +534,33 @@ int main(void) {
     expect(presents == PRESENT_BUFFERS, "startup scan is presented 3 times");
     expect(strcmp(ui_last_busy(), "Scanning for ROMs") == 0, "startup scan shows Scanning for ROMs");
 
+    /* Colour presets: Settings → UI opens Colors; A selects and saves. */
+    remove("/tmp/redux.theme");
+    ui_init();
+    down(7); press(LB_A);          /* Settings */
+    down(7); press(LB_A);          /* UI (last row) */
+    expect(ui_screen() == SCREEN_UI_COLORS, "Settings → UI opens Colors");
+    down(1); press(LB_A);          /* Amber */
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Amber") != NULL, "Colors lists Amber");
+        expect(strstr(dump, "(current)") != NULL, "selected preset is marked current");
+    }
+    press(LB_B);
+    expect(ui_screen() == SCREEN_SETTINGS, "B from Colors returns to Settings");
+    /* reload confirms the save */
+    ui_init();
+    down(7); press(LB_A); down(7); press(LB_A);
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Amber  (current)") != NULL, "saved accent reloads as current");
+    }
+    remove("/tmp/redux.theme");
+
     printf("%d failed\n", fails);
     return fails ? 1 : 0;
 }

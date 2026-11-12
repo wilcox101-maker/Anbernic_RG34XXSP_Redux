@@ -27,9 +27,9 @@ enum { MAIN_GAME_ROOM = 0, MAIN_INTERNET = 5, MAIN_NETWORK = 6, MAIN_SETTINGS = 
 /* ROM names come from romscan (read-only). The desktop fixture recreates the
    five F0 names so this screen still matches the mock-up. */
 static const char *settings_items[] = {
-    "Display", "Audio", "Input", "Power & Lid", "Network", "System", "Emulation"
+    "Display", "Audio", "Input", "Power & Lid", "Network", "System", "Emulation", "UI"
 };
-enum { SETTINGS_NETWORK = 4, SETTINGS_SYSTEM = 5 };
+enum { SETTINGS_NETWORK = 4, SETTINGS_SYSTEM = 5, SETTINGS_UI = 7 };
 static const char *system_items[] = { "Stock Menu", "System Tools" };
 enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1 };
 static const char *internet_items[] = {
@@ -57,6 +57,42 @@ static char wifi_result_ssid[WIFI_SSID_MAX];
 static int wifi_result_ok;
 static char wifi_retry[64];
 static char stock_msg[48];
+
+/* Colour presets (docs/ui-brief.md section 3). Default BIOS cyan. Saved to THEME_PATH. */
+#define THEME_PATH "/tmp/redux.theme"
+typedef struct { const char *name; uint8_t r, g, b; } theme_preset_t;
+static const theme_preset_t presets[] = {
+    { "BIOS cyan", 0, 255, 255 },
+    { "Amber",     255, 176, 0 },
+    { "Green",     0, 255, 0 },
+    { "White",     255, 255, 255 }
+};
+#define N_PRESETS ((int)(sizeof(presets) / sizeof(presets[0])))
+static int theme_index;
+
+static void theme_apply(int i) {
+    if (i < 0 || i >= N_PRESETS) i = 0;
+    theme_index = i;
+    grid_set_accent(presets[i].r, presets[i].g, presets[i].b);
+}
+
+static void theme_save(void) {
+    FILE *f = fopen(THEME_PATH, "w");
+    if (!f) return;
+    fprintf(f, "%d\n", theme_index);
+    fclose(f);
+}
+
+static void theme_load(void) {
+    FILE *f = fopen(THEME_PATH, "r");
+    int i = 0;
+    if (f) {
+        if (fscanf(f, "%d", &i) != 1) i = 0;
+        fclose(f);
+    }
+    theme_apply(i);
+}
+
 static int stock_started;
 static uint32_t a_down_at;
 static uint32_t hold_ms;
@@ -204,6 +240,7 @@ static void show_loading(const system_entry_t *sys, const char *path) {
 
 void ui_init(void) {
     should_exit = 0; back_top = 0; eng_tab = ENG_CPU; sys_index = 0; screen = SCREEN_MAIN;
+    theme_load();
     ui_busy("Scanning for ROMs", NULL);
     romscan_init();
     go_replace(SCREEN_MAIN);
@@ -227,6 +264,7 @@ static int list_count(void) {
     case SCREEN_SYSTEMS:  return romscan_systems();
     case SCREEN_ROMS:     return romscan_roms(sys_index);
     case SCREEN_SETTINGS: return COUNT(settings_items);
+    case SCREEN_UI_COLORS: return N_PRESETS;
     case SCREEN_INTERNET: return COUNT(internet_items);
     case SCREEN_WIFI:     return wifi_count();
     case SCREEN_SYSTEM_DEFAULTS: return COUNT(system_items);
@@ -515,6 +553,13 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (btn == LB_A && screen == SCREEN_SETTINGS) {
         if (selected == SETTINGS_NETWORK) { go(SCREEN_WIFI); wifi_rescan(); }
         if (selected == SETTINGS_SYSTEM)  go(SCREEN_SYSTEM_DEFAULTS);
+        if (selected == SETTINGS_UI)      go(SCREEN_UI_COLORS);
+        return;
+    }
+    if (btn == LB_A && screen == SCREEN_UI_COLORS) {
+        theme_apply(selected);
+        theme_save();
+        dirty = 1;
         return;
     }
     if (btn == LB_A && screen == SCREEN_SYSTEMS) {
@@ -701,6 +746,19 @@ void ui_draw(void) {
         frame("Settings", "A:Enter  B:Back  M:Menu", 1, 0);
         list(0, settings_items, COUNT(settings_items));
         break;
+    case SCREEN_UI_COLORS: {
+        frame("Colors", "A:Select  B:Back  M:Menu", 1, 0);
+        for (int i = 0; i < N_PRESETS; i++) {
+            char line[80];
+            snprintf(line, sizeof line, "  %s%s", presets[i].name,
+                     i == theme_index ? "  (current)" : "");
+            body(i, line);
+            if (i == selected) grid_invert(ROW_BODY0 + i, 0, 1);
+        }
+        body(N_PRESETS + 1, "  Black background, white text, one accent.");
+        body(N_PRESETS + 2, "  Saved for the next launch.");
+        break;
+    }
     case SCREEN_INTERNET:
         frame("Internet", "A:Enter  B:Back", 1, 0);
         list(0, internet_items, COUNT(internet_items));
