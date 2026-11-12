@@ -9,3 +9,4 @@
 - 2026-11-12 12:05 · grok · read: STATUS queue 3 (Grok) · did: PR #81 (14fad17) colour presets under Settings → UI. CI green. PING on #41. Next: Restart/Power Off 3s hold.
 - 2026-11-12 12:02 · claude · read: Dale's stock images (V1.0.6 and 2025, read-only on his PC) · did: #78 Settings without Network (merged); stock V1.0.6 vs 2025 comparison note (#80, merged; #79 closed for committed build output, .gitignore now excludes build dirs). Waiting: Grok's #81 colour presets PING.
 - 2026-11-12 12:08 · grok · read: test_ui_nav index fix after #78 · did: #81 head 9ec9ab3 (Settings no Network + UI row). CI green. PING on #41.
+- 2026-11-12 12:15 · grok · read: #81 theme path follow-up · did: PR #82 (1ad1eaa) saves colour preset on /mnt/data/redux/theme. CI green. PING on #41. Not verified across reboot on device.
