@@ -41,6 +41,7 @@ static const struct { const char *key; const char *title; } titles[] = {
     { "GBC_DGE", "Game Boy Color" }, { "MD_DGE", "Mega Drive" },
     { "GG", "Game Gear" }, { "PCECD", "PC Engine CD" }, { "NEOGEO", "Neo Geo" },
     { "FBNEO", "FinalBurn Neo" }, { "CPS1", "CPS-1" }, { "CPS2", "CPS-2" }, { "CPS3", "CPS-3" },
+    { "MAME", "MAME (Arcade)" },
 };
 
 /* Folder name on the card -> systems-table key, used only when the folder
