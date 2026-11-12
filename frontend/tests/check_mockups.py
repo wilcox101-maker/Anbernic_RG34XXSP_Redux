@@ -13,7 +13,7 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SCREENS = ["main", "roms", "settings", "eng-cpu", "eng-battery", "internet"]   # order in the spec
+SCREENS = ["main", "roms", "settings", "eng-cpu", "eng-battery", "internet", "loading"]
 
 
 def mask_build(line):
