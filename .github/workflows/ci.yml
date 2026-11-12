@@ -75,42 +75,33 @@ jobs:
         run: python tools/make_bootlogo.py --out build/bootlogo.bmp
 
   arm64:
-    # The device binary. Built inside an emulated arm64 Ubuntu 22.04 container, the same release as
-    # the stock rootfs, so glibc and SDL2 match. Download it from the run's "Artifacts" section.
-    runs-on: ubuntu-latest
+    # The device binary. Built natively on a GitHub arm64 runner, Ubuntu 22.04 -- the same release
+    # as the stock rootfs, so glibc and SDL2 match. Download it from the run's "Artifacts" section.
+    # arm64 runners are free and unlimited on public repositories.
+    #
+    # This job used to build inside an emulated arm64 container (docker + QEMU). apt-get died
+    # intermittently under emulation ("dpkg returned an error code (1)", 2026-11-12, runs 257 and
+    # 43304814309), each time passing on a plain re-run. Building on real arm64 removes the
+    # emulation layer entirely, and with it the DNS and mirror workarounds the container needed.
+    runs-on: ubuntu-22.04-arm
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
       - name: Build aarch64 (REDUX_PLATFORM=stock)
-        # --dns: name resolution inside the container failed on 2026-11-11 for every Ubuntu host,
-        # with or without host networking; public resolvers avoid the runner's resolver.
-        # Error-Mode=any turns a failed apt fetch into an error so the retry loop retries; if
-        # ports.ubuntu.com stays unreachable it falls back to the azure.ports.ubuntu.com mirror.
-        # No apostrophes inside the sh -ec '...' script below: one ends the quoted script.
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          docker run --rm --dns 1.1.1.1 --dns 8.8.8.8 --platform linux/arm64 -e REDUX_SHA=${GITHUB_SHA} -v "$PWD":/src -w /src ubuntu:22.04 sh -ec '
-            export DEBIAN_FRONTEND=noninteractive
-            ok=0
-            for mirror in ports.ubuntu.com azure.ports.ubuntu.com; do
-              sed -i "s#http://[a-z.]*ports.ubuntu.com#http://$mirror#" /etc/apt/sources.list
-              for i in 1 2; do
-                if apt-get update -qq -o Acquire::Retries=3 -o APT::Update::Error-Mode=any; then ok=1; break 2; fi
-                sleep 10
-              done
-            done
-            [ $ok = 1 ] || { echo "no Ubuntu ports mirror reachable"; exit 1; }
-            apt-get install -y -qq --no-install-recommends -o Acquire::Retries=3 cmake make gcc libc6-dev libsdl2-dev >/dev/null
-            cmake -S frontend -B build-arm64 -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Werror" -DREDUX_BUILD=$(echo $REDUX_SHA | cut -c1-7)
-            cmake --build build-arm64
-            ./build-arm64/test_launcher
-            ./build-arm64/test_remap_device
-            ./build-arm64/test_wifi
-            ./build-arm64/test_sysinfo
-            ./build-arm64/test_stockmenu
-            ./build-arm64/test_volume
-          '
+          sudo apt-get update -qq -o Acquire::Retries=3
+          sudo apt-get install -y -qq --no-install-recommends -o Acquire::Retries=3 \
+            cmake make gcc libc6-dev libsdl2-dev
+          cmake -S frontend -B build-arm64 -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS="-Werror" -DREDUX_BUILD=$(echo "$GITHUB_SHA" | cut -c1-7)
+          cmake --build build-arm64
+          ./build-arm64/test_launcher
+          ./build-arm64/test_remap_device
+          ./build-arm64/test_wifi
+          ./build-arm64/test_sysinfo
+          ./build-arm64/test_stockmenu
+          ./build-arm64/test_volume
       - name: Check it is an aarch64 ELF
         run: |
           python3 - build-arm64/rg34xxsp-redux <<'PY'
