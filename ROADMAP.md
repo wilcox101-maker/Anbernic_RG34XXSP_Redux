@@ -39,5 +39,5 @@ Runs alongside the kernel phases. The full plan, UI rules and exit tests are in 
 - [ ] F3 settings parity · F4 power and lid · F5 Engineering Mode · F6 features stock left out · F7 mainline port · F8 release
 
 ## Non-goals
-- Overclocking or undervolting past the stock OPP table
+- Overclocking or undervolting past the stock OPP table **by default** (it is possible only through the opt-in Expert Mode; see notes/2026-11-12-dale-decision-expert-mode.md)
 - Bundling ROMs or copyrighted BIOS files

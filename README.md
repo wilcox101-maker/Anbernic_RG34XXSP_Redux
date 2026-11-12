@@ -4,7 +4,7 @@ An operating system for the Anbernic RG34XXSP that lets the hardware perform the
 
 **Principles**
 
-- **Stay inside the factory envelope.** No overclocking, no undervolting. Use Allwinner's own bin-aware CPU frequency table (max 1512 MHz) and the stock thermal trip points.
+- **Stay inside the factory envelope by default.** No overclocking, no undervolting out of the box. Redux uses Allwinner's own bin-aware CPU frequency table (max 1512 MHz) and the stock thermal trip points. In the open-source spirit, tinkerers can go further through a deliberately hard-to-reach **Expert Mode** with automatic fallbacks. The thermal emergency shutdown is never touched.
 - **Remove what the stock OS wastes.** That covers input latency, a CPU pinned at full speed, ignored hardware (the clamshell lid sensor, the fuel gauge), slow boots, and filesystems that can corrupt.
 - **Stability first.** The system image is read-only and runs from RAM. User data is journaled with write barriers on. The stock SD card always stays a working fallback.
 
