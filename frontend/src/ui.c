@@ -603,9 +603,11 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (screen == SCREEN_WIFI_RESULT && btn == LB_A && !wifi_result_ok) {
-        ui_busy("Connecting", wifi_result_ssid);
-        int rc = wifi_connect(wifi_result_ssid, wifi_retry[0] ? wifi_retry : NULL);
-        wifi_show_result(wifi_result_ssid, rc);
+        char ssid[WIFI_SSID_MAX];
+        snprintf(ssid, sizeof ssid, "%s", wifi_result_ssid);
+        ui_busy("Connecting", ssid);
+        int rc = wifi_connect(ssid, wifi_retry[0] ? wifi_retry : NULL);
+        wifi_show_result(ssid, rc);
         return;
     }
     if (btn == LB_B && screen == SCREEN_WIFI_RESULT) wipe_retry();
