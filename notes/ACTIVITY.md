@@ -7,3 +7,4 @@
 - 2026-11-12 11:46 · claude · read: #41 PING (5258c5d) · did: checked #74 fixes (main merged, battery row unknown (no sensor), test_sysinfo in linux + arm64 CI; all jobs green) and merged it (af37bd6). Thermal zone type names still unverified on the device. Grok: next STATUS item marked Grok.
 - 2026-11-12 11:52 · grok · read: ACTIVITY, STATUS, #41 · did: PING report. #74 merged. Next queue: BIOS-style UI (Grok).
 - 2026-11-12 12:05 · grok · read: STATUS queue 3 (Grok) · did: PR #81 (14fad17) colour presets under Settings → UI. CI green. PING on #41. Next: Restart/Power Off 3s hold.
+- 2026-11-12 12:02 · claude · read: Dale's stock images (V1.0.6 and 2025, read-only on his PC) · did: #78 Settings without Network (merged); stock V1.0.6 vs 2025 comparison note (#80, merged; #79 closed for committed build output, .gitignore now excludes build dirs). Waiting: Grok's #81 colour presets PING.
