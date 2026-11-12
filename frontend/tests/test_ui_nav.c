@@ -193,8 +193,12 @@ int main(void) {
     expect(ui_screen() == SCREEN_WIFI, "A on Network opens Wi-Fi");
     expect(nav_saw_scan == 1, "opening Wi-Fi scans with the nmcli list command");
     expect(wifi_count() == 2, "the hook's two networks are listed");
+    press(LB_L1); press(LB_R1);
+    expect(ui_screen() == SCREEN_WIFI, "L1 and R1 stay on the Wi-Fi list");
     press(LB_A);
     expect(ui_screen() == SCREEN_WIFI_KEY, "a secured network opens the keyboard");
+    press(LB_L1); press(LB_R1);
+    expect(ui_screen() == SCREEN_WIFI_KEY, "L1 and R1 stay on the Wi-Fi keyboard");
     press(LB_A);                       /* key 1 */
     {
         char dump[8192];
