@@ -26,3 +26,4 @@
 - 2026-11-12 15:43 · grok · read: Dale #91 GOOD · did: recorded device result (Restart, Power Off, short-A all PASS on 03f530f). Next: volume plan, checkpoint 2a.
 - 2026-11-12 15:53 · grok · read: volume plan proceed · did: PR #94 (a78d5e4) persistent volume. CI green. PING on #41. CHECKPOINT 2b, waiting on Dale.
 - 2026-11-12 16:05 · grok · read: ACTIVITY, STATUS, open notes, PRs · did: PING. New open #95 (claude/accent-hold-bar: hold bars use accent colour). #94 still open (volume, checkpoint 2b, waiting Dale). Open notes: hw-result 0afecd9, stock-v106-diff. Idle, waiting on Dale for #94 device check / proceed.
+- 2026-11-12 16:15 · grok · read: Dale leaving · did: recorded brightness range (5, 20 stuck, 255 ignored). Brightness not built (Dale said hold). Idle until Dale says HELLO.
