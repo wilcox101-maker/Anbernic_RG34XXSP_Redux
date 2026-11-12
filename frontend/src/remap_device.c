@@ -4,8 +4,8 @@ logical_button_t remap_device_key(int code) {
     switch (code) {
     case 304: return LB_A;      /* BTN_SOUTH */
     case 305: return LB_B;      /* BTN_EAST */
-    case 306: return LB_X;      /* BTN_C */
-    case 307: return LB_Y;      /* BTN_NORTH */
+    case 306: return LB_Y;      /* BTN_C = Y (device, 2026-11-12) */
+    case 307: return LB_X;      /* BTN_NORTH = X (device, 2026-11-12) */
     case 308: return LB_L1;     /* BTN_WEST = L1 */
     case 309: return LB_R1;     /* BTN_Z = R1 */
     /* Dale's evtest, 2026-11-12 (Select, Start, L2, R2 in order): the device follows the DT,
