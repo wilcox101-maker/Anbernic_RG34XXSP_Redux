@@ -38,6 +38,8 @@ jobs:
         run: ./build/test_launcher
       - name: Wi-Fi tests
         run: ./build/test_wifi
+      - name: System Tools tests
+        run: ./build/test_sysinfo
       - name: Back-to-stock command test
         run: ./build/test_stockmenu
       - name: Remap tests
@@ -103,6 +105,7 @@ jobs:
             ./build-arm64/test_launcher
             ./build-arm64/test_remap_device
             ./build-arm64/test_wifi
+            ./build-arm64/test_sysinfo
             ./build-arm64/test_stockmenu
           '
       - name: Check it is an aarch64 ELF
