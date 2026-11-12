@@ -19,6 +19,9 @@ static const system_entry_t systems[] = {
     { "CPS1", LAUNCH_RETROARCH, "fbalpha2012_cps1_libretro.so" },
     { "CPS2", LAUNCH_RETROARCH, "fbalpha2012_cps2_libretro.so" },
     { "CPS3", LAUNCH_RETROARCH, "fbalpha2012_cps3_libretro.so" },
+    /* MAME: stock has a MAME folder and xmame.dge, but .dge launches fail, so use the
+       stock mame2003_plus core (listed on the device 2026-11-12). It wants 0.78-era romsets. */
+    { "MAME", LAUNCH_RETROARCH, "mame2003_plus_libretro.so" },
     { "PSP",  LAUNCH_PPSSPP,    NULL },
     { "NDS",  LAUNCH_DRASTIC,   NULL },
     { "FC",   LAUNCH_RETROARCH, "fceumm_libretro.so" },

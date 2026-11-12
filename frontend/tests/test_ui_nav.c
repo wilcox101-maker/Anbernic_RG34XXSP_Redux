@@ -226,6 +226,24 @@ int main(void) {
            "PS ROM launches the standalone pcsx line");
     remove(UI_RESUME_PATH);
 
+    /* The stock MAME folder is listed and launches through the mame2003_plus core. */
+    mkdir("/tmp/redux-rom-mame", 0755);
+    mkdir("/tmp/redux-rom-mame/MAME", 0755);
+    write_empty("/tmp/redux-rom-mame/MAME/dkong.zip");
+    setenv("REDUX_ROMS", "/tmp/redux-rom-mame", 1);
+    ui_init();
+    press(LB_A);
+    expect(romscan_systems() == 1 && strcmp(romscan_key(0), "MAME") == 0, "MAME folder is a system");
+    expect(strcmp(romscan_title(0), "MAME (Arcade)") == 0, "MAME has its display name");
+    launcher_set_next_path("/tmp/redux-next-mame");
+    press(LB_A); press(LB_A);
+    nf = fopen("/tmp/redux-next-mame", "r");
+    line[0] = 0;
+    if (nf) { if (!fgets(line, sizeof line, nf)) line[0] = 0; fclose(nf); }
+    expect(strstr(line, "mame2003_plus_libretro.so") != NULL && strstr(line, "dkong.zip") != NULL,
+           "MAME ROM launches with the mame2003_plus core");
+    remove(UI_RESUME_PATH);
+
     /* Network opens the Wi-Fi screen. The spawn hook stands in for nmcli. */
     wifi_set_spawn(nav_spawn);
     ui_init();
