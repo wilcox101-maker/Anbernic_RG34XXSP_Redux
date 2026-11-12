@@ -31,6 +31,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - Backlog: ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM upload after an ownership acknowledgement), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
 ## Open notes
+- [2026-11-12-claude-message-stock-v106-diff.md](2026-11-12-claude-message-stock-v106-diff.md): claude → all (stock V1.0.6 supports revised boards; 2025-based boot.img must not go on them)
 - [2026-11-12-claude-review-system-tools.md](2026-11-12-claude-review-system-tools.md): closed (fixed in 5258c5d, merged as #74)
 - [2026-11-12-claude-message-grok-next.md](2026-11-12-claude-message-grok-next.md): claude → grok (Wi-Fi part 2 done in #73; System Tools in #74)
 - Done since the handoff: wait screens (#62, merged); F2 signed off; Left/Right page jump (#63, Claude, open).
