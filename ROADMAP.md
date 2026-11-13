@@ -65,6 +65,19 @@ Dale. No mainline kernel is needed.
 - [ ] F8: install/update path for the new OS, measurements against stock and Beta, user docs
 - **Exit test:** a clean card boots mainline Redux to the menu, and every Beta checklist still passes
 
+### 1.x: requirements after 1.0
+Required for the 1.x line ([decision](notes/2026-11-13-dale-decision-zram-v1x.md)). Starts only after every
+current queue item and the 1.0 milestone are done. Nothing here goes into the stock-kernel (Beta) build.
+- [ ] **ZRAM (compressed RAM swap) on mainline**
+  - [ ] Kernel config: `ZRAM`, `ZSMALLOC`, `CRYPTO_LZ4` (plus `CRYPTO_ZSTD` to compare), built in
+  - [ ] Measure first, on the 2 GB unit: lowest `MemAvailable` and any OOM kills in a heavy PSP (PPSSPP)
+        and NDS (DraStic) game (the open item in [docs/ram-system-design.md](docs/ram-system-design.md))
+  - [ ] Boards under 1.5 GiB (revised 512 MB / 1 GB): zram on by default, LZ4, about 50% of RAM, set up by the initramfs
+  - [ ] 2 GB boards: default chosen from the measurements (off, a small LZ4 safety net, or a Settings > System toggle); a `decision` note for Dale
+  - [ ] Never swap to the SD card or p7 (card wear); hibernation is not supported
+  - [ ] Exit test on the device: zram active where expected (`/proc/swaps`), no audio or frame stutter in
+        the heavy games above, no OOM kill during a forced low-memory run
+
 ### After 1.0 or alongside it (backlog, not gating either milestone)
 Expert Mode (above-factory settings behind its unlock), chiptune composer (LittleGPTracker port),
 hardware video decode for media, in-game HUD overlay, Wi-Fi idle scanning, features.ini. Items can move
