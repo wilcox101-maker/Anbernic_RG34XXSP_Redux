@@ -13,6 +13,7 @@
 #include "brightness.h"
 #include "sysinfo.h"
 #include "apps.h"
+#include "cardscripts.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -37,14 +38,14 @@ static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "System", "Emulation", "UI"
 };
 enum { SETTINGS_DISPLAY = 0, SETTINGS_SYSTEM = 4, SETTINGS_UI = 6 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
-enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3 };
+enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3, SYSTEM_SCRIPTS = 4 };
 typedef struct { const char *label; int selectable; int action; } system_row_t;
 static const system_row_t system_rows[] = {
     { "System Tools",         1, SYSTEM_TOOLS },
     { "Restart",              1, SYSTEM_RESTART },
     { "Power Off",            1, SYSTEM_POWEROFF },
     { "Boot Screen   not yet", 0, -1 },
-    { "",                     0, -1 },
+    { "Card Scripts",         1, SYSTEM_SCRIPTS },   /* label gets Off/On when drawn */
     { "",                     0, -1 },
     { "",                     0, -1 },
     { "Stock Menu",           1, SYSTEM_STOCK },
@@ -247,6 +248,7 @@ static void engine_name(const system_entry_t *sys, char *out, size_t n) {
     else if (sys->target == LAUNCH_DRASTIC) snprintf(out, n, "Drastic");
     else if (sys->target == LAUNCH_PCSX) snprintf(out, n, "PCSX");
     else if (sys->target == LAUNCH_PORTMASTER) snprintf(out, n, "PortMaster");
+    else if (sys->target == LAUNCH_SCRIPT) snprintf(out, n, "Script from the card");
     else snprintf(out, n, "Standalone");
 }
 
@@ -560,7 +562,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
        first press; a repeat press does not move it. Release, or any other
        button, leaves the screen without running it. */
     if (screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
-        || screen == SCREEN_POWEROFF_CONFIRM) {
+        || screen == SCREEN_POWEROFF_CONFIRM || screen == SCREEN_SCRIPTS_CONFIRM) {
         if (btn == LB_A) {
             if (pressed) {
                 if (!a_down_at && !stock_started)
@@ -657,11 +659,19 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             port_sys = *sys;
             port_sys.core_or_path = own_core;
             sys = &port_sys;
+        } else if (sys && romscan_rom_is_script(sys_index, selected)) {
+            /* Listed only with Card Scripts On; check again in case it was turned off since. */
+            if (!cardscripts_enabled()) return;
+            port_sys = *sys;
+            port_sys.target = LAUNCH_SCRIPT;
+            port_sys.core_or_path = path;
+            sys = &port_sys;
         }
         if (sys && path[0]) {
             resume_save();
             volume_apply();
-            if (launcher_start(sys->target, sys->core_or_path, path) == 0) {
+            if (launcher_start(sys->target, sys->core_or_path,
+                               sys->target == LAUNCH_SCRIPT ? NULL : path) == 0) {
                 show_loading(sys, path);
                 should_exit = 1;
             } else
@@ -673,6 +683,18 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         if (!system_selectable(selected)) return;
         int action = system_rows[selected].action;
         if (action == SYSTEM_TOOLS) { go(SCREEN_SYSINFO); return; }
+        if (action == SYSTEM_SCRIPTS) {
+            if (cardscripts_enabled()) {   /* Off is the safe direction: one press */
+                cardscripts_set(0);
+                romscan_init();
+                dirty = 1;
+            } else {
+                stock_msg[0] = '\0';
+                stock_started = 0;
+                go(SCREEN_SCRIPTS_CONFIRM);
+            }
+            return;
+        }
         if (action == SYSTEM_RESTART || action == SYSTEM_POWEROFF || action == SYSTEM_STOCK) {
             stock_msg[0] = '\0';
             stock_started = 0;
@@ -710,11 +732,18 @@ void ui_tick(uint32_t now_ms) {
         dirty = 1;
     }
     if ((screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
-         || screen == SCREEN_POWEROFF_CONFIRM) && a_down_at && !stock_started) {
+         || screen == SCREEN_POWEROFF_CONFIRM || screen == SCREEN_SCRIPTS_CONFIRM)
+        && a_down_at && !stock_started) {
         hold_ms = now_ms - a_down_at;
         if (hold_ms >= HOLD_DESTRUCT_MS) {
             a_down_at = 0;
-            if (screen == SCREEN_STOCK_CONFIRM) {
+            if (screen == SCREEN_SCRIPTS_CONFIRM) {
+                cardscripts_set(1);
+                romscan_init();
+                stock_started = 1;
+                snprintf(stock_msg, sizeof stock_msg, "%s",
+                         cardscripts_enabled() ? "Card Scripts on. B: back" : "could not save; still off");
+            } else if (screen == SCREEN_STOCK_CONFIRM) {
                 ui_busy("Restoring stock menu", NULL);
                 int rc = stock_restore();
                 if (rc == 0) {
@@ -743,7 +772,8 @@ void ui_tick(uint32_t now_ms) {
 uint32_t ui_wait_ms(void) {
     if (vol_until) return 100;
     if (a_down_at && (screen == SCREEN_ENG_CONFIRM || screen == SCREEN_STOCK_CONFIRM
-        || screen == SCREEN_RESTART_CONFIRM || screen == SCREEN_POWEROFF_CONFIRM))
+        || screen == SCREEN_RESTART_CONFIRM || screen == SCREEN_POWEROFF_CONFIRM
+        || screen == SCREEN_SCRIPTS_CONFIRM))
         return HOLD_WAIT_MS;
     return IDLE_WAIT_MS;
 }
@@ -1006,7 +1036,11 @@ void ui_draw(void) {
         frame("System Defaults", "A:Select  B:Back", 1, 0);
         for (int i = 0; i < N_SYSTEM_ROWS; i++) {
             char line[GRID_COLS];
-            snprintf(line, sizeof line, "   %s", system_rows[i].label);
+            if (system_rows[i].action == SYSTEM_SCRIPTS)
+                snprintf(line, sizeof line, "   %-14s%s", system_rows[i].label,
+                         cardscripts_enabled() ? "On" : "Off");
+            else
+                snprintf(line, sizeof line, "   %s", system_rows[i].label);
             body(i, line);
             if (i == selected) grid_invert(ROW_BODY0 + i, 1, GRID_COLS - 2);
         }
@@ -1042,6 +1076,20 @@ void ui_draw(void) {
             char line[GRID_COLS];
             snprintf(line, sizeof line, "  %s", stock_msg);
             body(6, line);
+        }
+        break;
+    case SCREEN_SCRIPTS_CONFIRM:
+        frame("Card Scripts", "Hold A 3s:Turn on  B:Cancel", 1, 0);
+        body(0, "  Lets Game Room > Ports run .sh scripts from your Roms card");
+        body(1, "  (third-party ports, PortMaster). Scripts run with full access");
+        body(2, "  to the handheld. Only turn this on for scripts you trust.");
+        body(3, "  The stock ports work without it. Turn it off again any time.");
+        body(5, "  Hold A for 3 seconds. Release, or any other button, cancels.");
+        draw_hold_bar(7, HOLD_DESTRUCT_MS);
+        if (stock_msg[0]) {
+            char line[GRID_COLS];
+            snprintf(line, sizeof line, "  %s", stock_msg);
+            body(9, line);
         }
         break;
     case SCREEN_STOCK_CONFIRM:

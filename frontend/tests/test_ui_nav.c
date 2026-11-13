@@ -13,6 +13,7 @@
 #include "brightness.h"
 #include "sysinfo.h"
 #include "apps.h"
+#include "cardscripts.h"
 #include "grid.h"
 #include <stdio.h>
 #include <unistd.h>
@@ -522,8 +523,8 @@ int main(void) {
     }
     /* cursor skips Boot Screen, the blanks, and Reset All */
     expect(ui_list_selected() == 0, "cursor starts on System Tools");
-    press(LB_DOWN); press(LB_DOWN); press(LB_DOWN);
-    expect(ui_list_selected() == 7, "three downs land on Stock Menu, skipping the rest");
+    press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN);
+    expect(ui_list_selected() == 7, "four downs land on Stock Menu (via Card Scripts), skipping the rest");
     press(LB_DOWN);
     expect(ui_list_selected() == 0, "down from Stock Menu wraps to System Tools");
     press(LB_UP);
@@ -773,6 +774,38 @@ int main(void) {
     remove("/tmp/redux-next-apps");
     remove("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
     apps_set_root("");
+
+    /* Card Scripts switch (Ports option B): Off by default, 3 s hold to turn on, one press off. */
+    cardscripts_set_path("/tmp/redux-nav-cardscripts");
+    cardscripts_set(0);
+    ui_init();
+    down(8); press(LB_A); down(4); press(LB_A);       /* Settings > System */
+    down(3);
+    expect(ui_list_selected() == 4, "Card Scripts is the row after Power Off");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Card Scripts  Off") != NULL, "Card Scripts shows Off by default");
+    }
+    press(LB_A);
+    expect(ui_screen() == SCREEN_SCRIPTS_CONFIRM, "A on Card Scripts (Off) opens the hold-to-confirm");
+    ui_button(LB_A, 1, 10000); ui_tick(11000); ui_button(LB_A, 0, 11000);
+    expect(!cardscripts_enabled(), "a short hold does not turn it on");
+    ui_button(LB_A, 1, 20000); ui_tick(23100);
+    expect(cardscripts_enabled(), "a 3 s hold turns Card Scripts on");
+    ui_button(LB_A, 0, 23200);
+    press(LB_B);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B returns to System Defaults");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Card Scripts  On") != NULL, "row shows On");
+    }
+    down(3); press(LB_A);
+    expect(!cardscripts_enabled() && ui_screen() == SCREEN_SYSTEM_DEFAULTS, "one press turns it off");
+    remove("/tmp/redux-nav-cardscripts");
 
     printf("%d failed\n", fails);
     return fails ? 1 : 0;

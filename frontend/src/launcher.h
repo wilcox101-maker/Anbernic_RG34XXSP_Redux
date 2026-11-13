@@ -11,6 +11,7 @@ typedef enum {
     LAUNCH_DGE,      /* standalone .dge: core = binary path, rom optional */
     LAUNCH_PCSX,
     LAUNCH_PORTMASTER,
+    LAUNCH_SCRIPT,   /* a .sh from the card, only with the Card Scripts switch On: core = script path */
     LAUNCH_COUNT
 } launch_target_t;
 
