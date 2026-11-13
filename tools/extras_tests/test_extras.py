@@ -17,6 +17,11 @@ class Catalog(unittest.TestCase):
         self.assertTrue(next(i for i in items if i["package"] == "htop")["default"])
         self.assertIn("alsamixer", stock)
         self.assertNotIn("ffmpeg", stock)
+        helps = extras.load_stock_help()
+        self.assertTrue(helps <= set(stock))
+        cmd = extras.check_command(items, stock, helps)
+        self.assertIn("c nmtui --help", cmd)
+        self.assertIn("c nmcli --version", cmd)
 
     def test_rejects_bad_names(self):
         with tempfile.NamedTemporaryFile("w", suffix=".ini", delete=False) as f:
