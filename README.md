@@ -50,35 +50,68 @@ Ten built-in schemes named after the displays of 1975 to the 1990s. Pick one und
 
 ### Frontend status
 
-**Working today:**
-- Game list from both TF1 and TF2
-- RetroArch launching: GB/GBC/GBA, Mega Drive, SNES/SFC, Master System/Game Gear, PC Engine, WonderSwan, PS1, Neo Geo, CPS and more
-- PSP launching
-- Returns to the same game list after you quit
-- Wi-Fi setup with a full on-screen keyboard
-- Engineering Mode tabs
-- Restore the stock menu from Settings
-- Rebrandable boot screen
-
-**Next:**
-- BIOS-style UI with colour presets
-- System Tools
-- App Center (runs `Roms/APPS` tools)
-- htop
-- Boot-logo installer
-- Lid and power management
+See [Project status](#project-status).
 
 *Not affiliated with or endorsed by Anbernic. Device names are used only to identify compatible hardware.*
 
-## Status
+## Project status
 
-| Phase | Goal | State |
+*Updated 2026-11-13. **Device-checked** means Dale has run it on a real RG34XXSP. Everything else is
+merged and passes CI but hasn't been confirmed on hardware yet. Live task list:
+[`notes/STATUS.md`](notes/STATUS.md). Full plan: [`ROADMAP.md`](ROADMAP.md).*
+
+| Milestone | What it is | Progress (rough) |
 |---|---|---|
-| 0 | Dissect stock firmware, map the hardware | **Done**: see [`docs/`](docs/) |
-| 1 | Stock-kernel baseline: patched `boot.img` (input poll, governor, write barriers) | **Built**, awaiting on-device test |
-| 2 | Mainline kernel + purpose-built rootfs (ROCKNIX H700 kernel work as base) | Planned |
+| **Beta (v0.5)** | Redux frontend on the stock kernel, installable by anyone | ≈ 40% |
+| **1.0** | Purpose-built OS on a mainline kernel | ≈ 15% |
+| **1.x** | After 1.0: ZRAM on mainline | not started |
 
-The full plan is in [`ROADMAP.md`](ROADMAP.md).
+### Completed
+- **Phase 0, dissect stock:** partitions, boot chain, hardware map, stock userspace inventory.
+- **Phase 1, stock-kernel baseline:** patched `boot.img` (5 ms input polling, `schedutil` governor,
+  write barriers). Boots to the menu in about 20 s on the device (2026-11-10).
+- **Frontend F0–F2 signed off:** UI spec, desktop prototype, launch parity with the stock menu.
+- **Device-checked features:**
+  - Game launching through stock RetroArch (PS1, Neo Geo, CPS, Saturn and others), PSP, and
+    **MAME**; back to the same game list after quitting. Another 27 system folders are mapped;
+    not every one has been run on the device
+  - Wi-Fi setup with a full on-screen keyboard
+  - BIOS-style UI with 10 colour presets (Amber checked; it survives a reboot)
+  - **Boot screen modification:** the Redux boot logo, rendered in the stock format (640×480 BMP),
+    installed to the boot-resource partition by the Boot Screen manager, which keeps a backup
+  - System Tools (read-only), Engineering Mode tabs, Restart/Power Off with a 3 s hold,
+    persistent volume, restore the stock menu from Settings
+  - Apps list: Terminal, Task Monitor (htop), Music, and five Tools apps (Audio Mixer, Network
+    Setup, Bluetooth, Input Test, Speaker Test). The stock File Manager opens from Main (it tears
+    while loading)
+  - Ports: known-ports table (PortMaster Wolfenstein tested)
+  - `tools/extras.py`: optional Ubuntu extras (htop) from a checklist, one SSH line. It refuses
+    any upgrade that could break RetroArch (the refusal is tested on the PC only)
+
+### In progress (merged, waiting for a device check or a fix)
+- **Video Player** and **OpenBOR**: both crash back to the menu; logging added to find the cause
+- **Brightness** (Settings > Display): reworked after the first device test, re-check due
+- Screen Timeout (Off, 1–30 min), TF2 ROM scan, Ports Card Scripts switch (default Off),
+  returning to the Apps list after an app, File Manager on Main only, Ebook Reader quit button,
+  in-game buttons in Ports (Y, X, Start, Select)
+- Boot Screen **restore** (install is checked; restore not yet)
+- Open device checks are listed in [`notes/STATUS.md`](notes/STATUS.md)
+
+### Next (to reach Beta)
+- F3 settings parity: UI font picker, Reset All
+- F4 power and lid: sleep and wake on the lid, no lost saves over 50 lid cycles mid-game
+- F5 Engineering Mode, inside the stock CPU frequency table
+- Phase 1 measurements, stock vs. Redux: boot time, idle battery drain, temperature, button latency
+- One opt-in installer for a stock card, with a documented way back to stock
+- User docs; Beta exit test: one week of daily use with no lost save
+
+### Future
+- **1.0, mainline:** mainline kernel and u-boot, a read-only system that runs from RAM, lid wake,
+  then the frontend checklists passed again on the new OS, and an install/update path
+- **1.x:** ZRAM (compressed RAM swap) on mainline
+- **Backlog:** Expert Mode (above-factory settings behind an unlock), PC link (browser file
+  manager), chiptune composer, DOS Mode menu style, vsync rebuilds of stock apps that tear,
+  hardware video decode, in-game HUD
 
 ## Hardware at a glance
 
