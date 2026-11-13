@@ -472,8 +472,8 @@ Settings → System, in order:
     System Tools
     Restart
     Power Off
-    Boot Screen   not yet   (shown; cursor skips it)
-    <blank>                 (cursor skips)
+    Boot Screen   Stock/Redux   (3 s hold: installs the Redux boot logo, or restores the saved stock one)
+    Card Scripts  Off/On        (3 s hold to turn on; Ports option B)
     <blank>
     <blank>
     Stock Menu

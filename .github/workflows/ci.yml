@@ -51,6 +51,8 @@ jobs:
         run: ./build/test_brightness
       - name: Ports tests
         run: ./build/test_ports
+      - name: Boot Screen manager tests (temp folder, no device)
+        run: ./build/test_bootscreen
       - name: Bench harness tests (host tool, no device)
         run: cd tools && python3 -B -m unittest discover -s bench/tests -t .
       - name: Remap tests
@@ -114,6 +116,7 @@ jobs:
           ./build-arm64/test_stockmenu
           ./build-arm64/test_volume
           ./build-arm64/test_brightness
+          ./build-arm64/test_bootscreen
       - name: Check it is an aarch64 ELF
         run: |
           python3 - build-arm64/rg34xxsp-redux <<'PY'
@@ -123,8 +126,14 @@ jobs:
           print("aarch64 ELF ok")
           PY
           cp build-arm64/rg34xxsp-redux dmenu.bin
+      - name: Boot logo for the dev release (stock format)
+        run: |
+          python3 tools/make_bootlogo.py --out bootlogo.bmp
+          python3 tools/make_bootlogo.py --check bootlogo.bmp
       - uses: actions/upload-artifact@v4
         with:
           name: redux-dmenu-bin-aarch64
-          path: dmenu.bin
+          path: |
+            dmenu.bin
+            bootlogo.bmp
           retention-days: 30
