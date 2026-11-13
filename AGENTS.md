@@ -32,17 +32,27 @@ a fresh chat when **any** of these happens:
 *"Swap now? (reason)"* and waits. Dale replies **SWAP** to approve, or **NO SWAP** to keep going.
 Trigger 4 is Dale's approval already. Without Dale's SWAP, the agent keeps working in the current chat.
 
-Procedure (after Dale's SWAP): the agent updates the **Handoff** section of `notes/STATUS.md` (current state, device IP,
-deploy rule, lessons, decisions, queue) in a docs PR, and Dale merges it. Dale then opens a new chat
-in the project and sends: *"Approve repo push access. Read AGENTS.md and notes/STATUS.md, then
-continue."* The first part lets a new Claude chat attach the repo with write access before it
-starts (without it, Claude can only clone read-only and can't push, comment or log). Nothing else is
-needed; the inbox #41 and notes/ carry the detail. Before handing off, the agent either finishes
-reviewing any PR in flight or lists it in the handoff.
-The agent's last message in the old chat gives Dale an **archive name** to rename it with, in the
-form `Redux <start date>→<end date>: <milestones>`, for example
-`Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI plan`. The same line goes in the
-handoff, so the next chat knows what the previous one covered.
+Procedure (after Dale's SWAP). This is the routine every time, to keep usage down:
+
+1. Write a handoff file `notes/handoff-YYYY-MM-DD.md` (new file, never overwrite an older one).
+   It is the session's memory for the next chat: current state, what was done and device-verified,
+   decisions, what has not run on the device, the next task and its checkpoint, open PRs, and the
+   archive name below. No passwords, no credentials.
+2. Update the **Handoff** section of `notes/STATUS.md` to point at that file (current state, device
+   location, deploy rule, lessons, decisions, queue). Docs PR; Dale merges it.
+3. Last message in the old chat gives Dale an **archive name** to rename it with, in the form
+   `Redux <start date>→<end date>: <milestones>`, for example
+   `Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI plan`. The same line goes in the
+   handoff file, so the next chat knows what the previous one covered.
+4. Dale renames the old chat with that name, for reference.
+5. Dale opens a new project chat and sends: *"Approve repo push access. Read AGENTS.md and
+   notes/STATUS.md, then continue."* The first part lets a new Claude chat attach the repo with
+   write access before it starts (without it, Claude can only clone read-only and can't push,
+   comment or log). The new chat reads the Handoff section, then the handoff file it points at.
+   Nothing else is needed; the inbox #41 and notes/ carry the detail.
+
+Before handing off, the agent either finishes reviewing any PR in flight or lists it in the handoff.
+Without Dale's SWAP, the agent keeps working in the current chat.
 
 ## Dale's comments on GitHub
 
