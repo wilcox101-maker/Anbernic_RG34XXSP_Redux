@@ -12,8 +12,8 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 | Frontend | F2: launch parity on stock | **done**, signed off by Dale 2026-11-12 ([note](2026-11-12-dale-phase-gate-f2-signed-off.md)) | grok | — (Loading ROM splash confirmed on device) |
 
 ## Handoff (2026-11-13 00:35, Claude): start here in a new chat
-- **Read [handoff-2026-11-13-2.md](handoff-2026-11-13-2.md) next** (current state, device tests, next task), then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons.
-- Previous chats archived as: **Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI and Expert Mode plans**; **Redux 2026-11-12→11-12: F2 sign-off, page jump, MAME + 27 systems, ROM cap, Beta roadmap**; **Redux 2026-11-12→11-12: device test, button remap, Wi-Fi verify, stock V1.0.6 diff, power menu**; **Redux 2026-11-12: volume, accent bars, native arm64 CI**; **Redux 2026-11-12→11-13: Claude takeover, brightness, TF2 ROM scan, App Center plan**
+- **Read [handoff-2026-11-13-3.md](handoff-2026-11-13-3.md) next** (current state, setup left for the first Project chat, next task), then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project.
+- Previous chats archived as: **Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI and Expert Mode plans**; **Redux 2026-11-12→11-12: F2 sign-off, page jump, MAME + 27 systems, ROM cap, Beta roadmap**; **Redux 2026-11-12→11-12: device test, button remap, Wi-Fi verify, stock V1.0.6 diff, power menu**; **Redux 2026-11-12: volume, accent bars, native arm64 CI**; **Redux 2026-11-12→11-13: Claude takeover, brightness, TF2 ROM scan, App Center plan, agent harness, command words**
 - **Deploy only from main's CI runs** (the arm64 artifact). The title bar shows `v0.1-dev - <sha>` and must match main's **merge** commit. A SHA not in `git log` is GitHub's PR merge preview. Testing an unmerged PR's own build is fine; say so.
 - **Dale starts his own GitHub comments with `DALE:`**; Grok's start with `PING:`. Both post from `wilcox101-maker`. Every chat swap needs Dale's **SWAP**.
 - Device: at work 172.16.3.178 (`DLN_TeamWireless`), at home the saved `home` profile, around 192.168.1.13. Dale's PC `Downloads\Anbernic RG34xxSP` holds the 2025 `RG34XXSP.img` and `.FW\` stock V1.0.6 (read-only use).
@@ -22,7 +22,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 **2026-11-13: Grok is suspended; Claude runs the project solo ([decision](2026-11-13-dale-decision-grok-suspended.md), `GROK.md` to reinstate).** Every queue item below is Claude's, whatever its old owner marker.
 
 ## Waiting on Dale
-- Device check from **Releases → dev** (main after #104): Settings > Display brightness (Left/Right, survives reboot, never dark); TF2 games appear in Game Room, merged with TF1, and launch.
+- Device tests in the **Device test queue, issue #109**, from **Releases → dev**: Settings > Display brightness (Left/Right, survives reboot, never dark); TF2 games appear in Game Room, merged with TF1, and launch.
 - Optional device checks: #95 accent hold bars, and that the native-runner artifact runs.
 
 ## Queue (inbox #41 is the source of truth; in order)
