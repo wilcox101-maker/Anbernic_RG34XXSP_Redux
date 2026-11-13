@@ -35,6 +35,9 @@ int main(void) {
            "AUDIODEV=hw:2,0 /bin/bash /mnt/vendor/deep/drastic-modify/launch.sh '/mnt/mmc/Roms/NDS/d.nds'\n");
     expect(".dge needs a binary", LAUNCH_DGE, NULL, "/x", NULL);
     expect(".dge binary + rom", LAUNCH_DGE, "/mnt/vendor/bin/game/fc/fc_emu.dge", "/mnt/mmc/Roms/FC/a b.nes",
-           "AUDIODEV=hw:2,0 '/mnt/vendor/bin/game/fc/fc_emu.dge' '/mnt/mmc/Roms/FC/a b.nes'\n");
+           "cd '/mnt/vendor/bin/game/fc' && AUDIODEV=hw:2,0 ./'fc_emu.dge' '/mnt/mmc/Roms/FC/a b.nes'\n");
+    expect(".dge app, no rom", LAUNCH_DGE, "/mnt/vendor/bin/music/ap.dge", NULL,
+           "cd '/mnt/vendor/bin/music' && AUDIODEV=hw:2,0 ./'ap.dge'\n");
+    expect(".dge bare name rejected", LAUNCH_DGE, "ap.dge", NULL, NULL);
     return failures ? 1 : 0;
 }

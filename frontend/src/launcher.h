@@ -8,7 +8,7 @@ typedef enum {
     LAUNCH_RETROARCH,
     LAUNCH_PPSSPP,
     LAUNCH_DRASTIC,
-    LAUNCH_DGE,      /* standalone .dge — not implemented in scaffold */
+    LAUNCH_DGE,      /* standalone .dge: core = binary path, rom optional */
     LAUNCH_PCSX,
     LAUNCH_PORTMASTER,
     LAUNCH_COUNT
