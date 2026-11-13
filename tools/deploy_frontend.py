@@ -7,6 +7,11 @@ Writes only to appfs (/mnt/vendor). Never touches the Roms partition.
 Usage:
   python tools/deploy_frontend.py <device-ip> [binary-path]
   python tools/deploy_frontend.py --restore <device-ip>
+  python tools/deploy_frontend.py --bootlogo <bootlogo.bmp> <device-ip>
+
+--bootlogo only copies the Redux boot logo to appfs (/mnt/vendor/redux/bootlogo.bmp), after
+checking it is exactly the stock format. It does not touch the boot partition: installing it
+is done on the handheld, in Settings > System > Boot Screen.
 
 The binary must be an aarch64 ELF (checked from the header).
 Uses Windows' built-in ssh and scp. Python standard library only.
@@ -28,6 +33,36 @@ def is_aarch64_elf(path):
     except OSError:
         return False
 
+def is_stock_bootlogo(path):
+    """Same check as tools/make_bootlogo.py --check: 640x480, 24-bit, 921654 bytes."""
+    import struct
+    try:
+        d = open(path, "rb").read()
+    except OSError:
+        return False
+    if len(d) != 921654 or d[:2] != b"BM":
+        return False
+    fsize, _, _, off = struct.unpack_from("<IHHI", d, 2)
+    hdr, w, h, planes, bpp, comp = struct.unpack_from("<IiiHHI", d, 14)
+    return (fsize, off, hdr, w, h, planes, bpp, comp) == (921654, 54, 40, 640, 480, 1, 24, 0)
+
+def deploy_bootlogo(ip, path):
+    if not is_stock_bootlogo(path):
+        print(f"refusing {path}: not a stock-format boot logo "
+              "(python tools/make_bootlogo.py --check)", file=sys.stderr)
+        return 1
+    if run(["ssh", f"root@{ip}", "mkdir -p /mnt/vendor/redux"]) != 0:
+        return 1
+    rc = run(["scp", path, f"root@{ip}:/mnt/vendor/redux/bootlogo.bmp.new"])
+    if rc != 0:
+        return rc
+    rc = run(["ssh", f"root@{ip}",
+              "mv /mnt/vendor/redux/bootlogo.bmp.new /mnt/vendor/redux/bootlogo.bmp && sync"])
+    if rc == 0:
+        print("Copied to /mnt/vendor/redux/bootlogo.bmp. Install it on the handheld:")
+        print("  Settings > System > Boot Screen (3 s hold).")
+    return rc
+
 def run(cmd):
     print("+" + " ".join(cmd))
     return subprocess.run(cmd).returncode
@@ -38,8 +73,11 @@ def main():
     if args and args[0] == "--restore":
         restore = True
         args = args[1:]
+    if len(args) == 3 and args[0] == "--bootlogo":
+        return deploy_bootlogo(args[2], args[1])
     if not args:
-        print("usage: deploy_frontend.py [--restore] <device-ip> [binary]", file=sys.stderr)
+        print("usage: deploy_frontend.py [--restore] <device-ip> [binary]\n"
+              "       deploy_frontend.py --bootlogo <bootlogo.bmp> <device-ip>", file=sys.stderr)
         return 2
     ip = args[0]
     bin_path = args[1] if len(args) > 1 else "frontend/build/rg34xxsp-redux"

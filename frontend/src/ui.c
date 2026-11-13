@@ -14,6 +14,7 @@
 #include "sysinfo.h"
 #include "apps.h"
 #include "cardscripts.h"
+#include "bootscreen.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -38,13 +39,13 @@ static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "System", "Emulation", "UI"
 };
 enum { SETTINGS_DISPLAY = 0, SETTINGS_SYSTEM = 4, SETTINGS_UI = 6 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
-enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3, SYSTEM_SCRIPTS = 4 };
+enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3, SYSTEM_SCRIPTS = 4, SYSTEM_BOOT = 5 };
 typedef struct { const char *label; int selectable; int action; } system_row_t;
 static const system_row_t system_rows[] = {
     { "System Tools",         1, SYSTEM_TOOLS },
     { "Restart",              1, SYSTEM_RESTART },
     { "Power Off",            1, SYSTEM_POWEROFF },
-    { "Boot Screen   not yet", 0, -1 },
+    { "Boot Screen",          1, SYSTEM_BOOT },      /* label gets Stock/Redux when drawn */
     { "Card Scripts",         1, SYSTEM_SCRIPTS },   /* label gets Off/On when drawn */
     { "",                     0, -1 },
     { "",                     0, -1 },
@@ -79,7 +80,7 @@ static char wifi_msg[48];
 static char wifi_result_ssid[WIFI_SSID_MAX];
 static int wifi_result_ok;
 static char wifi_retry[64];
-static char stock_msg[48];
+static char stock_msg[80];
 static char apps_msg[48];
 
 /* Colour presets (docs/ui-brief.md section 3). Default BIOS cyan. Saved to THEME_PATH. */
@@ -562,7 +563,8 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
        first press; a repeat press does not move it. Release, or any other
        button, leaves the screen without running it. */
     if (screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
-        || screen == SCREEN_POWEROFF_CONFIRM || screen == SCREEN_SCRIPTS_CONFIRM) {
+        || screen == SCREEN_POWEROFF_CONFIRM || screen == SCREEN_SCRIPTS_CONFIRM
+        || screen == SCREEN_BOOT_CONFIRM) {
         if (btn == LB_A) {
             if (pressed) {
                 if (!a_down_at && !stock_started)
@@ -683,6 +685,12 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         if (!system_selectable(selected)) return;
         int action = system_rows[selected].action;
         if (action == SYSTEM_TOOLS) { go(SCREEN_SYSINFO); return; }
+        if (action == SYSTEM_BOOT) {
+            stock_msg[0] = '\0';
+            stock_started = 0;
+            go(SCREEN_BOOT_CONFIRM);
+            return;
+        }
         if (action == SYSTEM_SCRIPTS) {
             if (cardscripts_enabled()) {   /* Off is the safe direction: one press */
                 cardscripts_set(0);
@@ -732,12 +740,21 @@ void ui_tick(uint32_t now_ms) {
         dirty = 1;
     }
     if ((screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
-         || screen == SCREEN_POWEROFF_CONFIRM || screen == SCREEN_SCRIPTS_CONFIRM)
+         || screen == SCREEN_POWEROFF_CONFIRM || screen == SCREEN_SCRIPTS_CONFIRM
+         || screen == SCREEN_BOOT_CONFIRM)
         && a_down_at && !stock_started) {
         hold_ms = now_ms - a_down_at;
         if (hold_ms >= HOLD_DESTRUCT_MS) {
             a_down_at = 0;
-            if (screen == SCREEN_SCRIPTS_CONFIRM) {
+            if (screen == SCREEN_BOOT_CONFIRM) {
+                /* One action per visit: stock_started blocks a second run until B. */
+                int to_stock = bootscreen_is_redux();
+                ui_busy("Boot Screen", to_stock ? "Restoring the stock boot screen..."
+                                                : "Installing the Redux boot screen...");
+                int rc = to_stock ? bootscreen_restore() : bootscreen_install();
+                stock_started = 1;
+                snprintf(stock_msg, sizeof stock_msg, "%s", bootscreen_message(rc));
+            } else if (screen == SCREEN_SCRIPTS_CONFIRM) {
                 cardscripts_set(1);
                 romscan_init();
                 stock_started = 1;
@@ -773,7 +790,7 @@ uint32_t ui_wait_ms(void) {
     if (vol_until) return 100;
     if (a_down_at && (screen == SCREEN_ENG_CONFIRM || screen == SCREEN_STOCK_CONFIRM
         || screen == SCREEN_RESTART_CONFIRM || screen == SCREEN_POWEROFF_CONFIRM
-        || screen == SCREEN_SCRIPTS_CONFIRM))
+        || screen == SCREEN_SCRIPTS_CONFIRM || screen == SCREEN_BOOT_CONFIRM))
         return HOLD_WAIT_MS;
     return IDLE_WAIT_MS;
 }
@@ -1036,7 +1053,10 @@ void ui_draw(void) {
         frame("System Defaults", "A:Select  B:Back", 1, 0);
         for (int i = 0; i < N_SYSTEM_ROWS; i++) {
             char line[GRID_COLS];
-            if (system_rows[i].action == SYSTEM_SCRIPTS)
+            if (system_rows[i].action == SYSTEM_BOOT)
+                snprintf(line, sizeof line, "   %-14s%s", system_rows[i].label,
+                         bootscreen_is_redux() ? "Redux" : "Stock");
+            else if (system_rows[i].action == SYSTEM_SCRIPTS)
                 snprintf(line, sizeof line, "   %-14s%s", system_rows[i].label,
                          cardscripts_enabled() ? "On" : "Off");
             else
@@ -1078,6 +1098,29 @@ void ui_draw(void) {
             body(6, line);
         }
         break;
+    case SCREEN_BOOT_CONFIRM: {
+        int to_stock = bootscreen_is_redux();
+        frame("Boot Screen", stock_started ? "B:Back"
+              : to_stock ? "Hold A 3s:Restore stock  B:Back" : "Hold A 3s:Install Redux  B:Back", 1, 0);
+        if (stock_started) {
+            body(0, to_stock ? "  Boot screen: Redux" : "  Boot screen: Stock");
+        } else if (to_stock) {
+            body(0, "  Puts the saved stock boot screen back on the boot partition.");
+            body(1, "  The saved copy is kept.");
+        } else {
+            body(0, "  Replaces the picture shown at power-on with the Redux one.");
+            body(1, "  The stock picture is saved first and can be restored here.");
+        }
+        body(2, "  Writes to the boot partition. Keep the handheld on until it says Done.");
+        if (!stock_started) body(4, "  Hold A for 3 seconds. Release, or any other button, cancels.");
+        draw_hold_bar(6, HOLD_DESTRUCT_MS);
+        if (stock_msg[0]) {
+            char line[GRID_COLS];
+            snprintf(line, sizeof line, "  %s", stock_msg);
+            body(8, line);
+        }
+        break;
+    }
     case SCREEN_SCRIPTS_CONFIRM:
         frame("Card Scripts", "Hold A 3s:Turn on  B:Cancel", 1, 0);
         body(0, "  Lets Game Room > Ports run .sh scripts from your Roms card");

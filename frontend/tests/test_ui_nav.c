@@ -14,6 +14,7 @@
 #include "sysinfo.h"
 #include "apps.h"
 #include "cardscripts.h"
+#include "bootscreen.h"
 #include "grid.h"
 #include <stdio.h>
 #include <unistd.h>
@@ -26,6 +27,12 @@ static void expect(int cond, const char *what) { printf("%s %s\n", cond ? "ok  "
 static void press(logical_button_t b) { ui_button(b, 1, 1); ui_button(b, 0, 2); }
 static void down(int n) { while (n--) press(LB_DOWN); }
 static void tap(logical_button_t b, int n) { while (n--) press(b); }
+
+static int boot_mounts;
+static int boot_hook(const char *cmd) {
+    if (strcmp(cmd, BOOTSCREEN_MOUNT_CMD) == 0) boot_mounts++;
+    return 0;
+}
 
 static void write_empty(const char *path) {
     FILE *f = fopen(path, "w");
@@ -517,14 +524,14 @@ int main(void) {
         grid_dump(dump, sizeof dump);
         expect(strstr(dump, "System Tools") != NULL, "System Tools is first");
         expect(strstr(dump, "Stock Menu") != NULL, "Stock Menu is listed");
-        expect(strstr(dump, "Boot Screen") != NULL && strstr(dump, "not yet") != NULL,
-               "Boot Screen is shown and not yet");
+        expect(strstr(dump, "Boot Screen   Stock") != NULL, "Boot Screen is shown as Stock");
+        expect(strstr(dump, "Reset All     not yet") != NULL, "Reset All is still not yet");
         expect(strstr(dump, "Reset All") != NULL, "Reset All is shown");
     }
-    /* cursor skips Boot Screen, the blanks, and Reset All */
+    /* cursor skips the blanks and Reset All */
     expect(ui_list_selected() == 0, "cursor starts on System Tools");
-    press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN);
-    expect(ui_list_selected() == 7, "four downs land on Stock Menu (via Card Scripts), skipping the rest");
+    press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN);
+    expect(ui_list_selected() == 7, "five downs land on Stock Menu (via Boot Screen and Card Scripts)");
     press(LB_DOWN);
     expect(ui_list_selected() == 0, "down from Stock Menu wraps to System Tools");
     press(LB_UP);
@@ -797,8 +804,8 @@ int main(void) {
     cardscripts_set(0);
     ui_init();
     down(8); press(LB_A); down(4); press(LB_A);       /* Settings > System */
-    down(3);
-    expect(ui_list_selected() == 4, "Card Scripts is the row after Power Off");
+    down(4);
+    expect(ui_list_selected() == 4, "Card Scripts is the row after Boot Screen");
     {
         char dump[8192];
         ui_draw();
@@ -820,9 +827,64 @@ int main(void) {
         grid_dump(dump, sizeof dump);
         expect(strstr(dump, "Card Scripts  On") != NULL, "row shows On");
     }
-    down(3); press(LB_A);
+    down(4); press(LB_A);
     expect(!cardscripts_enabled() && ui_screen() == SCREEN_SYSTEM_DEFAULTS, "one press turns it off");
     remove("/tmp/redux-nav-cardscripts");
+
+    /* Boot Screen manager: 3 s hold installs, a second visit restores. Temp folder, no device. */
+    {
+        static unsigned char img[921654];
+        const char *files[2] = { "/tmp/redux-nav-boot/mnt/bootlogo.bmp", "/tmp/redux-nav-boot/redux.bmp" };
+        mkdir("/tmp/redux-nav-boot", 0755); mkdir("/tmp/redux-nav-boot/mnt", 0755);
+        remove("/tmp/redux-nav-boot/backup.bmp"); remove("/tmp/redux-nav-boot/marker");
+        for (int k = 0; k < 2; k++) {
+            memset(img, k ? 0x22 : 0x11, sizeof img);
+            memset(img, 0, 54);
+            img[0] = 'B'; img[1] = 'M';
+            img[2] = 0x36; img[3] = 0x10; img[4] = 0x0e;          /* 921654 */
+            img[10] = 54; img[14] = 40;
+            img[18] = 0x80; img[19] = 0x02;                       /* 640 */
+            img[22] = 0xe0; img[23] = 0x01;                       /* 480 */
+            img[26] = 1; img[28] = 24;
+            FILE *f = fopen(files[k], "wb");
+            if (f) { fwrite(img, 1, sizeof img, f); fclose(f); }
+        }
+        bootscreen_set_paths("/tmp/redux-nav-boot/mnt", files[1], "/tmp/redux-nav-boot/backup.bmp",
+                             "/tmp/redux-nav-boot/marker");
+        bootscreen_set_run(boot_hook);
+        ui_init();
+        down(8); press(LB_A); down(4); press(LB_A);       /* Settings > System */
+        down(3);
+        expect(ui_list_selected() == 3, "Boot Screen is the row after Power Off");
+        press(LB_A);
+        expect(ui_screen() == SCREEN_BOOT_CONFIRM, "A on Boot Screen opens the hold-to-confirm");
+        ui_button(LB_A, 1, 30000); ui_tick(31000); ui_button(LB_A, 0, 31000);
+        expect(!bootscreen_is_redux(), "a short hold installs nothing");
+        ui_button(LB_A, 1, 40000); ui_tick(43100);
+        expect(bootscreen_is_redux(), "a 3 s hold installs the Redux boot screen");
+        ui_tick(47000);
+        expect(bootscreen_is_redux() && boot_mounts == 1, "holding on does not run it a second time");
+        ui_button(LB_A, 0, 47100);
+        {
+            char dump[8192];
+            ui_draw();
+            grid_dump(dump, sizeof dump);
+            expect(strstr(dump, "Done. Shows at the next power-on.") != NULL, "the result is shown");
+        }
+        press(LB_B);
+        {
+            char dump[8192];
+            ui_draw();
+            grid_dump(dump, sizeof dump);
+            expect(strstr(dump, "Boot Screen   Redux") != NULL, "row shows Redux");
+        }
+        down(3); press(LB_A);
+        ui_button(LB_A, 1, 50000); ui_tick(53100); ui_button(LB_A, 0, 53200);
+        expect(!bootscreen_is_redux() && boot_mounts == 2, "a second 3 s hold restores stock");
+        press(LB_B);
+        remove(files[0]); remove(files[1]);
+        remove("/tmp/redux-nav-boot/backup.bmp");
+    }
 
     printf("%d failed\n", fails);
     return fails ? 1 : 0;

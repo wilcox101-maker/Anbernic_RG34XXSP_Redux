@@ -37,10 +37,15 @@ partition (`bootlogo.bmp`) on 2026-11-13. A 640-wide screen fits the label at `f
 Check any file with `python tools/make_bootlogo.py --check file.bmp`; anything that installs a boot
 logo refuses a file that fails this check.
 
-## Not done yet
+## Putting it on the device
 
-- Putting it on the device: the Boot Screen manager (Settings > System), a separate Dale-approved
-  step with a restore path to the stock logo.
+1. Copy it to the handheld: `python tools/deploy_frontend.py --bootlogo build/bootlogo.bmp <ip>`
+   (appfs only: `/mnt/vendor/redux/bootlogo.bmp`). The dev release carries a ready `bootlogo.bmp`.
+2. On the handheld: **Settings > System > Boot Screen**, hold A 3 s. It saves the logo it finds
+   (`/mnt/vendor/redux/bootlogo.stock.bmp`, first time only), then overwrites `bootlogo.bmp` on the
+   boot-resource partition in place and reads it back. The same screen restores the saved one.
+   Details and the reasons are in `frontend/src/bootscreen.h`. Not run on a device yet.
+3. A full way back that needs no Redux: reflash the stock image.
 
 ## Credits and licence
 
