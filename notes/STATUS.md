@@ -27,6 +27,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 **2026-11-13: Claude runs this phase; Grok is sidelined until Dale calls him in ([decision](2026-11-13-dale-decision-claude-runs-phase.md)).** Queue items below are Claude's unless marked otherwise.
 
 ## Waiting on Dale
+- Device check of main after #104: Settings > Display brightness (Left/Right, survives reboot, never dark); TF2 games appear in Game Room, merged with TF1, and launch.
 - Close #101 (Grok's brightness PR, replaced by #102; Claude's close was blocked by a permission check).
 - Optional device checks: #95 accent hold bars, and that the native-runner artifact runs.
 
@@ -38,8 +39,8 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 3. ~~BIOS-style UI, colour presets~~ (#81/#82) and ~~Restart/Power Off~~ (#89, device-verified). **Grok**
 3a. ~~Confirm screens: a short A tap stays on the screen and resets the hold bar~~ merged in #91, device-verified. **Grok**
 3b. ~~Settings → System layout~~ merged in #91, device-verified. Reset All still to come = Redux's own `/mnt/data/redux/` settings to defaults only, 3 s hold. **Grok**
-3c. Grok's task list from Dale (one at a time, CHECKPOINT + "proceed?" each): ~~persistent volume~~ merged in #94, device-verified → **brightness** (1–20, never 0, in config; [decision](2026-11-12-dale-decision-brightness-l3r3.md)) in #102, Grok's module rewired by Claude → TF2 ROM scan. **Claude**
-4. App Center · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. TF2 scan · 8. 640×480 boot logo (Dale-only installer)
+3c. ~~persistent volume~~ (#94, device-verified) → ~~brightness~~ merged in #102 (Settings > Display, 1–20) → ~~TF2 ROM scan~~ merged in #104 (TF1 + TF2 merged per system). Brightness and TF2 **not device-checked yet**. **Claude**
+4. App Center · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. ~~TF2 scan~~ (#104) · 8. 640×480 boot logo (Dale-only installer)
 - L3/R3 (313/316): stay unmapped, left available for mapping later ([decision](2026-11-12-dale-decision-brightness-l3r3.md)).
 - Backlog: **DOS Mode** (Dale: keep the development menu style as a DOS Mode option alongside BIOS Mode; he'll define the layout as menus grow), ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM upload after an ownership acknowledgement), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
