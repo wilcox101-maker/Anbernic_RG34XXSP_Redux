@@ -28,4 +28,13 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
    either may be NULL. Returns 0 or -1, like launcher_start. */
 int launcher_start_app(const char *bin, const char *env, const char *args);
 
+/* The stock video player (vp.dge) plays a file by writing a new /tmp/.next (./FFplay.sh "<file>"),
+   setting /tmp/vpRun.ini and exiting; stock dmenu_ln then runs vp.dge again in its menu slot.
+   Run from Redux's own .next, nobody would run that new .next. So this writes a loop:
+   exec bash (so the shell stops reading the .next file it is about to be overwritten),
+   run the player, and while it leaves an FFplay.sh line, play it and start the player again.
+   On quit, clear /tmp/vpRun.ini so dmenu_ln comes back to Redux. bin: absolute path of the
+   player, from Redux's own table; refused if it contains a quote. Returns 0 or -1. */
+int launcher_start_video(const char *bin);
+
 #endif

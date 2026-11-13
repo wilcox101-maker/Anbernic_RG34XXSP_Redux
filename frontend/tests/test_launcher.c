@@ -57,5 +57,24 @@ int main(void) {
         printf("%s app needs a folder\n", ok ? "ok  " : "FAIL");
         if (!ok) failures++;
     }
+    {
+        const char *path = "test_launcher_video.txt";
+        launcher_set_next_path(path);
+        int rc = launcher_start_video("/mnt/vendor/bin/video/vp.dge");
+        char got[512] = "";
+        FILE *f = fopen(path, "r");
+        if (f) { if (!fgets(got, sizeof got, f)) got[0] = '\0'; fclose(f); }
+        remove(path);
+        const char *want = "cd /mnt/vendor/bin/video && exec /bin/bash -c 'while :; do rm -f /tmp/.next; "
+            "AUDIODEV=hw:2,0 ./vp.dge; grep -q FFplay.sh /tmp/.next 2>/dev/null || break; "
+            "mv -f /tmp/.next /tmp/.vpnext; sh /tmp/.vpnext; done; rm -f /tmp/vpRun.ini /tmp/.vpnext /tmp/.next'\n";
+        int ok = rc == 0 && strcmp(got, want) == 0;
+        printf("%s video player loop\n", ok ? "ok  " : "FAIL");
+        if (!ok) { printf("  want: %s  got:  %s", want, got); failures++; }
+        ok = launcher_start_video("/mnt/x/it's.dge") == -1 && launcher_start_video("vp.dge") == -1
+             && launcher_start_video(NULL) == -1;
+        printf("%s video player refuses quotes and bare names\n", ok ? "ok  " : "FAIL");
+        if (!ok) failures++;
+    }
     return failures ? 1 : 0;
 }

@@ -65,6 +65,22 @@ int launcher_start_app(const char *bin, const char *env, const char *args) {
     return 0;
 }
 
+int launcher_start_video(const char *bin) {
+    const char *slash = bin ? strrchr(bin, '/') : NULL;
+    if (!slash || slash == bin || !slash[1] || bin[0] != '/' || strpbrk(bin, "'\"\\$`")) return -1;
+    FILE *f = fopen(next_path, "w");
+    if (!f) return -1;
+    fprintf(f, "cd ");
+    fwrite(bin, 1, (size_t)(slash - bin), f);
+    fprintf(f, " && exec /bin/bash -c '"
+               "while :; do rm -f /tmp/.next; AUDIODEV=hw:2,0 ./%s; "
+               "grep -q FFplay.sh /tmp/.next 2>/dev/null || break; "
+               "mv -f /tmp/.next /tmp/.vpnext; sh /tmp/.vpnext; done; "
+               "rm -f /tmp/vpRun.ini /tmp/.vpnext /tmp/.next'\n", slash + 1);
+    fclose(f);
+    return 0;
+}
+
 int launcher_start(launch_target_t target, const char *core, const char *rom_path) {
     FILE *f = fopen(next_path, "w");
     if (!f) return -1;
