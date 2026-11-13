@@ -2,10 +2,13 @@
 """Render the RG34XXSP Redux boot screen from branding/boot.ini and branding/mark.pbm.
 
     python tools/make_bootlogo.py [--ini branding/boot.ini] [--version 0.2] [--out file.bmp]
+    python tools/make_bootlogo.py --check file.bmp     # is it a valid stock-format boot logo?
 
 Python 3 standard library only; runs on Windows. Writes a 24-bit BMP. Only the INI, the mark
 and the font decide what it looks like, so a rebuilder rebrands by editing branding/, not code.
-Not yet done: converting to the stock boot-logo format, which still has to be read from the device.
+With [output] format = stock-bootlogo the file is exactly the stock boot logo's format, read from
+the stock image (boot-resource partition, bootlogo.bmp): 640x480, 24-bit, uncompressed,
+bottom-up rows, 54-byte header, 921654 bytes.
 """
 import argparse, configparser, os, re, struct, sys
 
@@ -96,12 +99,31 @@ class Canvas:
             for y in range(self.h - 1, -1, -1):
                 f.write(b"".join(bytes((b, g, r)) for r, g, b in self.px[y * self.w:(y + 1) * self.w]) + pad)
 
+STOCK_W, STOCK_H = 640, 480
+STOCK_SIZE = 54 + STOCK_W * 3 * STOCK_H   # 921654; 640*3 is already a multiple of 4
+
+def check_stock(data):
+    """Return None if data is a stock-format boot logo, else the reason it isn't."""
+    if len(data) != STOCK_SIZE: return "size %d, want %d" % (len(data), STOCK_SIZE)
+    if data[:2] != b"BM": return "not a BMP"
+    fsize, _, _, off = struct.unpack_from("<IHHI", data, 2)
+    hdr, w, h, planes, bpp, comp = struct.unpack_from("<IiiHHI", data, 14)
+    if fsize != STOCK_SIZE or off != 54 or hdr != 40: return "header layout differs from stock"
+    if (w, h) != (STOCK_W, STOCK_H): return "%dx%d, want %dx%d (positive height = bottom-up)" % (w, h, STOCK_W, STOCK_H)
+    if planes != 1 or bpp != 24 or comp != 0: return "want 24-bit uncompressed"
+    return None
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--ini", default=os.path.join(ROOT, "branding", "boot.ini"))
     ap.add_argument("--version")
     ap.add_argument("--out")
+    ap.add_argument("--check", metavar="BMP", help="only check that BMP is a valid stock-format boot logo")
     a = ap.parse_args()
+    if a.check:
+        why = check_stock(open(a.check, "rb").read())
+        print("%s: %s" % (a.check, "ok, stock boot-logo format" if why is None else "NOT stock format: " + why))
+        sys.exit(0 if why is None else 1)
     ini = configparser.ConfigParser(inline_comment_prefixes=(";", "#"))
     if not ini.read(a.ini, encoding="utf-8"):
         sys.exit("cannot read %s" % a.ini)
@@ -144,8 +166,16 @@ def main():
         cv.text(lx + 24 + mw * ms + 24, ty + k * 16 * fs, l, font, ink, fs)
 
     out = a.out or os.path.join(ROOT, ini.get("output", "file"))
+    fmt = ini.get("output", "format", fallback="bmp").strip()
+    if fmt not in ("bmp", "stock-bootlogo"):
+        sys.exit("[output] format must be bmp or stock-bootlogo, got %r" % fmt)
+    if fmt == "stock-bootlogo" and (W, H) != (STOCK_W, STOCK_H):
+        sys.exit("stock-bootlogo needs [screen] %dx%d, got %dx%d" % (STOCK_W, STOCK_H, W, H))
     cv.save_bmp(out)
-    print("wrote %s (%dx%d)" % (out, W, H))
+    if fmt == "stock-bootlogo":
+        why = check_stock(open(out, "rb").read())
+        if why: sys.exit("%s: not stock format: %s" % (out, why))
+    print("wrote %s (%dx%d, %s)" % (out, W, H, fmt))
 
 if __name__ == "__main__":
     main()

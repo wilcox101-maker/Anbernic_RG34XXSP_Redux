@@ -57,7 +57,9 @@ jobs:
         run: |
           if [ -x ./build/test_remap_device ]; then ./build/test_remap_device; fi
       - name: Boot screen renders from branding/
-        run: python3 tools/make_bootlogo.py --out build/bootlogo.bmp
+        run: |
+          python3 tools/make_bootlogo.py --out build/bootlogo.bmp
+          python3 tools/make_bootlogo.py --check build/bootlogo.bmp
       - uses: actions/upload-artifact@v4
         with:
           name: bootlogo-preview

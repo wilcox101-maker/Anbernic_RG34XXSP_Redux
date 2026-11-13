@@ -29,11 +29,18 @@ broken `boot.ini` or mark shows up as a red check. The text uses the frontend's 
   combinations of them, so your build doesn't look official or endorsed.
 - Put the source and licence of any new artwork in this README.
 
+## Format
+
+`[output] format = stock-bootlogo` writes exactly the stock boot logo's format: **640×480, 24-bit,
+uncompressed, bottom-up, 54-byte header, 921,654 bytes**, read from the stock image's `boot-resource`
+partition (`bootlogo.bmp`) on 2026-11-13. A 640-wide screen fits the label at `font_scale = 2`.
+Check any file with `python tools/make_bootlogo.py --check file.bmp`; anything that installs a boot
+logo refuses a file that fails this check.
+
 ## Not done yet
 
-- Writing the image in the stock boot-logo format and putting it on the device. That needs the stock
-  file's location and format read from the device first; it will be a separate, Dale-approved step with a
-  restore path.
+- Putting it on the device: the Boot Screen manager (Settings > System), a separate Dale-approved
+  step with a restore path to the stock logo.
 
 ## Credits and licence
 
