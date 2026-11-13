@@ -172,31 +172,62 @@ static int scan_dir(const char *dirpath, int begin) {
     return n;
 }
 
-void romscan_load(const char *root) {
+/* One system folder found on one card. */
+typedef struct {
+    char key[KEY_MAX];
+    char path[PATH_MAX_R];
+} found_t;
+
+#define FOUND_MAX (SYS_MAX * ROMSCAN_ROOTS_MAX)
+
+void romscan_load_roots(const char *const *roots, int nroots) {
     g_nsys = 0;
     g_nrom = 0;
-    if (!root || !root[0]) return;
-    DIR *d = opendir(root);          /* read-only; never created here */
-    if (!d) return;
-    struct dirent *de;
-    while ((de = readdir(d)) != NULL && g_nsys < SYS_MAX) {
-        if (de->d_name[0] == '.') continue;
-        const char *key = key_for_folder(de->d_name);
-        if (!key) continue;
-        char path[PATH_MAX_R];
-        if (join2(path, sizeof path, root, de->d_name) != 0) continue;
-        if (!is_dir(path)) continue;
-        int n = scan_dir(path, g_nrom);
-        if (n <= 0) continue;
-        sys_t *s = &g_sys[g_nsys++];
-        copy_trunc(s->key, sizeof s->key, key);
-        copy_trunc(s->title, sizeof s->title, title_for(key));
-        s->begin = g_nrom;
-        s->count = n;
-        g_nrom += n;
+    static found_t found[FOUND_MAX];
+    int nfound = 0;
+    for (int r = 0; r < nroots && r < ROMSCAN_ROOTS_MAX; r++) {
+        const char *root = roots[r];
+        if (!root || !root[0]) continue;
+        DIR *d = opendir(root);          /* read-only; never created here. Missing card: skipped */
+        if (!d) continue;
+        struct dirent *de;
+        while ((de = readdir(d)) != NULL && nfound < FOUND_MAX) {
+            if (de->d_name[0] == '.') continue;
+            const char *key = key_for_folder(de->d_name);
+            if (!key) continue;
+            found_t *f = &found[nfound];
+            if (join2(f->path, sizeof f->path, root, de->d_name) != 0) continue;
+            if (!is_dir(f->path)) continue;
+            copy_trunc(f->key, sizeof f->key, key);
+            nfound++;
+        }
+        closedir(d);
     }
-    closedir(d);
+    /* One system per key: TF1 and TF2 folders (and alias folders such as PS and PSX)
+       merge into one list, sorted by name. Each ROM keeps its own full path. */
+    for (int i = 0; i < nfound && g_nsys < SYS_MAX; i++) {
+        if (!found[i].key[0]) continue;
+        int begin = g_nrom, n = 0;
+        for (int j = i; j < nfound; j++) {
+            if (strcmp(found[j].key, found[i].key) != 0) continue;
+            n += scan_dir(found[j].path, begin + n);
+            if (j != i) found[j].key[0] = '\0';
+        }
+        if (n > 1) qsort(g_rom + begin, (size_t)n, sizeof(rom_t), cmp_rom);
+        if (n <= 0) { found[i].key[0] = '\0'; continue; }
+        sys_t *sy = &g_sys[g_nsys++];
+        copy_trunc(sy->key, sizeof sy->key, found[i].key);
+        copy_trunc(sy->title, sizeof sy->title, title_for(found[i].key));
+        sy->begin = begin;
+        sy->count = n;
+        g_nrom += n;
+        found[i].key[0] = '\0';
+    }
     if (g_nsys > 1) qsort(g_sys, (size_t)g_nsys, sizeof(sys_t), cmp_sys);
+}
+
+void romscan_load(const char *root) {
+    romscan_load_roots(&root, 1);
 }
 
 #ifndef REDUX_PLATFORM_STOCK
@@ -224,9 +255,23 @@ static void ensure_fixture(char *out, size_t n) {
 
 void romscan_init(void) {
     const char *env = getenv("REDUX_ROMS");
-    if (env && env[0]) { romscan_load(env); return; }
+    if (env && env[0]) {
+        /* One root, or several separated by ':' (TF1 first). */
+        static char buf[PATH_MAX_R * ROMSCAN_ROOTS_MAX];
+        const char *roots[ROMSCAN_ROOTS_MAX];
+        int n = 0;
+        copy_trunc(buf, sizeof buf, env);
+        for (char *p = buf; p && *p && n < ROMSCAN_ROOTS_MAX; ) {
+            roots[n++] = p;
+            p = strchr(p, ':');
+            if (p) *p++ = '\0';
+        }
+        romscan_load_roots(roots, n);
+        return;
+    }
 #ifdef REDUX_PLATFORM_STOCK
-    romscan_load("/mnt/mmc/Roms");
+    static const char *const stock_roots[] = { ROMSCAN_TF1, ROMSCAN_TF2 };
+    romscan_load_roots(stock_roots, 2);
 #else
     char root[PATH_MAX_R];
     ensure_fixture(root, sizeof root);
