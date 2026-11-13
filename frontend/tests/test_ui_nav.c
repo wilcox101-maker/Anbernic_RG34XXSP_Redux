@@ -767,6 +767,9 @@ int main(void) {
         grid_dump(dump, sizeof dump);
         expect(strstr(dump, "Music Player") && strstr(dump, "not verified") && strstr(dump, "Terminal"),
                "Apps lists stock apps as not verified, and Terminal");
+        expect(strstr(dump, "File Manager") == NULL, "File Manager is on Main only, not in Apps");
+        expect(apps_row_of(APP_FILES) == -1 && apps_count() == APP_COUNT - 1
+               && apps_list_id(apps_row_of(APP_PDF)) == APP_PDF, "Apps rows map to app ids without File Manager");
     }
     press(LB_A);
     expect(ui_should_exit() == 0 && ui_screen() == SCREEN_APPS, "a missing app does not launch");
@@ -776,7 +779,7 @@ int main(void) {
         grid_dump(dump, sizeof dump);
         expect(strstr(dump, "Not installed on this device") != NULL, "missing app says not installed");
     }
-    down(APP_PDF); press(LB_A);
+    down(apps_row_of(APP_PDF)); press(LB_A);
     expect(ui_should_exit() == 0, "PDF Reader is not launchable yet");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Apps returns to Main");
@@ -805,7 +808,7 @@ int main(void) {
     write_empty("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
     ui_init();
     down(5); press(LB_A);              /* Apps */
-    down(APP_TOP); press(LB_A);
+    down(apps_row_of(APP_TOP)); press(LB_A);
     expect(ui_should_exit() == 1, "Task Monitor launches");
     {
         char line[256] = "";
@@ -819,7 +822,7 @@ int main(void) {
     /* After an app from the Apps list, Redux restarts on the Apps list at the same row. */
     ui_init();
     expect(ui_screen() == SCREEN_APPS, "after an Apps launch, Redux restarts on the Apps list");
-    expect(ui_list_selected() == APP_TOP, "the Apps list keeps the launched row");
+    expect(ui_list_selected() == apps_row_of(APP_TOP), "the Apps list keeps the launched row");
     {
         FILE *sf = fopen(UI_RESUME_PATH, "r");
         expect(sf == NULL, "apps resume file is removed after a valid read");
@@ -853,7 +856,7 @@ int main(void) {
         for (unsigned t = 0; t < sizeof tools / sizeof tools[0]; t++) {
             ui_init();
             down(5); press(LB_A);              /* Apps */
-            down(tools[t].app); press(LB_A);
+            down(apps_row_of(tools[t].app)); press(LB_A);
             char line[256] = "", want[256];
             FILE *f = fopen("/tmp/redux-next-apps", "r");
             if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }

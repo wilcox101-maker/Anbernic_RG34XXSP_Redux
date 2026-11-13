@@ -36,7 +36,28 @@ static const app_t apps[APP_COUNT] = {
 
 static const char *root = "";
 
-int apps_count(void) { return APP_COUNT; }
+/* Rows of the Apps list. File Manager is left out: it is on Main (Dale, 2026-11-13, 12d: A). */
+static int listed(int i) { return i != APP_FILES; }
+
+int apps_count(void) {
+    int n = 0;
+    for (int i = 0; i < APP_COUNT; i++) n += listed(i);
+    return n;
+}
+
+int apps_list_id(int row) {
+    for (int i = 0, r = 0; i < APP_COUNT; i++)
+        if (listed(i) && r++ == row) return i;
+    return -1;
+}
+
+int apps_row_of(int id) {
+    for (int i = 0, r = 0; i < APP_COUNT; i++) {
+        if (i == id) return listed(i) ? r : -1;
+        r += listed(i);
+    }
+    return -1;
+}
 
 const char *apps_name(int i) {
     return (i >= 0 && i < APP_COUNT) ? apps[i].name : "";
