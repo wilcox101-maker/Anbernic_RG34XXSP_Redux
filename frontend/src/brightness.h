@@ -2,7 +2,11 @@
 #define REDUX_BRIGHTNESS_H
 
 /* Persistent display brightness.
-   Writes /sys/class/power_supply/axp2202-battery/brightness (1-20, never 0).
+   The backlight is set with the sunxi display driver: ioctl(/dev/disp, DISP_LCD_SET_BRIGHTNESS
+   0x102, {screen 0, value 0-255}). Device-checked by Dale 2026-11-13: 40 dims, 200 brightens.
+   The AXP2202 attribute /sys/class/power_supply/axp2202-battery/brightness only stores a number
+   (writing it never changed the screen, Dale 2026-11-13); Redux still writes the level there too,
+   in case a stock script reads it. Levels 1-20, never 0.
    Min, max and default live here so a later builder can widen the range once
    the real upper limit is known. Do not probe above BRIGHTNESS_MAX.
    Saved to /mnt/data/redux/brightness on the device, /tmp/redux.brightness on desktop.
@@ -31,6 +35,9 @@ void brightness_load(void);
 
 /* Re-apply the current level (startup). */
 int brightness_apply(void);
+
+/* Backlight value 0-255 for a level: 16 at level 1 (never dark), 255 at level 20. */
+int brightness_disp_value(int level);
 
 /* The level the last apply asked to write, or -1. For tests. */
 int brightness_last_written(void);

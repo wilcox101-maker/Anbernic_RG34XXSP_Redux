@@ -886,6 +886,19 @@ int main(void) {
         remove("/tmp/redux-nav-boot/backup.bmp");
     }
 
+    /* M (Menu) returns to Main from anywhere; on a confirm screen it cancels instead. */
+    ui_init();
+    down(8); press(LB_A); press(LB_A);             /* Settings > Display */
+    expect(ui_screen() == SCREEN_DISPLAY, "Settings > Display is open");
+    press(LB_MENU);
+    expect(ui_screen() == SCREEN_MAIN && ui_list_selected() == 0, "M on Display goes to Main");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_MAIN, "B on Main after M stays on Main (back stack cleared)");
+    down(8); press(LB_A); down(4); press(LB_A); down(5); press(LB_A);   /* Stock Menu confirm */
+    expect(ui_screen() == SCREEN_STOCK_CONFIRM, "Stock Menu confirm is open");
+    press(LB_MENU);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "M on a confirm screen cancels back one level");
+
     printf("%d failed\n", fails);
     return fails ? 1 : 0;
 }
