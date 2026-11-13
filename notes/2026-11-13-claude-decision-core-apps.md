@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-13
 re: Dale 2026-11-13 10:00 "What is installed and stock but not utilized? Consider adding as Core App."
-status: decided
+status: closed
 ---
 
 # Installed on the device but not used by Redux: Core App candidates
