@@ -16,6 +16,7 @@
 #include "grid.h"
 #include "platform.h"
 #include "remap.h"
+#include "screentimeout.h"
 #include "ui.h"
 #ifdef REDUX_PLATFORM_STOCK
 #include "evdev_reader.h"
@@ -75,7 +76,10 @@ static int dump_screens(void) {
 }
 
 #ifdef REDUX_PLATFORM_STOCK
+static uint32_t last_input_ms;   /* screen timeout: last button press or release */
+
 static void on_device_button(logical_button_t btn, int pressed) {
+    last_input_ms = SDL_GetTicks();
     ui_button(btn, pressed, SDL_GetTicks());
 }
 #endif
@@ -160,6 +164,11 @@ int main(int argc, char **argv) {
            SDL_WaitEventTimeout would delay every button press by up to ui_wait_ms() (1 s idle). */
         evdev_wait((int)ui_wait_ms());
         evdev_poll(on_device_button);
+        if (screentimeout_due(SDL_GetTicks() - last_input_ms)) {
+            evdev_auto_sleep();               /* returns after wake (or never, on shutdown) */
+            last_input_ms = SDL_GetTicks();
+            for (int i = 0; i < PRESENT_BUFFERS; i++) present_frame();   /* repaint after resume */
+        }
         have_event = SDL_PollEvent(&e);
 #else
         have_event = SDL_WaitEventTimeout(&e, (int)ui_wait_ms());

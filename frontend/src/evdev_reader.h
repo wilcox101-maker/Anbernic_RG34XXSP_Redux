@@ -16,4 +16,8 @@ int evdev_wait(int timeout_ms);
    Sticks use edge detection with hysteresis. */
 int evdev_poll(void (*cb)(logical_button_t btn, int pressed));
 
+/* Screen timeout reached: run stock `pwr_new.sh auto` (suspend; shutdown with power.lock=1;
+   nothing on HDMI), then drop the queued wake events like a power-key press. */
+void evdev_auto_sleep(void);
+
 #endif

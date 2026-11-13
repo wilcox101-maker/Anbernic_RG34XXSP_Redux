@@ -74,6 +74,14 @@ static void handle_power(void) {
     power_quiet_until = now_ms() + POWER_QUIET_MS;
 }
 
+void evdev_auto_sleep(void) {
+    if (system("/bin/bash /mnt/mod/ctrl/pwr_new.sh auto") != 0)
+        fprintf(stderr, "pwr_new.sh auto returned an error\n");
+    drain(power_fd);
+    drain(keys_fd);
+    power_quiet_until = now_ms() + POWER_QUIET_MS;
+}
+
 int evdev_wait(int timeout_ms) {
     struct pollfd p[2];
     int n = 0;
