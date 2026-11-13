@@ -52,7 +52,21 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
        so for ELF targets it goes after the cd, directly in front of the emulator. */
     const char *audiodev = "AUDIODEV=hw:2,0 ";
 
-    if (target == LAUNCH_DGE) {
+    if (target == LAUNCH_SCRIPT) {
+        /* Same as stock dmenu.bin for PORTS: from the script's own folder, with bash. */
+        const char *slash = core ? strrchr(core, '/') : NULL;
+        if (!slash || slash == core || !slash[1]) { fclose(f); return -1; }
+        char dir[512];
+        size_t n = (size_t)(slash - core);
+        if (n >= sizeof dir) { fclose(f); return -1; }
+        memcpy(dir, core, n);
+        dir[n] = '\0';
+        fprintf(f, "cd ");
+        quote(f, dir);
+        fprintf(f, " && %s/bin/bash ./", audiodev);
+        quote(f, slash + 1);
+        fputc('\n', f);
+    } else if (target == LAUNCH_DGE) {
         /* core is the .dge binary path. Stock dmenu.bin runs a .dge as
            cd "<dir>" && ./<name>.dge (strings, 2026-11-13), and the .dge files load
            their resources relative to that folder, so do the same. */

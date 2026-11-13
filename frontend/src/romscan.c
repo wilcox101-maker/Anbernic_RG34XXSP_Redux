@@ -1,6 +1,7 @@
 #include "romscan.h"
 #include "systems.h"
 #include "ports.h"
+#include "cardscripts.h"
 #include <ctype.h>
 #include <dirent.h>
 #include <stdio.h>
@@ -18,6 +19,7 @@ typedef struct {
     char name[ROM_NAME_MAX];
     char path[PATH_MAX_R];
     const char *core;   /* per-entry RetroArch core (Ports); NULL = the system's own */
+    int script;         /* 1 = a card .sh, listed only with the Card Scripts switch On */
 } rom_t;
 
 typedef struct {
@@ -168,6 +170,7 @@ static int scan_dir(const char *dirpath, int begin) {
         display_name(r->name, sizeof r->name, de->d_name);
         copy_trunc(r->path, sizeof r->path, path);
         r->core = NULL;
+        r->script = 0;
         n++;
     }
     closedir(d);
@@ -190,7 +193,35 @@ static int scan_ports(const char *dirpath, int begin) {
         copy_trunc(r->name, sizeof r->name, p->name);
         copy_trunc(r->path, sizeof r->path, path);
         r->core = p->core;
+        r->script = 0;
         n++;
+    }
+    /* Card Scripts On (explicit opt-in): also every other top-level .sh. A script named like a
+       known port is skipped, the table already starts that port without running the script. */
+    if (cardscripts_enabled()) {
+        DIR *d = opendir(dirpath);
+        struct dirent *de;
+        while (d && (de = readdir(d)) != NULL) {
+            const char *dot = strrchr(de->d_name, '.');
+            if (de->d_name[0] == '.' || !dot || icmp(dot, ".sh") != 0) continue;
+            char name[ROM_NAME_MAX], path[PATH_MAX_R];
+            struct stat st;
+            display_name(name, sizeof name, de->d_name);
+            int known = 0;
+            for (int i = 0; i < ports_count(); i++)
+                if (icmp(ports_get(i)->name, name) == 0) known = 1;
+            if (known) continue;
+            if (join2(path, sizeof path, dirpath, de->d_name) != 0) continue;
+            if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) continue;
+            if (rom_reserve(begin + n) != 0) break;
+            rom_t *r = &g_rom[begin + n];
+            copy_trunc(r->name, sizeof r->name, name);
+            copy_trunc(r->path, sizeof r->path, path);
+            r->core = NULL;
+            r->script = 1;
+            n++;
+        }
+        if (d) closedir(d);
     }
     if (n > 1) qsort(g_rom + begin, (size_t)n, sizeof(rom_t), cmp_rom);
     return n;
@@ -330,4 +361,8 @@ const char *romscan_rom_path(int sys, int rom) {
 const char *romscan_rom_core(int sys, int rom) {
     if (sys < 0 || sys >= g_nsys || rom < 0 || rom >= g_sys[sys].count) return NULL;
     return g_rom[g_sys[sys].begin + rom].core;
+}
+int romscan_rom_is_script(int sys, int rom) {
+    if (sys < 0 || sys >= g_nsys || rom < 0 || rom >= g_sys[sys].count) return 0;
+    return g_rom[g_sys[sys].begin + rom].script;
 }
