@@ -651,6 +651,13 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (btn == LB_A && screen == SCREEN_ROMS) {
         const system_entry_t *sys = systems_lookup(romscan_key(sys_index));
         const char *path = romscan_rom_path(sys_index, selected);
+        const char *own_core = romscan_rom_core(sys_index, selected);
+        system_entry_t port_sys;
+        if (sys && own_core) {   /* Ports: the entry's own core */
+            port_sys = *sys;
+            port_sys.core_or_path = own_core;
+            sys = &port_sys;
+        }
         if (sys && path[0]) {
             resume_save();
             volume_apply();

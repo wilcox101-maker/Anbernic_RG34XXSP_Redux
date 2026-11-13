@@ -31,6 +31,8 @@ int romscan_index_of(const char *key);   /* 0 if missing */
 int romscan_roms(int sys);
 const char *romscan_rom_name(int sys, int rom);   /* file name without the extension */
 const char *romscan_rom_path(int sys, int rom);   /* full path, for launcher_start */
+/* RetroArch core for this entry when it has its own (Ports), else NULL. */
+const char *romscan_rom_core(int sys, int rom);
 
 /* How many rows a list draws before it scrolls. Shared with the UI. */
 #define ROM_LIST_WINDOW 20

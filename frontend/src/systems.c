@@ -65,6 +65,8 @@ static const system_entry_t systems[] = {
     { "WS",   LAUNCH_RETROARCH, "mednafen_wswan_libretro.so" },
     { "NGP",  LAUNCH_RETROARCH, "mednafen_ngp_libretro.so" },
     { "PCSX", LAUNCH_PCSX,      NULL },
+    /* Ports: each entry carries its own core (ports.c); no system-wide core. */
+    { "PORTS", LAUNCH_RETROARCH, NULL },
     { NULL,    0,                NULL }
 };
 

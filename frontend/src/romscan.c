@@ -1,5 +1,6 @@
 #include "romscan.h"
 #include "systems.h"
+#include "ports.h"
 #include <ctype.h>
 #include <dirent.h>
 #include <stdio.h>
@@ -16,6 +17,7 @@
 typedef struct {
     char name[ROM_NAME_MAX];
     char path[PATH_MAX_R];
+    const char *core;   /* per-entry RetroArch core (Ports); NULL = the system's own */
 } rom_t;
 
 typedef struct {
@@ -63,7 +65,7 @@ static const struct { const char *key; const char *title; } titles[] = {
     { "POKE", "Pokemon Mini" }, { "VB", "Virtual Boy" }, { "PICO", "PICO-8" },
     { "SEGA32X", "Sega 32X" }, { "MDCD", "Mega CD" }, { "SATURN", "Saturn" },
     { "N64", "Nintendo 64" }, { "DREAMCAST", "Dreamcast" }, { "NAOMI", "NAOMI" },
-    { "ATOMISWAVE", "Atomiswave" }, { "NEOCD", "Neo Geo CD" },
+    { "ATOMISWAVE", "Atomiswave" }, { "NEOCD", "Neo Geo CD" }, { "PORTS", "Ports" },
 };
 
 /* Folder name on the card -> systems-table key, used only when the folder
@@ -165,9 +167,31 @@ static int scan_dir(const char *dirpath, int begin) {
         rom_t *r = &g_rom[begin + n];
         display_name(r->name, sizeof r->name, de->d_name);
         copy_trunc(r->path, sizeof r->path, path);
+        r->core = NULL;
         n++;
     }
     closedir(d);
+    if (n > 1) qsort(g_rom + begin, (size_t)n, sizeof(rom_t), cmp_rom);
+    return n;
+}
+
+/* PORTS: only rows from the known-ports table whose data file exists. Nothing in the
+   folder is executed or listed by itself (card scripts need the opt-in switch, part 2). */
+static int scan_ports(const char *dirpath, int begin) {
+    int n = 0;
+    for (int i = 0; i < ports_count(); i++) {
+        const port_t *p = ports_get(i);
+        char path[PATH_MAX_R];
+        struct stat st;
+        if (join2(path, sizeof path, dirpath, p->data) != 0) continue;
+        if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) continue;
+        if (rom_reserve(begin + n) != 0) break;
+        rom_t *r = &g_rom[begin + n];
+        copy_trunc(r->name, sizeof r->name, p->name);
+        copy_trunc(r->path, sizeof r->path, path);
+        r->core = p->core;
+        n++;
+    }
     if (n > 1) qsort(g_rom + begin, (size_t)n, sizeof(rom_t), cmp_rom);
     return n;
 }
@@ -210,7 +234,8 @@ void romscan_load_roots(const char *const *roots, int nroots) {
         int begin = g_nrom, n = 0;
         for (int j = i; j < nfound; j++) {
             if (strcmp(found[j].key, found[i].key) != 0) continue;
-            n += scan_dir(found[j].path, begin + n);
+            n += strcmp(found[i].key, "PORTS") == 0 ? scan_ports(found[j].path, begin + n)
+                                                     : scan_dir(found[j].path, begin + n);
             if (j != i) found[j].key[0] = '\0';
         }
         if (n > 1) qsort(g_rom + begin, (size_t)n, sizeof(rom_t), cmp_rom);
@@ -301,4 +326,8 @@ const char *romscan_rom_name(int sys, int rom) {
 const char *romscan_rom_path(int sys, int rom) {
     if (sys < 0 || sys >= g_nsys || rom < 0 || rom >= g_sys[sys].count) return "";
     return g_rom[g_sys[sys].begin + rom].path;
+}
+const char *romscan_rom_core(int sys, int rom) {
+    if (sys < 0 || sys >= g_nsys || rom < 0 || rom >= g_sys[sys].count) return NULL;
+    return g_rom[g_sys[sys].begin + rom].core;
 }
