@@ -79,7 +79,8 @@ current queue item and the 1.0 milestone are done. Nothing here goes into the st
         the heavy games above, no OOM kill during a forced low-memory run
 
 ### After 1.0 or alongside it (backlog, not gating either milestone)
-Expert Mode (above-factory settings behind its unlock), chiptune composer (LittleGPTracker port),
+Expert Mode (above-factory settings behind its unlock), PC link (browser file manager; ROM copy only in
+[Xroot Mode], [decision](notes/2026-11-13-dale-decision-xroot-mode.md)), chiptune composer (LittleGPTracker port),
 hardware video decode for media, in-game HUD overlay, Wi-Fi idle scanning, features.ini. Items can move
 earlier once Beta is out, if they don't put its exit test at risk.
 

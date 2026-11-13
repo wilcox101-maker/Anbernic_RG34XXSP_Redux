@@ -161,7 +161,8 @@ and the next PING report. No notification.
   fine; copying, creating, editing or deleting anything there is not. **One exception:** the PC link
   (decision on inbox #41, 2026-11-12) may write there, only while the user has switched it on, with its
   safeguards: password, local network only, delete moves files to `.trash`, overwrite asks, and ROM uploads
-  only after the one-time ownership acknowledgement. Nothing else in Redux writes to p1.
+  (ROM copy) only in **[Xroot Mode]**, the state after the one-time ownership acknowledgement
+  ([decision](notes/2026-11-13-dale-decision-xroot-mode.md)). Nothing else in Redux writes to p1.
 - Never write code that formats a partition automatically. Never run code from removable media
   without an explicit user opt-in.
 - Host tools: Python 3 standard library only, must run on Windows.
