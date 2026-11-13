@@ -38,6 +38,7 @@ RG34XXSP Redux
 ├── Video
 ├── Documents
 ├── File Manager
+├── Apps                       (App Center: stock apps + Redux tools; decision 2026-11-13)
 ├── Internet
 │   ├── YouTube                (if feasible, no earlier than F6)
 │   └── Web browser (text)
@@ -108,11 +109,11 @@ RG34XXSP Redux  v0.1-dev - dev                                      BAT 87% CHG 
 │   Video                                                                                │
 │   Documents                                                                            │
 │   File Manager                                                                         │
+│   Apps                                                                                 │
 │   Internet                                                                             │
 │   Network                                                                              │
 │   Settings                                                                             │
 │   Engineering Mode                                                                     │
-│                                                                                        │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
