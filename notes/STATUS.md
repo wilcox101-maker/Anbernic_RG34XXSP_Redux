@@ -11,18 +11,23 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 | Frontend | F1: desktop prototype | **done**, signed off by Dale 2026-11-10 | grok + claude | — |
 | Frontend | F2: launch parity on stock | **done**, signed off by Dale 2026-11-12 ([note](2026-11-12-dale-phase-gate-f2-signed-off.md)) | grok | — (Loading ROM splash confirmed on device) |
 
-## Handoff (2026-11-12 15:00, Claude): start here in a new chat
-- Previous chats archived as: **Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI and Expert Mode plans**; **Redux 2026-11-12→11-12: F2 sign-off, page jump, MAME + 27 systems, ROM cap, Beta roadmap**; **Redux 2026-11-12→11-12: device test, button remap, Wi-Fi verify, stock V1.0.6 diff, power menu**
-- **Deploy only from main's CI runs** (the arm64 artifact). The title bar shows `v0.1-dev - <sha>` and must match main's **merge** commit, not the PR head.
-- Device at work: 172.16.3.178 (`DLN_TeamWireless`). Saved Wi-Fi profiles: DLN_Guest, DLN_TeamWireless, SAND_BOX, home x2. Dale's PC: `Downloads\Anbernic RG34xxSP` holds the 2025 `RG34XXSP.img` and `.FW\` the stock V1.0.6 image (read-only use only; three scratch files of Claude's there can be deleted).
-- **How Dale wants to work now:** Grok gets single tasks with CHECKPOINTS and asks Dale "proceed?" at each one. Dale brings Grok's questions here, Claude advises, Dale relays. Batch reviews; Dale merges docs-only PRs without asking. Usage is tight until the Monday reset.
-- Device-verified 2026-11-12 ([hw-result](2026-11-12-dale-hw-result-build-0afecd9.md)): Settings without Network, colour preset survives reboot, System Tools (VE/DDR fixed in #83), Saturn BIOS game (BIOS path works), Restart and Power Off (#89).
-- Merged this session: #78 (Settings: no Network), #80 (stock V1.0.6 vs 2025: revised boards need the V1.0.6 DTB; never put a 2025-based boot.img on them), #81/#82 colour presets on /mnt/data, #83 VE/DDR zone names, #85 **button remap** (device follows the DT: Select 310, Start 311, X 307, Y 306, L2 314, R2 315; L3/R3 313/316 unmapped pending Dale), #86 queue, #87 brightness = AXP2202 `brightness` attribute (no backlight class), #88 Wi-Fi verify (nmcli exits 0 on failure; device show is FIELD:value lines; saved-profile modify+up), #89 Restart/Power Off.
-- **Not yet device-checked:** #85 buttons (Start submits Wi-Fi password, Y rescans, X Favorites, L2/R2 nothing) and #88 Wi-Fi (wrong password → Not connected; DLN_Guest right password → real IP; saved profile path).
-- Lessons: `git add -A` committed build output once (#79, closed); `.gitignore` now excludes build dirs, so use explicit paths. Force-push is blocked here; open a new PR instead. A PR's fake nmcli must match the device's real output format (#88). The arm64 job sometimes fails in apt/dpkg; one re-run.
+## Handoff (2026-11-12 16:20, Claude): start here in a new chat
+- Previous chats archived as: **Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI and Expert Mode plans**; **Redux 2026-11-12→11-12: F2 sign-off, page jump, MAME + 27 systems, ROM cap, Beta roadmap**; **Redux 2026-11-12→11-12: device test, button remap, Wi-Fi verify, stock V1.0.6 diff, power menu**; **Redux 2026-11-12: volume, accent bars, native arm64 CI**
+- **Deploy only from main's CI runs** (the arm64 artifact). The title bar shows `v0.1-dev - <sha>` and must match main's **merge** commit, not the PR head. 2026-11-12: Dale deployed `fadf977`, which is GitHub's PR merge-preview commit, not a repo commit — if a title-bar SHA is not in `git log`, that is what happened. Testing an unmerged PR from its own build is fine; just say so.
+- **Dale starts his own GitHub comments with `DALE:`** (AGENTS.md). Grok's status comments start with `PING:`. Both post from `wilcox101-maker`.
+- **Every chat swap needs Dale's approval** (AGENTS.md, #93). For the automatic triggers the agent asks "Swap now?" and waits for **SWAP** or **NO SWAP**. Dale saying SWAP himself still works.
+- Device at work: 172.16.3.178 (`DLN_TeamWireless`). **Dale left work 2026-11-12 16:20; at home the device returns to the saved `home` profile, around 192.168.1.13.** Dale's PC: `Downloads\Anbernic RG34xxSP` holds the 2025 `RG34XXSP.img` and `.FW\` the stock V1.0.6 image (read-only use only).
+- **How Dale wants to work now:** Grok gets single tasks with CHECKPOINTS and asks Dale "proceed?" at each one. Dale brings Grok's questions here, Claude advises, Dale relays. Batch reviews; Dale merges docs-only PRs without asking. Dale watches CI himself and only forwards failures that persist past about three attempts.
+- A scheduled task **"Redux CI hourly check"** runs hourly 09:00–21:00 America/New_York and pushes to Dale's phone. Read-only: it never comments, pushes or merges. It skips the hour if Dale merged, reviewed, or left a non-`PING:` comment; otherwise it reports branches failing 3+ runs in a row and green PRs with no Claude review, else "All quiet".
+- Merged this session: #93 (AGENTS.md: swap approval + `DALE:` prefix), #94 persistent volume, #95 hold bars use the accent colour, #96 volume-stages decision note, #97 **arm64 CI builds natively** on `ubuntu-22.04-arm` instead of under QEMU.
+- Device-verified 2026-11-12 (Dale, from the #94 build a78d5e4): Vol+/− steps and the `VOL nn` overlay appears and clears; the level survives a reboot; the level survives returning from a game. #91's short-A fix and System layout verified from `03f530f`.
+- **Not yet device-checked:** #95 accent hold bars (a solid accent block replaced the white stipple — check it reads well on the darker presets), and #97's artifact (the first binary built on the native arm64 runner; confirm it still runs before trusting the new pipeline).
+- Lessons: `git add -A` committed build output once (#79, closed); `.gitignore` now excludes build dirs, so use explicit paths. Force-push is blocked here; open a new PR instead. A PR's fake nmcli must match the device's real output format (#88). The emulated arm64 job's apt/dpkg failures are gone with #97 — if arm64 fails now, it is real. The arm64 job went from 2m33s to 49s.
 
 ## Waiting on Dale
-- Send Grok the #89 results + the System layout task (drafted in the last chat; summary under Queue item 3b), then device-check #85 and #88.
+- Nothing blocking. All PRs merged, main green, Grok idle awaiting HELLO.
+- Decide whether Grok proceeds with **brightness** (his SSH findings: current 5, writing 20 sticks, 255 ignored; his plan is a 1–20 range that never reaches 0). Dale put it on hold.
+- Optional device checks: #95 accent hold bars, and that the native-runner artifact runs.
 
 ## Queue (inbox #41 is the source of truth; in order)
 1. ~~Wi-Fi part 2: Connecting and result screens~~ merged in #73 (device test 2026-11-12: connect failed; fixed in #88). **Grok**
@@ -30,14 +35,15 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 1a. ~~Map unmapped stock folders~~ done in #70 (HBMAME/OPENBOR/VARCADE left). **Claude**
 2. ~~System Tools (read-only, `sysinfo.c` data layer)~~ merged in #74, VE/DDR fixed in #83 (device-verified). **Grok**
 3. ~~BIOS-style UI, colour presets~~ (#81/#82) and ~~Restart/Power Off~~ (#89, device-verified). **Grok**
-3a. Confirm screens: a short A tap stays on the screen and resets the hold bar; only B/other buttons leave (Restart, Power Off, Stock Menu). **Grok**
-3b. Settings → System layout: System Tools, Restart, Power Off, Boot Screen (not yet), 3 blank rows, Stock Menu, Reset All (not yet). Cursor skips blanks and "not yet" items. Reset All (later) = Redux's own `/mnt/data/redux/` settings to defaults only, 3 s hold. **Grok**
-3c. Grok's task list from Dale (one at a time, CHECKPOINT + "proceed?" each): persistent volume (`lineout volume` 0–31 via amixer, keys 115/114, /mnt/data/redux/volume) → brightness (AXP2202 attribute; range check first, never 0) → TF2 ROM scan. **Grok**
+3a. ~~Confirm screens: a short A tap stays on the screen and resets the hold bar~~ merged in #91, device-verified. **Grok**
+3b. ~~Settings → System layout~~ merged in #91, device-verified. Reset All still to come = Redux's own `/mnt/data/redux/` settings to defaults only, 3 s hold. **Grok**
+3c. Grok's task list from Dale (one at a time, CHECKPOINT + "proceed?" each): ~~persistent volume~~ merged in #94, device-verified → **brightness** (AXP2202 attribute; range 1–20, never 0; on hold pending Dale) → TF2 ROM scan. **Grok**
 4. App Center · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. TF2 scan · 8. 640×480 boot logo (Dale-only installer)
 - Open with Dale: what L3/R3 (313/316) should do; they're unmapped for now.
 - Backlog: **DOS Mode** (Dale: keep the development menu style as a DOS Mode option alongside BIOS Mode; he'll define the layout as menus grow), ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM upload after an ownership acknowledgement), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
 ## Open notes
+- [2026-11-12-dale-decision-volume-stages.md](2026-11-12-dale-decision-volume-stages.md): dale → all (Redux Vol+/- is the hardware master; RetroArch keeps its own trim. Not a defect; do not add code to sync the two numbers)
 - [2026-11-12-dale-hw-result-build-0afecd9.md](2026-11-12-dale-hw-result-build-0afecd9.md): dale → all (0afecd9 on device: Colors, System Tools, Saturn pass; Wi-Fi connect fails, nmcli exits 0 on error)
 - [2026-11-12-claude-message-stock-v106-diff.md](2026-11-12-claude-message-stock-v106-diff.md): claude → all (stock V1.0.6 supports revised boards; 2025-based boot.img must not go on them)
 - [2026-11-12-claude-review-system-tools.md](2026-11-12-claude-review-system-tools.md): closed (fixed in 5258c5d, merged as #74)
