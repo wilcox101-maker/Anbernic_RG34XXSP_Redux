@@ -89,8 +89,10 @@ def check_file(path, problems):
                     names = [node.module]
                 for n in names:
                     top = n.split(".")[0]
-                    # A package of our own under tools/ (e.g. tools/bench) is not a dependency.
-                    local = os.path.isfile(os.path.join(ROOT_DIR, "tools", top, "__init__.py"))
+                    # A package or module of our own under tools/ (tools/bench, tools/extras.py)
+                    # is not a dependency.
+                    local = (os.path.isfile(os.path.join(ROOT_DIR, "tools", top, "__init__.py"))
+                             or os.path.isfile(os.path.join(ROOT_DIR, "tools", top + ".py")))
                     if top not in sys.stdlib_module_names and not local:
                         problems.append(f"{p}:{node.lineno}: imports '{top}', not stdlib (rule: stdlib only)")
 
