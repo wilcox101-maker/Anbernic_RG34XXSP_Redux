@@ -41,8 +41,13 @@ jobs:
           items = []
           if m:
               for line in m.group(2).splitlines():
-                  t = re.sub(r"^\s*[-*]\s*(\[[ xX]\]\s*)?", "", line).strip()
-                  if not line.strip().startswith(("-", "*")) or not t or t.startswith("<!--"):
+                  if re.fullmatch(r"\s*([-*_])(\s*\1){2,}\s*", line):
+                      break                    # a --- rule ends the section (PR footers add one)
+                  b = re.match(r"^\s*[-*]\s+(\[[ xX]\]\s*)?(.*)$", line)
+                  if not b:
+                      continue                 # only real "- item" bullets
+                  t = b.group(2).strip()
+                  if not t or t.startswith("<!--"):
                       continue
                   if re.fullmatch(r"(none|nothing|n/?a)\.?", t, re.I):
                       continue
