@@ -800,7 +800,7 @@ int main(void) {
     remove("/tmp/redux-next-apps");
     remove("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
 
-    /* Task Monitor: SimpleTerminal from rootfs with -e top. */
+    /* Task Monitor: SimpleTerminal from rootfs with -e htop (/usr/bin/htop; not stock, see apps.c). */
     mkdir("/tmp/redux-apps/mnt/mod", 0755); mkdir("/tmp/redux-apps/mnt/mod/ctrl", 0755);
     write_empty("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
     ui_init();
@@ -811,8 +811,8 @@ int main(void) {
         char line[256] = "";
         FILE *f = fopen("/tmp/redux-next-apps", "r");
         if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
-        expect(strcmp(line, "cd '/mnt/mod/ctrl' && HOME=/root ./'SimpleTerminal' -e top\n") == 0,
-               "Task Monitor runs SimpleTerminal -e top from its folder");
+        expect(strcmp(line, "cd '/mnt/mod/ctrl' && HOME=/root ./'SimpleTerminal' -e htop\n") == 0,
+               "Task Monitor runs SimpleTerminal -e htop from its folder");
     }
     remove("/tmp/redux-next-apps");
     remove("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
