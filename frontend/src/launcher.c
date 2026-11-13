@@ -53,12 +53,22 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
     const char *audiodev = "AUDIODEV=hw:2,0 ";
 
     if (target == LAUNCH_DGE) {
-        /* core is the .dge binary path. Quote it like every other path. */
+        /* core is the .dge binary path. Stock dmenu.bin runs a .dge as
+           cd "<dir>" && ./<name>.dge (strings, 2026-11-13), and the .dge files load
+           their resources relative to that folder, so do the same. */
         if (!core) { fclose(f); return -1; }
-        fputs(audiodev, f);
-        quote(f, core);
-        fputc(' ', f);
-        if (rom_path) quote(f, rom_path);
+        const char *slash = strrchr(core, '/');
+        if (!slash || slash == core || !slash[1]) { fclose(f); return -1; }
+        char dir[512];
+        size_t n = (size_t)(slash - core);
+        if (n >= sizeof dir) { fclose(f); return -1; }
+        memcpy(dir, core, n);
+        dir[n] = '\0';
+        fprintf(f, "cd ");
+        quote(f, dir);
+        fprintf(f, " && %s./", audiodev);
+        quote(f, slash + 1);
+        if (rom_path) { fputc(' ', f); quote(f, rom_path); }
         fputc('\n', f);
     } else {
         const char *script = script_for(target);
