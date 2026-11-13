@@ -265,6 +265,39 @@ int main(void) {
            "PS ROM launches the standalone pcsx line");
     remove(UI_RESUME_PATH);
 
+    /* TF1 + TF2: the same system on both cards is one merged, sorted list; a TF2-only system
+       appears; alias folders PS and PSX merge; a missing card is skipped. */
+    {
+        const char *made[] = { "/tmp/redux-tf1", "/tmp/redux-tf1/GBA", "/tmp/redux-tf1/PS",
+                               "/tmp/redux-tf2", "/tmp/redux-tf2/GBA", "/tmp/redux-tf2/N64",
+                               "/tmp/redux-tf2/PSX" };
+        for (size_t i = 0; i < sizeof made / sizeof made[0]; i++) mkdir(made[i], 0755);
+        write_empty("/tmp/redux-tf1/GBA/Metroid Fusion.gba");
+        write_empty("/tmp/redux-tf1/GBA/Advance Wars.gba");
+        write_empty("/tmp/redux-tf2/GBA/Golden Sun.gba");
+        write_empty("/tmp/redux-tf2/N64/mario.z64");
+        write_empty("/tmp/redux-tf1/PS/castlevania.chd");
+        write_empty("/tmp/redux-tf2/PSX/ff7.chd");
+        setenv("REDUX_ROMS", "/tmp/redux-tf1:/tmp/redux-tf2:/tmp/redux-no-such-card", 1);
+        ui_init();
+        expect(romscan_systems() == 3, "TF1 + TF2 give GBA, N64 and PS1 once each");
+        int g = -1, p = -1, n64 = -1;
+        for (int s = 0; s < romscan_systems(); s++) {
+            if (!strcmp(romscan_key(s), "GBA")) g = s;
+            if (!strcmp(romscan_key(s), "PS1")) p = s;
+            if (!strcmp(romscan_key(s), "N64")) n64 = s;
+        }
+        expect(g >= 0 && romscan_roms(g) == 3, "GBA merges both cards");
+        expect(g >= 0 && !strcmp(romscan_rom_name(g, 0), "Advance Wars") &&
+               !strcmp(romscan_rom_name(g, 1), "Golden Sun") &&
+               !strcmp(romscan_rom_name(g, 2), "Metroid Fusion"), "merged list is sorted by name");
+        expect(g >= 0 && strstr(romscan_rom_path(g, 1), "/tmp/redux-tf2/GBA/") != NULL,
+               "a TF2 ROM keeps its TF2 path");
+        expect(n64 >= 0 && romscan_roms(n64) == 1, "TF2-only system is listed");
+        expect(p >= 0 && romscan_roms(p) == 2, "PS (TF1) and PSX (TF2) merge into PS1");
+        unsetenv("REDUX_ROMS");
+    }
+
     /* Stock folders added 2026-11-12: each key has a RetroArch core, and real folders are listed by name. */
     {
         static const char *keys[] = { "A2600", "A5200", "A7800", "A800", "LYNX", "ATARIST", "AMIGA",

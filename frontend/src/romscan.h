@@ -1,14 +1,24 @@
 #ifndef REDUX_ROMSCAN_H
 #define REDUX_ROMSCAN_H
 
-/* Read-only scan of a ROM root (stock: /mnt/mmc/Roms). Never creates, edits or
+/* Read-only scan of the ROM roots (stock: TF1 /mnt/mmc/Roms and TF2 /mnt/sdcard/Roms). Never creates, edits or
    deletes anything under that root. Desktop builds with no REDUX_ROMS set a
    zero-byte fixture under /tmp so the F0 ROM mock-up still matches. */
+
+/* ROM roots on the device: TF1 (Roms partition) and TF2 (second card, if inserted).
+   Both are read only. A missing card or folder is skipped. */
+#define ROMSCAN_TF1 "/mnt/mmc/Roms"
+#define ROMSCAN_TF2 "/mnt/sdcard/Roms"
+#define ROMSCAN_ROOTS_MAX 4
 
 /* Load one root now. romscan_init picks the root; tests call this directly. */
 void romscan_load(const char *root);
 
-/* Load REDUX_ROMS, or the stock root, or the desktop fixture. Safe to call again. */
+/* Load several roots; the same system on two cards becomes one merged, sorted list. */
+void romscan_load_roots(const char *const *roots, int nroots);
+
+/* Load REDUX_ROMS (one root or several separated by ':'), else TF1 + TF2 on the
+   device, else the desktop fixture. Safe to call again. */
 void romscan_init(void);
 
 int romscan_systems(void);
