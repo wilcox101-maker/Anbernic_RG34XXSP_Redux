@@ -15,6 +15,8 @@ import re
 import subprocess
 import sys
 
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # Rule 1: never write to the Roms partition (p1, mounted at /mnt/mmc; /mnt/sdcard on debug units).
 ROMS = re.compile(r"/mnt/(mmc|sdcard)\b")
 # Scripts that run on the host or the device: any Roms path at all is suspect.
@@ -87,7 +89,9 @@ def check_file(path, problems):
                     names = [node.module]
                 for n in names:
                     top = n.split(".")[0]
-                    if top not in sys.stdlib_module_names:
+                    # A package of our own under tools/ (e.g. tools/bench) is not a dependency.
+                    local = os.path.isfile(os.path.join(ROOT_DIR, "tools", top, "__init__.py"))
+                    if top not in sys.stdlib_module_names and not local:
                         problems.append(f"{p}:{node.lineno}: imports '{top}', not stdlib (rule: stdlib only)")
 
     if p == SELF:

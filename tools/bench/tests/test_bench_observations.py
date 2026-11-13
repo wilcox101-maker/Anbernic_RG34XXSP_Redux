@@ -31,7 +31,7 @@ class ObservationTests(unittest.TestCase):
         self.assertEqual(found["cpu_freq_khz"]["value"], 1008000)
         self.assertEqual(found["cpu_governor"]["value"], "ondemand")
         self.assertEqual(found["thermal_millic"]["value"], 45000)
-        self.assertEqual(found["mounts"]["/mnt/mmc"]["status"], "ok")
+        self.assertEqual(found["mounts"]["/mnt/mmc"]["status"], "ok")  # rules: allow roms (test reads a fixture)
         self.assertNotIn("\n", found["python"]["value"])
 
     def test_missing_board_is_unavailable(self):

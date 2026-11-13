@@ -11,8 +11,8 @@ import time
 from pathlib import Path
 
 MOUNT_KEYS = (
-    "/mnt/mmc",
-    "/mnt/sdcard",
+    "/mnt/mmc",     # rules: allow roms (statvfs only: free space, never written)
+    "/mnt/sdcard",  # rules: allow roms (statvfs only: free space, never written)
     "/tmp",
     "/mnt/vendor",
     "/mnt/mod",
