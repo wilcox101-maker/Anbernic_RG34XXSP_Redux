@@ -17,9 +17,9 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - **Deploy only from main's CI runs** (the arm64 artifact). The title bar shows `v0.1-dev - <sha>` and must match main's **merge** commit. A SHA not in `git log` is GitHub's PR merge preview. Testing an unmerged PR's own build is fine; say so.
 - **Dale starts his own GitHub comments with `DALE:`**; Grok's start with `PING:`. Both post from `wilcox101-maker`. Every chat swap needs Dale's **SWAP**.
 - Device: at work 172.16.3.178 (`DLN_TeamWireless`), at home the saved `home` profile, around 192.168.1.13. Dale's PC `Downloads\Anbernic RG34xxSP` holds the 2025 `RG34XXSP.img` and `.FW\` stock V1.0.6 (read-only use).
-- Scheduled task **"Redux CI hourly check"** (09:00–21:00 ET, read-only, pushes to Dale's phone) still runs.
+- Scheduled task **"Redux CI hourly check"** is **paused** (disabled 2026-11-12 ~21:23 ET; last run 21:05). Don't re-enable it unless Dale asks. If he does: its prompt uses `gh pr list`, which fails in cloud sessions (GraphQL blocked), so switch it to the REST calls in `CLAUDE.md`, and drop its Grok/`PING:` logic while Grok is suspended.
 
-**2026-11-13: Claude runs this phase; Grok is sidelined until Dale calls him in ([decision](2026-11-13-dale-decision-claude-runs-phase.md)).** Queue items below are Claude's unless marked otherwise.
+**2026-11-13: Grok is suspended; Claude runs the project solo ([decision](2026-11-13-dale-decision-grok-suspended.md), `GROK.md` to reinstate).** Every queue item below is Claude's, whatever its old owner marker.
 
 ## Waiting on Dale
 - Device check of main after #104: Settings > Display brightness (Left/Right, survives reboot, never dark); TF2 games appear in Game Room, merged with TF1, and launch.
@@ -40,6 +40,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - Backlog: **DOS Mode** (Dale: keep the development menu style as a DOS Mode option alongside BIOS Mode; he'll define the layout as menus grow), ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM upload after an ownership acknowledgement), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
 ## Open notes
+- [2026-11-13-dale-decision-grok-suspended.md](2026-11-13-dale-decision-grok-suspended.md): dale → all (Grok suspended; Claude solo; replaces "sidelined")
 - [2026-11-13-dale-decision-app-center.md](2026-11-13-dale-decision-app-center.md): dale → all (App Center = local launcher, no downloads)
 - [2026-11-13-dale-decision-claude-runs-phase.md](2026-11-13-dale-decision-claude-runs-phase.md): dale → all (Claude builds and merges this phase; Grok on call)
 - [2026-11-12-dale-decision-brightness-l3r3.md](2026-11-12-dale-decision-brightness-l3r3.md): dale → grok (brightness go, 1–20 in config; L3/R3 stay unmapped)
