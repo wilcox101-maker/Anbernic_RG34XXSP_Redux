@@ -4,12 +4,20 @@ Short openers Dale sends. The rules live in `AGENTS.md` and `CLAUDE.md`. Current
 Grok suspended (see `GROK.md` to reinstate).
 
 ## Claude: new owning chat (after SWAP)
+Inside the Redux Project (instructions do the rest, see `docs/project-setup.md`):
+> HELLO
+
+Outside the Project:
 > Approve repo push access. Read AGENTS.md and notes/STATUS.md, then continue.
 > Watch the Claude inbox, PR #41.
 
 ## Claude: side or advice chat (another Claude owns the repo)
 > Read-only advisory session for the Redux repo. Clone it, but don't push, comment or log.
 > Question: <...>. Give me text or files to pass to the owning chat.
+
+## Claude: model switch (answering a "Model switch?" checkpoint)
+> SWITCH        (then change the model in the picker and reply "switched")
+> NO SWITCH
 
 ## Claude: status check
 > PING
