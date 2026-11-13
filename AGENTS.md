@@ -34,7 +34,8 @@ Trigger 4 is Dale's approval already. Without Dale's SWAP, the agent keeps worki
 
 Procedure (after Dale's SWAP). This is the routine every time, to keep usage down:
 
-1. Write a handoff file `notes/handoff-YYYY-MM-DD.md` (new file, never overwrite an older one).
+1. Write a handoff file `notes/handoff-YYYY-MM-DD.md` (new file, never overwrite an older one;
+   add `-2`, `-3` for further handoffs the same day).
    It is the session's memory for the next chat: current state, what was done and device-verified,
    decisions, what has not run on the device, the next task and its checkpoint, open PRs, and the
    archive name below. No passwords, no credentials.
@@ -45,11 +46,11 @@ Procedure (after Dale's SWAP). This is the routine every time, to keep usage dow
    `Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI plan`. The same line goes in the
    handoff file, so the next chat knows what the previous one covered.
 4. Dale renames the old chat with that name, for reference.
-5. Dale opens a new project chat and sends: *"Approve repo push access. Read AGENTS.md and
-   notes/STATUS.md, then continue."* The first part lets a new Claude chat attach the repo with
-   write access before it starts (without it, Claude can only clone read-only and can't push,
-   comment or log). The new chat reads the Handoff section, then the handoff file it points at.
-   Nothing else is needed; the inbox #41 and notes/ carry the detail.
+5. Dale opens a new chat in the agent's project and sends its opener (Claude: **`HELLO`** in the
+   Redux Project, see `CLAUDE.md`; outside it, *"Approve repo push access. Read AGENTS.md and
+   notes/STATUS.md, then continue."*). The new chat attaches the repo with write access first, then
+   reads the Handoff section and the handoff file it points at. Nothing else is needed; the inbox
+   #41 and notes/ carry the detail.
 
 Before handing off, the agent either finishes reviewing any PR in flight or lists it in the handoff.
 Without Dale's SWAP, the agent keeps working in the current chat.
@@ -97,9 +98,9 @@ the **Claude inbox, PR #41** (a draft, never merged or closed):
   finishes on a `grok/` branch. Grok doesn't need to do anything.
 - Manual: comment `PING` on #41 with one line of context (a question, a blocker, "ready for review").
   Grok's own chat or notes don't reach Claude; the inbox comment does.
-- The watch on #41 belongs to one Claude conversation. **A new Claude session must first subscribe to
-  PR #41** (Dale: "watch the Claude inbox, PR #41"), then read the comments posted since its last
-  visit. Comments wait on #41; nothing is lost between sessions.
+- The watch on #41 belongs to one Claude conversation. **A new Claude session subscribes to PR #41
+  if it has a tool for that**, and in any case reads the comments posted since its last visit by
+  REST at session start. Comments wait on #41; nothing is lost between sessions.
 
 ## Pull requests: who reviews and merges
 
