@@ -34,13 +34,14 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 3a. ~~Confirm screens: a short A tap stays on the screen and resets the hold bar~~ merged in #91, device-verified. **Grok**
 3b. ~~Settings → System layout~~ merged in #91, device-verified. Reset All still to come = Redux's own `/mnt/data/redux/` settings to defaults only, 3 s hold. **Grok**
 3c. ~~persistent volume~~ (#94, device-verified) → ~~brightness~~ merged in #102 (Settings > Display, 1–20) → ~~TF2 ROM scan~~ merged in #104 (TF1 + TF2 merged per system). Brightness and TF2 **not device-checked yet**. **Claude**
-4. App Center (local launcher, option A, [decision](2026-11-13-dale-decision-app-center.md)) **Claude, next** · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. ~~TF2 scan~~ (#104) · 8. 640×480 boot logo (Dale-only installer)
+4. App Center (local launcher, option A, [decision](2026-11-13-dale-decision-app-center.md); menu option A, [decision](2026-11-13-dale-decision-app-center-menu.md); .dge cd fix #115) **Claude, in progress** · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. ~~TF2 scan~~ (#104) · 8. 640×480 boot logo (Dale-only installer)
 - L3/R3 (313/316): stay unmapped, left available for mapping later ([decision](2026-11-12-dale-decision-brightness-l3r3.md)).
 - Backlog: **DOS Mode** (Dale: keep the development menu style as a DOS Mode option alongside BIOS Mode; he'll define the layout as menus grow), ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM upload after an ownership acknowledgement), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
 ## Open notes
 - [2026-11-13-dale-decision-grok-suspended.md](2026-11-13-dale-decision-grok-suspended.md): dale → all (Grok suspended; Claude solo; replaces "sidelined")
 - [2026-11-13-dale-decision-app-center.md](2026-11-13-dale-decision-app-center.md): dale → all (App Center = local launcher, no downloads)
+- [2026-11-13-dale-decision-app-center-menu.md](2026-11-13-dale-decision-app-center-menu.md): dale → all (option A: four menu entries launch stock apps, plus a top-level Apps list)
 - [2026-11-13-dale-decision-claude-runs-phase.md](2026-11-13-dale-decision-claude-runs-phase.md): dale → all (Claude builds and merges this phase; Grok on call)
 - [2026-11-12-dale-decision-brightness-l3r3.md](2026-11-12-dale-decision-brightness-l3r3.md): dale → grok (brightness go, 1–20 in config; L3/R3 stay unmapped)
 - [2026-11-12-dale-decision-volume-stages.md](2026-11-12-dale-decision-volume-stages.md): dale → all (Redux Vol+/- is the hardware master; RetroArch keeps its own trim. Not a defect; do not add code to sync the two numbers)
