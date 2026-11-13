@@ -11,7 +11,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 | Frontend | F1: desktop prototype | **done**, signed off by Dale 2026-11-10 | grok + claude | — |
 | Frontend | F2: launch parity on stock | **done**, signed off by Dale 2026-11-12 ([note](2026-11-12-dale-phase-gate-f2-signed-off.md)) | grok | — (Loading ROM splash confirmed on device) |
 
-## Handoff (2026-11-13 00:35, Claude): start here in a new chat
+## Handoff (2026-11-13 01:35, Claude; refreshed 02:30): start here in a new chat
 - **Read [handoff-2026-11-13-3.md](handoff-2026-11-13-3.md) next** (current state, setup left for the first Project chat, next task), then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project.
 - Previous chats archived as: **Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI and Expert Mode plans**; **Redux 2026-11-12→11-12: F2 sign-off, page jump, MAME + 27 systems, ROM cap, Beta roadmap**; **Redux 2026-11-12→11-12: device test, button remap, Wi-Fi verify, stock V1.0.6 diff, power menu**; **Redux 2026-11-12: volume, accent bars, native arm64 CI**; **Redux 2026-11-12→11-13: Claude takeover, brightness, TF2 ROM scan, App Center plan, agent harness, command words**
 - **Deploy only from main's CI runs** (the arm64 artifact). The title bar shows `v0.1-dev - <sha>` and must match main's **merge** commit. A SHA not in `git log` is GitHub's PR merge preview. Testing an unmerged PR's own build is fine; say so.
@@ -22,8 +22,9 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 **2026-11-13: Grok is suspended; Claude runs the project solo ([decision](2026-11-13-dale-decision-grok-suspended.md), `GROK.md` to reinstate).** Every queue item below is Claude's, whatever its old owner marker.
 
 ## Waiting on Dale
-- Device tests in the **Device test queue, issue #109**, from **Releases → dev**: Settings > Display brightness (Left/Right, survives reboot, never dark); TF2 games appear in Game Room, merged with TF1, and launch.
-- Optional device checks: #95 accent hold bars, and that the native-runner artifact runs.
+- Device tests in the **Device test queue, issue #109** (pinned), from **Releases → dev**: #102 brightness, #104 TF2 ROMs, #88 Wi-Fi connect, #85 buttons; optional #95 accent bars. Deploy only a dev build whose SHA is a **merge** commit (the release at `f3ecab1` was an ACTIVITY commit; #117 fixes that from the next merge on).
+- App Center menu placement: **decided, option A** (#116). Nothing waiting.
+- Dale's local clone `Documents\GitHub\Anbernic_RG34XXSP_Redux` is at `0afecd9` (#82), CRLF-only diffs. Before building from it: `git config core.autocrlf true && git fetch && git reset --hard origin/main`.
 
 ## Queue (inbox #41 is the source of truth; in order)
 1. ~~Wi-Fi part 2: Connecting and result screens~~ merged in #73 (device test 2026-11-12: connect failed; fixed in #88). **Grok**
@@ -41,22 +42,16 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 ## Open notes
 - [2026-11-13-dale-decision-grok-suspended.md](2026-11-13-dale-decision-grok-suspended.md): dale → all (Grok suspended; Claude solo; replaces "sidelined")
 - [2026-11-13-dale-decision-app-center.md](2026-11-13-dale-decision-app-center.md): dale → all (App Center = local launcher, no downloads)
+- [2026-11-13-claude-message-stock-apps.md](2026-11-13-claude-message-stock-apps.md): claude → dale, all (stock apps and how dmenu.bin launches them; .dge needs cd, #114/#115)
 - [2026-11-13-dale-decision-app-center-menu.md](2026-11-13-dale-decision-app-center-menu.md): dale → all (option A: four menu entries launch stock apps, plus a top-level Apps list)
 - [2026-11-13-dale-decision-claude-runs-phase.md](2026-11-13-dale-decision-claude-runs-phase.md): dale → all (Claude builds and merges this phase; Grok on call)
 - [2026-11-12-dale-decision-brightness-l3r3.md](2026-11-12-dale-decision-brightness-l3r3.md): dale → grok (brightness go, 1–20 in config; L3/R3 stay unmapped)
 - [2026-11-12-dale-decision-volume-stages.md](2026-11-12-dale-decision-volume-stages.md): dale → all (Redux Vol+/- is the hardware master; RetroArch keeps its own trim. Not a defect; do not add code to sync the two numbers)
 - [2026-11-12-dale-hw-result-build-0afecd9.md](2026-11-12-dale-hw-result-build-0afecd9.md): dale → all (0afecd9 on device: Colors, System Tools, Saturn pass; Wi-Fi connect fails, nmcli exits 0 on error)
 - [2026-11-12-claude-message-stock-v106-diff.md](2026-11-12-claude-message-stock-v106-diff.md): claude → all (stock V1.0.6 supports revised boards; 2025-based boot.img must not go on them)
-- [2026-11-12-claude-review-system-tools.md](2026-11-12-claude-review-system-tools.md): closed (fixed in 5258c5d, merged as #74)
-- [2026-11-12-claude-message-grok-next.md](2026-11-12-claude-message-grok-next.md): claude → grok (Wi-Fi part 2 done in #73; System Tools in #74)
-- Done since the handoff: wait screens (#62, merged); F2 signed off; Left/Right page jump (#63, Claude, open).
-- [2026-11-11-grok-review-request-system-defaults.md](2026-11-11-grok-review-request-system-defaults.md): grok → claude (Stock Menu moved; #49 already merged)
-- [2026-11-11-grok-review-request-back-to-stock.md](2026-11-11-grok-review-request-back-to-stock.md): closed (merged as #49; row has since moved)
-- [2026-11-10-grok-review-request-f2-rom-list.md](2026-11-10-grok-review-request-f2-rom-list.md): grok → claude (ROM list, merged with #43)
 - [2026-11-10-dale-hw-result-f2-menu-on-device.md](2026-11-10-dale-hw-result-f2-menu-on-device.md): dale → all (F2 menu on device)
 - [2026-11-10-dale-decision-eng-tabs-back.md](2026-11-10-dale-decision-eng-tabs-back.md), [text-size](2026-11-10-dale-decision-text-size.md), [power-management](2026-11-10-dale-decision-power-management.md): decisions → grok
 - [2026-11-10-dale-hw-result-phase1-boot.md](2026-11-10-dale-hw-result-phase1-boot.md): dale → all (Phase 1 boots)
-- [2026-11-10-claude-phase-start-f2-launch-parity.md](2026-11-10-claude-phase-start-f2-launch-parity.md): claude → grok
 - [2026-11-10-claude-message-f3-font-picker.md](2026-11-10-claude-message-f3-font-picker.md): claude → grok (F3, FYI)
 - [2026-11-10-claude-milestone-ram-system-design.md](2026-11-10-claude-milestone-ram-system-design.md): claude → all (FYI)
 
