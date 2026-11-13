@@ -6,7 +6,7 @@
    downloads, copies or deletes. Paths from notes/2026-11-13-claude-message-stock-apps.md. */
 
 typedef enum {
-    APP_MUSIC, APP_VIDEO, APP_EBOOK_TF1, APP_EBOOK_TF2, APP_FILES, APP_PDF, APP_TERMINAL,
+    APP_MUSIC, APP_VIDEO, APP_EBOOK_TF1, APP_EBOOK_TF2, APP_FILES, APP_PDF, APP_TERMINAL, APP_TOP,
     APP_COUNT
 } app_id_t;
 

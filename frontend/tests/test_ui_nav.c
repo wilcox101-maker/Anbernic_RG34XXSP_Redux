@@ -750,8 +750,8 @@ int main(void) {
         grid_dump(dump, sizeof dump);
         expect(strstr(dump, "Not installed on this device") != NULL, "missing app says not installed");
     }
-    down(APP_TERMINAL); press(LB_A);
-    expect(ui_should_exit() == 0, "Terminal is not launchable yet");
+    down(APP_PDF); press(LB_A);
+    expect(ui_should_exit() == 0, "PDF Reader is not launchable yet");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Apps returns to Main");
 
@@ -773,6 +773,23 @@ int main(void) {
     }
     remove("/tmp/redux-next-apps");
     remove("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
+
+    /* Task Monitor: SimpleTerminal from rootfs with -e top. */
+    mkdir("/tmp/redux-apps/mnt/mod", 0755); mkdir("/tmp/redux-apps/mnt/mod/ctrl", 0755);
+    write_empty("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
+    ui_init();
+    down(5); press(LB_A);              /* Apps */
+    down(APP_TOP); press(LB_A);
+    expect(ui_should_exit() == 1, "Task Monitor launches");
+    {
+        char line[256] = "";
+        FILE *f = fopen("/tmp/redux-next-apps", "r");
+        if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
+        expect(strcmp(line, "cd '/mnt/mod/ctrl' && HOME=/root ./'SimpleTerminal' -e top\n") == 0,
+               "Task Monitor runs SimpleTerminal -e top from its folder");
+    }
+    remove("/tmp/redux-next-apps");
+    remove("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
     apps_set_root("");
 
     /* Card Scripts switch (Ports option B): Off by default, 3 s hold to turn on, one press off. */

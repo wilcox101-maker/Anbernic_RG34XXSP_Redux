@@ -23,4 +23,9 @@ void launcher_set_next_path(const char *path);
    Does not call exit(). */
 int launcher_start(launch_target_t target, const char *core, const char *rom_path);
 
+/* A program on internal storage, run from its own folder: cd '<dir>' && <env> ./'<name>' <args>.
+   env and args are fixed strings from Redux's own tables, written as given (not quoted);
+   either may be NULL. Returns 0 or -1, like launcher_start. */
+int launcher_start_app(const char *bin, const char *env, const char *args);
+
 #endif
