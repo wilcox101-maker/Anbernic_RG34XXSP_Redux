@@ -10,6 +10,7 @@
 #include "stockmenu.h"
 #include "power.h"
 #include "volume.h"
+#include "brightness.h"
 #include "sysinfo.h"
 #include "grid.h"
 #include <stdio.h>
@@ -599,6 +600,31 @@ int main(void) {
         expect(strstr(dump, "Amber  (current)") != NULL, "saved accent reloads as current");
     }
     remove("/tmp/redux.theme");
+
+    /* Display: Settings → Display; Left/Right steps brightness 1-20 and saves; B returns. */
+    remove("/tmp/redux.brightness");
+    ui_init();
+    down(7); press(LB_A);          /* Settings */
+    press(LB_A);                   /* Display (row 0) */
+    expect(ui_screen() == SCREEN_DISPLAY, "Settings → Display opens Display");
+    {
+        int start = brightness_get();
+        press(LB_RIGHT);
+        expect(brightness_get() == start + 1 || start == BRIGHTNESS_MAX, "Right raises brightness");
+        for (int i = 0; i < 40; i++) press(LB_LEFT);
+        expect(brightness_get() == BRIGHTNESS_MIN, "Left stops at the minimum, never 0");
+        press(LB_RIGHT); press(LB_RIGHT);
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, " 3/20") != NULL, "Display shows the level out of 20");
+        expect(ui_screen() == SCREEN_DISPLAY, "Left/Right stay on Display");
+    }
+    press(LB_B);
+    expect(ui_screen() == SCREEN_SETTINGS, "B from Display returns to Settings");
+    ui_init();
+    expect(brightness_get() == 3, "saved brightness reloads");
+    remove("/tmp/redux.brightness");
 
     /* Restart / Power Off: one A does nothing; 3 s hold runs the hook once; B cancels. */
     power_set_run(power_hook);

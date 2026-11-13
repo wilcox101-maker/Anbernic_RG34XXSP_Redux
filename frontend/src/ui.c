@@ -10,6 +10,7 @@
 #include "stockmenu.h"
 #include "power.h"
 #include "volume.h"
+#include "brightness.h"
 #include "sysinfo.h"
 #include <stdio.h>
 #include <string.h>
@@ -33,7 +34,7 @@ enum { MAIN_GAME_ROOM = 0, MAIN_INTERNET = 5, MAIN_NETWORK = 6, MAIN_SETTINGS = 
 static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "System", "Emulation", "UI"
 };
-enum { SETTINGS_SYSTEM = 4, SETTINGS_UI = 6 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
+enum { SETTINGS_DISPLAY = 0, SETTINGS_SYSTEM = 4, SETTINGS_UI = 6 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
 enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3 };
 typedef struct { const char *label; int selectable; int action; } system_row_t;
 static const system_row_t system_rows[] = {
@@ -269,6 +270,7 @@ void ui_init(void) {
     should_exit = 0; back_top = 0; eng_tab = ENG_CPU; sys_index = 0; screen = SCREEN_MAIN;
     theme_load();
     volume_load();
+    brightness_load();   /* no saved file: leave the hardware level as stock set it */
     ui_busy("Scanning for ROMs", NULL);
     romscan_init();
     go_replace(SCREEN_MAIN);
@@ -567,6 +569,12 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
 
     if (screen == SCREEN_WIFI && btn == LB_Y) { wifi_rescan(); return; }
 
+    if (screen == SCREEN_DISPLAY && (btn == LB_LEFT || btn == LB_RIGHT)) {
+        brightness_step(btn == LB_RIGHT ? +1 : -1);
+        dirty = 1;
+        return;
+    }
+
     if ((screen == SCREEN_ROMS || screen == SCREEN_SYSTEMS) && (btn == LB_LEFT || btn == LB_RIGHT)) {
         page(btn == LB_RIGHT ? +1 : -1);
         return;
@@ -594,6 +602,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (btn == LB_A && screen == SCREEN_SETTINGS) {
+        if (selected == SETTINGS_DISPLAY) go(SCREEN_DISPLAY);
         if (selected == SETTINGS_SYSTEM)  go(SCREEN_SYSTEM_DEFAULTS);
         if (selected == SETTINGS_UI)      go(SCREEN_UI_COLORS);
         return;
@@ -818,6 +827,18 @@ void ui_draw(void) {
         frame("Settings", "A:Enter  B:Back  M:Menu", 1, 0);
         list(0, settings_items, COUNT(settings_items));
         break;
+    case SCREEN_DISPLAY: {
+        frame("Settings > Display", "Left/Right:Brightness  B:Back  M:Menu", 1, 0);
+        int lvl = brightness_get();
+        char bar[BRIGHTNESS_MAX + 1], line[80];
+        for (int i = 0; i < BRIGHTNESS_MAX; i++) bar[i] = i < lvl ? '#' : '.';
+        bar[BRIGHTNESS_MAX] = '\0';
+        snprintf(line, sizeof line, "  Brightness  [%s]  %2d/%d", bar, lvl, BRIGHTNESS_MAX);
+        body(0, line);
+        grid_invert(ROW_BODY0, 0, 1);
+        body(2, "  Applies at once. Saved. Never goes fully dark.");
+        break;
+    }
     case SCREEN_UI_COLORS: {
         frame("Colors", "A:Select  B:Back  M:Menu", 1, 0);
         for (int i = 0; i < N_PRESETS; i++) {
