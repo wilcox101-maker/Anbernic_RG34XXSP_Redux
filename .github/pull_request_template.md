@@ -10,7 +10,7 @@
 - [ ] Other
 
 ## Checklist
-- [ ] Work is on a `grok/` or `claude/` branch (not pushed straight to main)
+- [ ] Work is on a `claude/` branch (or `grok/` when Grok is active) (not pushed straight to main)
 - [ ] If a note event occurred, the note and `notes/STATUS.md` are updated in this PR
 - [ ] `notes/ACTIVITY.md` line was appended on main (or will be)
 - [ ] No Anbernic binaries, ROMs, or BIOS files are included
@@ -26,9 +26,14 @@
 - Build + test output (paste, or "CI green" with the run link):
 - For each review item: addressed in `<file>` (`<commit>`)
 
+## Not verified on device
+<!-- One bullet per thing Dale must check on the RG34XXSP. Merging copies these into the
+     "Device test queue" issue automatically. Write "- none" for docs/CI-only PRs. -->
+- 
+
 ## Test plan
 - [ ] <!-- How to verify. Note anything not yet tested on real hardware. -->
 
-## Reviewers
-- [ ] Claude (if frontend or shared docs)
-- [ ] Dale (phase-gate or sign-off required)
+## Review
+- [ ] Self-review done (solo mode, CLAUDE.md): CI green, hard rules checked against the diff
+- [ ] Dale required (phase-gate, hard-rule change, boot chain/partition write, security item)

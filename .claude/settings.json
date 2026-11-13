@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python tools/*)",
+      "Bash(python3 tools/*)",
+      "Bash(cmake *)",
+      "Bash(ctest *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git switch*)",
+      "Bash(git checkout -b *)",
+      "Bash(gh api repos/wilcox101-maker/anbernic_rg34xxsp_redux/*)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(git commit*)",
+      "Bash(python tools/deploy_frontend.py*)",
+      "Bash(python phase1-stock-tweaks/*)",
+      "Bash(ssh *)",
+      "Bash(scp *)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git add -A*)",
+      "Bash(git add .*)",
+      "Bash(dd *)",
+      "Bash(mkfs*)",
+      "Bash(format *)"
+    ]
+  }
+}

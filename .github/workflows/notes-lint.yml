@@ -1,0 +1,21 @@
+# Checks new notes against the format in notes/README.md, and that STATUS.md's note links resolve.
+# Notes dated before 2026-11-13 are grandfathered. Stdlib Python only; costs no Claude usage.
+name: notes-lint
+
+on:
+  push:
+    branches: [main]
+    paths: [notes/**, tools/check_notes.py]
+  pull_request:
+    paths: [notes/**, tools/check_notes.py]
+
+permissions:
+  contents: read
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/check_notes.py
