@@ -24,8 +24,10 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - **Not yet device-checked:** #95 accent hold bars (a solid accent block replaced the white stipple — check it reads well on the darker presets), and #97's artifact (the first binary built on the native arm64 runner; confirm it still runs before trusting the new pipeline).
 - Lessons: `git add -A` committed build output once (#79, closed); `.gitignore` now excludes build dirs, so use explicit paths. Force-push is blocked here; open a new PR instead. A PR's fake nmcli must match the device's real output format (#88). The emulated arm64 job's apt/dpkg failures are gone with #97 — if arm64 fails now, it is real. The arm64 job went from 2m33s to 49s.
 
+**2026-11-13: Claude runs this phase; Grok is sidelined until Dale calls him in ([decision](2026-11-13-dale-decision-claude-runs-phase.md)).** Queue items below are Claude's unless marked otherwise.
+
 ## Waiting on Dale
-- Merge #99 (Grok: dated handoff file in the SWAP routine; Claude reviewed it clean, Claude's merge was blocked).
+- Close #101 (Grok's brightness PR, replaced by #102; Claude's close was blocked by a permission check).
 - Optional device checks: #95 accent hold bars, and that the native-runner artifact runs.
 
 ## Queue (inbox #41 is the source of truth; in order)
@@ -36,12 +38,13 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 3. ~~BIOS-style UI, colour presets~~ (#81/#82) and ~~Restart/Power Off~~ (#89, device-verified). **Grok**
 3a. ~~Confirm screens: a short A tap stays on the screen and resets the hold bar~~ merged in #91, device-verified. **Grok**
 3b. ~~Settings → System layout~~ merged in #91, device-verified. Reset All still to come = Redux's own `/mnt/data/redux/` settings to defaults only, 3 s hold. **Grok**
-3c. Grok's task list from Dale (one at a time, CHECKPOINT + "proceed?" each): ~~persistent volume~~ merged in #94, device-verified → **brightness** (AXP2202 attribute; range 1–20, never 0, min/max/default in config; **go**, [decision](2026-11-12-dale-decision-brightness-l3r3.md)) → TF2 ROM scan. **Grok**
+3c. Grok's task list from Dale (one at a time, CHECKPOINT + "proceed?" each): ~~persistent volume~~ merged in #94, device-verified → **brightness** (1–20, never 0, in config; [decision](2026-11-12-dale-decision-brightness-l3r3.md)) in #102, Grok's module rewired by Claude → TF2 ROM scan. **Claude**
 4. App Center · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. TF2 scan · 8. 640×480 boot logo (Dale-only installer)
 - L3/R3 (313/316): stay unmapped, left available for mapping later ([decision](2026-11-12-dale-decision-brightness-l3r3.md)).
 - Backlog: **DOS Mode** (Dale: keep the development menu style as a DOS Mode option alongside BIOS Mode; he'll define the layout as menus grow), ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM upload after an ownership acknowledgement), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
 ## Open notes
+- [2026-11-13-dale-decision-claude-runs-phase.md](2026-11-13-dale-decision-claude-runs-phase.md): dale → all (Claude builds and merges this phase; Grok on call)
 - [2026-11-12-dale-decision-brightness-l3r3.md](2026-11-12-dale-decision-brightness-l3r3.md): dale → grok (brightness go, 1–20 in config; L3/R3 stay unmapped)
 - [2026-11-12-dale-decision-volume-stages.md](2026-11-12-dale-decision-volume-stages.md): dale → all (Redux Vol+/- is the hardware master; RetroArch keeps its own trim. Not a defect; do not add code to sync the two numbers)
 - [2026-11-12-dale-hw-result-build-0afecd9.md](2026-11-12-dale-hw-result-build-0afecd9.md): dale → all (0afecd9 on device: Colors, System Tools, Saturn pass; Wi-Fi connect fails, nmcli exits 0 on error)
