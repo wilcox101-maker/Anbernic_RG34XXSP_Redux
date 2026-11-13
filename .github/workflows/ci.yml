@@ -1,9 +1,12 @@
 # Runs on every push and PR. A red X means: don't review, fix first.
+# A push to main that only appends an ACTIVITY.md line is skipped: it changes no code, and building
+# it would make dev-build publish a non-merge SHA (see dev-build.yml).
 name: ci
 
 on:
   push:
     branches: [main]
+    paths-ignore: [notes/ACTIVITY.md]
   pull_request:
 
 jobs:

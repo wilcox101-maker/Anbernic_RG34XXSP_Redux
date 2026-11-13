@@ -47,22 +47,13 @@ other chats don't pick them up.
 
 ---
 
-## 3. First Project chat: one-time setup
+## 3. First Project chat: one-time setup (done 2026-11-13)
 
-Send this as the first message in the Project. Most of the old setup list is already done on main
-(#107 harness, #108 Grok suspended and the hourly check paused, #101 closed, first dev release at
-`3fc4cad`).
+Done in the first Project chat (ACTIVITY 2026-11-13 01:45): #111/#112/#113 merged, Device test
+queue #109 pinned, STATUS's Handoff points new chats at `HELLO` in the Project. Project chats have
+no tool to subscribe to #41, so each session reads it by REST at start (CLAUDE.md).
 
-```
-HELLO. One-time setup, then continue with the handoff's next task:
-1. Confirm #111 (test-queue footer fix) and the follow-up harness PR (commands.md, project-setup.md, model checkpoints) are merged; merge them if CI is green.
-2. Create and pin the "Device test queue" issue if it doesn't exist yet, seeded with the device checks in handoff-2026-11-13-2.md (#102 brightness, #104 TF2 ROMs, #95 accent bars, #88 Wi-Fi connect).
-3. Subscribe to the Claude inbox, PR #41.
-4. Point STATUS.md's Handoff at this Project ("new chats: HELLO in the Redux Project").
-Then BRIEF, and start the App Center first checkpoint.
-```
-
-After that, every new chat in the Project needs only: **`HELLO`**
+Every new chat in the Project needs only: **`HELLO`**
 
 ---
 
@@ -80,7 +71,8 @@ Type the shortcut anywhere (Claude, GitHub) and it expands at once.
 | `rdale` | `DALE: ` *(GitHub comments)* |
 | `rbye` | `BYE. Park at a safe point and list what waits on me.` |
 | `rqwen` | `QWEN ` |
-| `rsetup` | the section 3 first-chat message |
+
+(`rsetup`, the one-time setup message, is retired: setup is done. Delete it from the .ahk file.)
 
 The one-word commands (HELLO, GO, HOLD, NEXT, TEST, SHIP, BRIEF) are already as short as they get.
 
@@ -91,8 +83,8 @@ The one-word commands (HELLO, GO, HOLD, NEXT, TEST, SHIP, BRIEF) are already as 
 - **Watch the repo** (github.com, Watch → Custom): Issues, Pull requests, Releases. Releases tells
   you each time a new dev build is ready.
 - **Actions alerts** (github.com/settings/notifications): Actions → only failed workflows, by web
-  and email. That covers what the paused "Redux CI hourly check" did, using none of your Claude
-  usage; leave it paused.
+  and email. That covers what the old "Redux CI hourly check" scheduled task did, using none of
+  your Claude usage. (As of 2026-11-13 it no longer appears in the account's scheduled tasks.)
 - **Pin** the "Device test queue" issue. In a device session, open it, deploy the build named at the
   top of Releases → dev, and tick what passes.
 - **Comments:** start with `DALE:` (`rdale`), e.g. `DALE: HOLD` on #41. The next Claude session reads it.

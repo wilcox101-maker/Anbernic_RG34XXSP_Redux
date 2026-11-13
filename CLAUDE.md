@@ -38,8 +38,9 @@ Dale's decision of 2026-11-13: Claude runs the project alone until Dale reinstat
 1. Dale's opener: **`HELLO`** inside the Redux Project (its instructions are in
    `docs/project-setup.md`), or *"Approve repo push access. Read AGENTS.md and notes/STATUS.md, then
    continue."* outside it. Attach the repo with **push** access before anything else.
-2. Subscribe to the Claude inbox, **PR #41**, then read comments posted since the last
-   `ACTIVITY.md` line by `claude`.
+2. Read the Claude inbox, **PR #41**, by REST (Tooling notes): comments posted since the last
+   `ACTIVITY.md` line by `claude`. Subscribe to it too if the session has a tool for that (Project
+   chats so far haven't).
 3. Read: last 20 lines of `notes/ACTIVITY.md` → `notes/STATUS.md` Handoff → the handoff file it
    points at → open notes addressed to `claude` or `all`.
 

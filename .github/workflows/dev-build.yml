@@ -38,9 +38,12 @@ jobs:
       - name: Skip if main has moved on
         id: latest
         run: |
-          head=$(gh api "repos/$REPO/commits/main" --jq .sha)
-          if [ "$head" != "$SHA" ]; then
-            echo "main is at ${head:0:7}, this run built ${SHA:0:7}; the newer run will publish."
+          # Skip only if main has moved on with something other than ACTIVITY.md lines (those
+          # pushes don't run ci, so nothing newer would publish). Keeps the dev SHA a merge commit.
+          other=$(gh api "repos/$REPO/compare/$SHA...main" \
+                  --jq '[.files[]?.filename | select(. != "notes/ACTIVITY.md")] | length')
+          if [ "${other:-0}" != "0" ]; then
+            echo "main has newer changes than ${SHA:0:7}; the newer run will publish."
             echo "skip=1" >> "$GITHUB_OUTPUT"
           fi
       - name: Publish to the dev pre-release
