@@ -51,6 +51,8 @@ jobs:
         run: ./build/test_brightness
       - name: Ports tests
         run: ./build/test_ports
+      - name: Bench harness tests (host tool, no device)
+        run: cd tools && python3 -B -m unittest discover -s bench/tests -t .
       - name: Remap tests
         run: |
           if [ -x ./build/test_remap_device ]; then ./build/test_remap_device; fi
