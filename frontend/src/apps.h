@@ -7,6 +7,8 @@
 
 typedef enum {
     APP_MUSIC, APP_VIDEO, APP_EBOOK_TF1, APP_EBOOK_TF2, APP_FILES, APP_PDF, APP_TERMINAL, APP_TOP,
+    /* Tools (Core Apps decision A, 2026-11-13): stock terminal programs in SimpleTerminal. */
+    APP_MIXER, APP_NETWORK, APP_BLUETOOTH, APP_INPUT_TEST, APP_SPEAKER_TEST,
     APP_COUNT
 } app_id_t;
 

@@ -24,6 +24,14 @@ static const app_t apps[APP_COUNT] = {
     [APP_PDF]       = { "PDF Reader", "later (needs a file picker)", NULL },
     [APP_TERMINAL]  = { "Terminal", "not verified", NULL, TERM_BIN, "HOME=/root", NULL },
     [APP_TOP]       = { "Task Monitor (htop)", "not verified", NULL, TERM_BIN, "HOME=/root", "-e htop" },
+    /* Tools: stock Ubuntu programs, each seen present with no missing libraries on Dale's unit
+       (2026-11-13 check). The default ALSA card is the one Redux's volume (amixer) already uses.
+       evtest reads the buttons device without grabbing it, so MENU still quits the terminal. */
+    [APP_MIXER]        = { "Audio Mixer", "not verified", NULL, TERM_BIN, "HOME=/root", "-e alsamixer" },
+    [APP_NETWORK]      = { "Network Setup", "not verified", NULL, TERM_BIN, "HOME=/root", "-e nmtui" },
+    [APP_BLUETOOTH]    = { "Bluetooth", "not verified", NULL, TERM_BIN, "HOME=/root", "-e bluetoothctl" },
+    [APP_INPUT_TEST]   = { "Input Test", "not verified", NULL, TERM_BIN, "HOME=/root", "-e evtest /dev/input/event1" },
+    [APP_SPEAKER_TEST] = { "Speaker Test", "not verified", NULL, TERM_BIN, "HOME=/root", "-e speaker-test -t wav -c 2 -l 1" },
 };
 
 static const char *root = "";
