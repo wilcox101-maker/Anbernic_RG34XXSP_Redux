@@ -22,7 +22,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 **2026-11-13: Grok is suspended; Claude runs the project solo ([decision](2026-11-13-dale-decision-grok-suspended.md), `GROK.md` to reinstate).** Every queue item below is Claude's, whatever its old owner marker.
 
 ## Waiting on Dale
-- **Merge #136** ([Xroot Mode]): it changes AGENTS.md hard-rule wording, so it's yours.
+- **Confirm the title-bar SHA** of the build tested 2026-11-13 08:06 (expected `168c8bc`): the Boot Screen row wasn't seen ([result](2026-11-13-dale-hw-result-app-center-ports-boot.md)).
 - Device tests in the **Device test queue, issue #109** (pinned), from **Releases → dev**: #102 brightness, #104 TF2 ROMs, #88 Wi-Fi connect, #85 buttons; optional #95 accent bars. Deploy only a dev build whose SHA is a **merge** commit (the release at `f3ecab1` was an ACTIVITY commit; #117 fixes that from the next merge on).
 - Dale's local clone `Documents\GitHub\Anbernic_RG34XXSP_Redux` is at `0afecd9` (#82), CRLF-only diffs. Before building from it: `git config core.autocrlf true && git fetch && git reset --hard origin/main`.
 
@@ -36,11 +36,18 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 3b. ~~Settings → System layout~~ merged in #91, device-verified. Reset All still to come = Redux's own `/mnt/data/redux/` settings to defaults only, 3 s hold. **Grok**
 3c. ~~persistent volume~~ (#94, device-verified) → ~~brightness~~ merged in #102 (Settings > Display, 1–20) → ~~TF2 ROM scan~~ merged in #104 (TF1 + TF2 merged per system). Brightness and TF2 **not device-checked yet**. **Claude**
 4. ~~App Center~~ merged in #119 (Apps list; Music/Video/Documents/File Manager launch stock apps; .dge cd fix #115). **Not device-checked yet** (#109). **Claude** · 5. Ports, option B ([decision](2026-11-13-dale-decision-ports.md)): ~~known-ports table~~ merged in #124 (not device-checked); ~~Card Scripts switch~~ merged in #125 (Dale). Neither device-checked yet (#109). **Claude** · 6. ~~Terminal/htop~~ merged in #129: Apps > Terminal and Task Monitor (`top`; stock has no htop), the mod's SimpleTerminal on rootfs. Not device-checked (#109). **Claude** · 7. ~~TF2 scan~~ (#104) · 8. Boot logo: ~~stock-format render~~ merged in #132 (640×480, 921,654 bytes); ~~Boot Screen manager~~ merged in #133 (Dale; writes boot-resource; in-place overwrite, backup + restore). Not device-checked (#109).
+9. **Device result 2026-11-13** ([note](2026-11-13-dale-hw-result-app-center-ports-boot.md)), fixes in this order. **Claude**
+   a. Brightness: bar moves, backlight unchanged; M button fails on Settings > Display
+   b. Boot Screen row not seen (confirm build first; then debug)
+   c. Ports: Y, X, Start, Select don't work in-game (RetroArch input mapping for the port cores)
+   d. Video Player: playing a video drops back to Redux · e. Ebook Reader: M drops back to Redux
+   f. File Manager: screen tears while loading · g. Screen timeout setting (feature; stock timeout is on, Power wakes)
 - Tools: `tools/bench` (#130), Dale's read-only RAM/CPU probe over SSH, for the Phase 1/2 measurements; needs SSH on the device (stock mod's temporary SSH server).
 - L3/R3 (313/316): stay unmapped, left available for mapping later ([decision](2026-11-12-dale-decision-brightness-l3r3.md)).
 - Backlog: **DOS Mode** (Dale: keep the development menu style as a DOS Mode option alongside BIOS Mode; he'll define the layout as menus grow), ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM copy only in **[Xroot Mode]**, after the hidden ownership acknowledgement, [decision](2026-11-13-dale-decision-xroot-mode.md)), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track, **ZRAM: v1.x (after 1.0)** ([decision](2026-11-13-dale-decision-zram-v1x.md)).
 
 ## Open notes
+- [2026-11-13-dale-hw-result-app-center-ports-boot.md](2026-11-13-dale-hw-result-app-center-ports-boot.md): dale → all (device session 08:06: Terminal, Task Monitor, Music, Ports launch PASS; brightness, video, ebook M, port buttons FAIL; Boot Screen not seen)
 - [2026-11-13-dale-decision-xroot-mode.md](2026-11-13-dale-decision-xroot-mode.md): dale → all (ROM copy in the PC link runs in [Xroot Mode], after the hidden ownership acknowledgement; first record of the #41 PC link decision; not Expert Mode)
 - [2026-11-13-dale-decision-zram-v1x.md](2026-11-13-dale-decision-zram-v1x.md): dale → all (ZRAM required for v1.x on mainline, after 1.0; 2 GB default decided later from measurements)
 - [2026-11-13-dale-decision-ports.md](2026-11-13-dale-decision-ports.md): dale → all (Ports option B: known-ports table + card-script switch, default Off)
