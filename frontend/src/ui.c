@@ -583,6 +583,10 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     }
     if (!pressed) return;
 
+    /* M (Menu) goes straight to the Main menu from anywhere. Confirm screens never get here:
+       there, M cancels like any other button. */
+    if (btn == LB_MENU) { ui_show(SCREEN_MAIN); return; }
+
     /* Shoulders are not Wi-Fi navigation. L2/R2 are not logical buttons, so they never get here. */
     if ((screen == SCREEN_WIFI || screen == SCREEN_WIFI_KEY) &&
         (btn == LB_L1 || btn == LB_R1))

@@ -5,6 +5,15 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifdef REDUX_PLATFORM_STOCK
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#define DISP_DEV "/dev/disp"
+#define DISP_LCD_SET_BRIGHTNESS 0x102
+#endif
+
+#define DISP_MIN 16
+#define DISP_MAX 255
 
 #ifdef REDUX_PLATFORM_STOCK
 #define BRIGHTNESS_PATH "/mnt/data/redux/brightness"
@@ -35,15 +44,24 @@ static void save(void) {
     fclose(f);
 }
 
+int brightness_disp_value(int level) {
+    if (level < BRIGHTNESS_MIN) level = BRIGHTNESS_MIN;
+    if (level > BRIGHTNESS_MAX) level = BRIGHTNESS_MAX;
+    return DISP_MIN + (level - BRIGHTNESS_MIN) * (DISP_MAX - DISP_MIN) / (BRIGHTNESS_MAX - BRIGHTNESS_MIN);
+}
+
 int brightness_apply(void) {
     g_last = g_level;
     if (g_write) return g_write(g_level);
 #ifdef REDUX_PLATFORM_STOCK
-    FILE *f = fopen(BRIGHTNESS_SYSFS, "w");
-    if (!f) return -1;
-    int rc = fprintf(f, "%d\n", g_level);
-    fclose(f);
-    return (rc > 0) ? 0 : -1;
+    FILE *f = fopen(BRIGHTNESS_SYSFS, "w");   /* stock's stored value; not the backlight */
+    if (f) { fprintf(f, "%d\n", g_level); fclose(f); }
+    int fd = open(DISP_DEV, O_RDWR);
+    if (fd < 0) return -1;
+    unsigned long args[4] = { 0, (unsigned long)brightness_disp_value(g_level), 0, 0 };
+    int rc = ioctl(fd, DISP_LCD_SET_BRIGHTNESS, args);
+    close(fd);
+    return rc < 0 ? -1 : 0;
 #else
     return -1;   /* a desktop build must not touch sysfs */
 #endif

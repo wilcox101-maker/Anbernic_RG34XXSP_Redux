@@ -19,6 +19,14 @@ int main(void) {
     unlink("/tmp/redux-brightness-test");
 
     check(brightness_get() == BRIGHTNESS_DEFAULT, "default is 5");
+    check(brightness_disp_value(1) == 16, "level 1 is backlight 16, never dark");
+    check(brightness_disp_value(20) == 255, "level 20 is backlight 255");
+    check(brightness_disp_value(0) == 16 && brightness_disp_value(99) == 255, "out-of-range levels clamp");
+    {
+        int prev = 0, up = 1;
+        for (int l = 1; l <= 20; l++) { int v = brightness_disp_value(l); if (v <= prev) up = 0; prev = v; }
+        check(up, "each level is brighter than the one before");
+    }
     brightness_step(+1);
     check(brightness_get() == 6, "step up from default");
     check(calls == 1, "step applies");
