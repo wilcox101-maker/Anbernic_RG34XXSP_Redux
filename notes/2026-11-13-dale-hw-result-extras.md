@@ -25,7 +25,15 @@ From DLN-DALEW2 (PowerShell, repo at `3a2f418`), device at home 192.168.1.13.
   (one ssh session for `--run`; `--check --run` runs the check).
 - 533 packages are upgradable on the device: the no-upgrade guard matters.
 
+## 11:11, after #154: `--check --run`
+One password prompt. htop OK; catalog extras btop, s-tui, ncdu, tmux, mc: MISSING (not installed,
+as expected). Every stock tool links (missing-libs=0): nmcli 1.36.4, bluetoothctl 5.66, evtest 1.33,
+mpv 0.35.0, Python 3.10.12, vim 8.2, git 2.34.1, wget 1.21.2. alsamixer, speaker-test and nmtui have
+no `--version` flag (blank or "unrecognized option"); the check now runs them with `--help`
+(`help_only` in `tools/extras.ini`).
+
 ## Not verified on device
 - The REFUSED path (a package that would upgrade something installed): tests only.
 - Installing a package that is not there yet (btop etc.) through the tool.
-- The full `--check` output across all catalog and stock tools.
+- The `--help` form of the check for alsamixer, speaker-test, nmtui.
+- The combined one-session `--run` (install + check).

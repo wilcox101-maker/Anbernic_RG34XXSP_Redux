@@ -55,6 +55,17 @@ def load(path=CATALOG):
     return items, stock
 
 
+def load_stock_help(path=None):
+    """Stock binaries with no --version flag: the check runs them with --help instead."""
+    cp = configparser.ConfigParser()
+    cp.read(path or CATALOG, encoding="utf-8")
+    names = cp.get("stock", "help_only", fallback="").split()
+    for b in names:
+        if not NAME.match(b):
+            raise ValueError("bad stock binary %r" % b)
+    return set(names)
+
+
 def install_command(packages):
     """Remote shell text: update, simulate, refuse on any upgrade, then install."""
     if not packages:
@@ -71,13 +82,13 @@ def install_command(packages):
             "apt-get install -y %s %s" % (sim, APT_FLAGS, pk))
 
 
-def check_command(items, stock):
+def check_command(items, stock, stock_help=()):
     """Remote shell text: for each program, path, missing libraries and a version line."""
     parts = []
     for it in items:
         parts.append("c %s %s" % (it["binary"], it["check"]))
     for b in stock:
-        parts.append("c %s --version" % b)
+        parts.append("c %s %s" % (b, "--help" if b in stock_help else "--version"))
     fn = ("c() { p=$(command -v $1); if [ -z \"$p\" ]; then echo \"$1: MISSING\"; return; fi; "
           "m=$(ldd \"$p\" 2>/dev/null | grep -c \"not found\"); "
           "v=$(LC_ALL=C timeout 3 \"$p\" $2 </dev/null 2>&1 | head -1); "
@@ -125,11 +136,11 @@ def main(argv=None):
     items, stock = load()
     by_name = {it["package"]: it for it in items}
     if a.check:
-        line = ssh_line(a.ip, check_command(items, stock))
+        line = ssh_line(a.ip, check_command(items, stock, load_stock_help()))
         if not a.run:
             print(line)
             return 0
-        return subprocess.run(["ssh", "root@" + a.ip, check_command(items, stock)]).returncode
+        return subprocess.run(["ssh", "root@" + a.ip, check_command(items, stock, load_stock_help())]).returncode
     if a.select:
         chosen = [p.strip() for p in a.select.split(",") if p.strip()]
         unknown = [p for p in chosen if p not in by_name]
