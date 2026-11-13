@@ -67,6 +67,28 @@ class Commands(unittest.TestCase):
                            capture_output=True, text=True)
         self.assertEqual(r.returncode, 3)
         self.assertIn("REFUSED", r.stdout)
+        # Combined session: a refusal keeps its exit code and skips the check.
+        items, _ = extras.load()
+        both = extras.install_then_check(["htop"], [i for i in items if i["package"] == "htop"])
+        r = subprocess.run(["sh", "-c", both], env=env, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 3)
+        self.assertNotIn("htop |", r.stdout)
+        self.assertNotIn("htop: MISSING", r.stdout)
+
+    def test_install_then_check_runs_check_after_success(self):
+        d = tempfile.mkdtemp()
+        stub = os.path.join(d, "apt-get")
+        with open(stub, "w") as f:
+            f.write("#!/bin/sh\nexit 0\n")
+        os.chmod(stub, 0o755)
+        env = dict(os.environ, PATH=d + os.pathsep + os.environ["PATH"])
+        both = extras.install_then_check(["sh"], [{"binary": "sh", "check": "-c"}])
+        r = subprocess.run(["sh", "-n", "-c", both], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(extras.ssh_line("192.168.1.13", both).count("'"), 2)
+        r = subprocess.run(["sh", "-c", both], env=env, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("sh | ", r.stdout)
 
 
 class Checklist(unittest.TestCase):

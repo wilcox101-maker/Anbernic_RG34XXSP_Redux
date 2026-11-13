@@ -6,6 +6,7 @@
     python tools/extras.py --ip 172.16.3.178    # device address (default 192.168.1.13)
     python tools/extras.py --run                # also runs the install over ssh, after a y/N
     python tools/extras.py --check              # prints the functional check only
+    python tools/extras.py --check --run        # runs the functional check over ssh
 
 The install never upgrades anything. StockOS is a full Ubuntu, but an upgrade can break the
 library paths RetroArch needs (cbepx-me, StockOS-Modification issue #300). So the generated
@@ -84,6 +85,13 @@ def check_command(items, stock):
     return fn + "; ".join(parts)
 
 
+def install_then_check(packages, items):
+    """One remote session: install (in a subshell, so its exits stay local), then the check
+    only if the install succeeded. Exit code is the install's. One ssh, one password prompt."""
+    return "( %s ); rc=$?; if [ $rc -eq 0 ]; then %s; fi; exit $rc" % (
+        install_command(packages), check_command(items, []))
+
+
 def ssh_line(ip, remote):
     if not HOST.match(ip):
         raise ValueError("bad device address %r" % ip)
@@ -111,14 +119,17 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Install Redux extras on the device over SSH.")
     ap.add_argument("--ip", default=DEFAULT_IP)
     ap.add_argument("--select", help="comma list of packages, skips the checklist")
-    ap.add_argument("--run", action="store_true", help="run the install over ssh after a y/N")
+    ap.add_argument("--run", action="store_true", help="run over ssh: the install after a y/N, or with --check the check")
     ap.add_argument("--check", action="store_true", help="print the functional check only")
     a = ap.parse_args(argv)
     items, stock = load()
     by_name = {it["package"]: it for it in items}
     if a.check:
-        print(ssh_line(a.ip, check_command(items, stock)))
-        return 0
+        line = ssh_line(a.ip, check_command(items, stock))
+        if not a.run:
+            print(line)
+            return 0
+        return subprocess.run(["ssh", "root@" + a.ip, check_command(items, stock)]).returncode
     if a.select:
         chosen = [p.strip() for p in a.select.split(",") if p.strip()]
         unknown = [p for p in chosen if p not in by_name]
@@ -139,12 +150,10 @@ def main(argv=None):
     print("\n2. Check they run:")
     print(check)
     if a.run:
-        if input("\nRun step 1 now on %s? [y/N] " % a.ip).strip().lower() != "y":
+        if input("\nRun steps 1 and 2 now on %s (one ssh session)? [y/N] " % a.ip).strip().lower() != "y":
             return 0
-        rc = subprocess.run(["ssh", "root@" + a.ip, install_command(chosen)]).returncode
-        if rc == 0:
-            subprocess.run(["ssh", "root@" + a.ip, check_command([by_name[p] for p in chosen], [])])
-        return rc
+        remote = install_then_check(chosen, [by_name[p] for p in chosen])
+        return subprocess.run(["ssh", "root@" + a.ip, remote]).returncode
     return 0
 
 

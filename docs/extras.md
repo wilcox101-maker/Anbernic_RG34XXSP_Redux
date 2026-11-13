@@ -14,9 +14,9 @@ htop first (Apps > Task Monitor). `tools/extras.py` installs them over SSH from 
 python tools\extras.py --ip 192.168.1.13
 ```
 Tick what you want (htop is ticked), press Enter, and the tool prints two lines to copy into
-PowerShell: **1. Install**, **2. Check they run**. Add `--run` to have it run them for you, after a
-y/N. `--select htop,btop` skips the checklist; `--check` prints a check for every catalog and stock
-tool.
+PowerShell: **1. Install**, **2. Check they run**. Add `--run` to have it run both for you in one SSH
+session (one password prompt), after a y/N. `--select htop,btop` skips the checklist; `--check`
+prints a check for every catalog and stock tool, and `--check --run` runs it.
 
 ## Safety
 - **Never run `apt upgrade` or `full-upgrade` on the device.** An upgrade can break the library
@@ -30,6 +30,10 @@ tool.
 Add a section to `tools/extras.ini` (package name, binary, a version argument, a description).
 
 ## Seen on Dale's unit (2026-11-13)
+`--select htop --run` from DLN-DALEW2: apt skipped htop (already installed), 0 upgraded, 0 newly
+installed; check `htop | /usr/bin/htop | missing-libs=0 | htop 3.0.5`. The REFUSED path has not
+run on the device (tests only).
+
 Stock and working (library check + version line): alsamixer, speaker-test, nmtui, nmcli,
 bluetoothctl, evtest, mpv, python3 3.10, vim 8.2, git 2.34, wget. htop 3.0.5 after `apt install`.
 **ffmpeg fails** (`libpangoft2` symbol error, `FcWeightFromOpenTypeDouble`): the StockOS Mod's
