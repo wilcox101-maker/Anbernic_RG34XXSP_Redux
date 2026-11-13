@@ -11,8 +11,8 @@ typedef struct {
     const char *bin, *env, *args; /* or a program run from its own folder (launcher_start_app) */
 } app_t;
 /* SimpleTerminal: on rootfs (/mnt/mod/ctrl), not the card. The mod starts it as
-   HOME=/root ./SimpleTerminal; it takes -e <command>, and MENU quits. Stock has no htop; top
-   is in /usr/bin. */
+   HOME=/root ./SimpleTerminal; it takes -e <command>, and MENU quits. htop is stock (Ubuntu
+   package htop 3.0.5, /usr/bin/htop; Dale's device listing 2026-11-13). */
 #define TERM_BIN "/mnt/mod/ctrl/SimpleTerminal" 
 static const app_t apps[APP_COUNT] = {
     [APP_MUSIC]     = { "Music Player", "not verified", "/mnt/vendor/bin/music/ap.dge" },
@@ -22,7 +22,7 @@ static const app_t apps[APP_COUNT] = {
     [APP_FILES]     = { "File Manager", "not verified", "/mnt/vendor/bin/fileM/dinguxCommand_en.dge" },
     [APP_PDF]       = { "PDF Reader", "later (needs a file picker)", NULL },
     [APP_TERMINAL]  = { "Terminal", "not verified", NULL, TERM_BIN, "HOME=/root", NULL },
-    [APP_TOP]       = { "Task Monitor (top)", "not verified", NULL, TERM_BIN, "HOME=/root", "-e top" },
+    [APP_TOP]       = { "Task Monitor (htop)", "not verified", NULL, TERM_BIN, "HOME=/root", "-e htop" },
 };
 
 static const char *root = "";
