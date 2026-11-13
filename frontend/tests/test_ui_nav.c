@@ -668,6 +668,25 @@ int main(void) {
     expect(brightness_get() == 3, "saved brightness reloads");
     remove("/tmp/redux.brightness");
 
+    /* Display row 2: Screen Timeout (Off..30 min, default 5), Down selects it, Left/Right change it. */
+    remove("/tmp/redux.screen_timeout");
+    ui_init();
+    down(8); press(LB_A); press(LB_A);             /* Settings > Display */
+    {
+        int b = brightness_get();
+        press(LB_DOWN); press(LB_RIGHT);
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Screen Timeout  10 min") != NULL, "Down + Right: Screen Timeout 5 -> 10 min");
+        expect(brightness_get() == b, "changing the timeout leaves brightness alone");
+        for (int i = 0; i < 10; i++) press(LB_LEFT);
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Screen Timeout  Off") != NULL, "Left stops at Off");
+    }
+    remove("/tmp/redux.screen_timeout");
+
     /* Restart / Power Off: one A does nothing; 3 s hold runs the hook once; B cancels. */
     power_set_run(power_hook);
     power_calls = 0;

@@ -49,6 +49,8 @@ jobs:
         run: ./build/test_volume
       - name: Brightness tests
         run: ./build/test_brightness
+      - name: Screen timeout tests
+        run: ./build/test_screentimeout
       - name: Ports tests
         run: ./build/test_ports
       - name: Boot Screen manager tests (temp folder, no device)
@@ -116,6 +118,7 @@ jobs:
           ./build-arm64/test_stockmenu
           ./build-arm64/test_volume
           ./build-arm64/test_brightness
+          ./build-arm64/test_screentimeout
           ./build-arm64/test_bootscreen
       - name: Check it is an aarch64 ELF
         run: |

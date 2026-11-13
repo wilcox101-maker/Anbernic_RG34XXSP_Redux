@@ -11,6 +11,7 @@
 #include "power.h"
 #include "volume.h"
 #include "brightness.h"
+#include "screentimeout.h"
 #include "sysinfo.h"
 #include "apps.h"
 #include "cardscripts.h"
@@ -277,6 +278,7 @@ void ui_init(void) {
     theme_load();
     volume_load();
     brightness_load();   /* no saved file: leave the hardware level as stock set it */
+    screentimeout_load();
     ui_busy("Scanning for ROMs", NULL);
     romscan_init();
     go_replace(SCREEN_MAIN);
@@ -305,6 +307,7 @@ static int list_count(void) {
     case SCREEN_APPS:     return apps_count();
     case SCREEN_WIFI:     return wifi_count();
     case SCREEN_SYSTEM_DEFAULTS: return N_SYSTEM_ROWS;
+    case SCREEN_DISPLAY:  return 2;   /* Brightness, Screen Timeout */
     default:              return 0;
     }
 }
@@ -600,7 +603,8 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (screen == SCREEN_WIFI && btn == LB_Y) { wifi_rescan(); return; }
 
     if (screen == SCREEN_DISPLAY && (btn == LB_LEFT || btn == LB_RIGHT)) {
-        brightness_step(btn == LB_RIGHT ? +1 : -1);
+        if (selected == 1) screentimeout_step(btn == LB_RIGHT ? +1 : -1);
+        else               brightness_step(btn == LB_RIGHT ? +1 : -1);
         dirty = 1;
         return;
     }
@@ -930,15 +934,20 @@ void ui_draw(void) {
         list(0, settings_items, COUNT(settings_items));
         break;
     case SCREEN_DISPLAY: {
-        frame("Settings > Display", "Left/Right:Brightness  B:Back  M:Menu", 1, 0);
+        frame("Settings > Display", "Up/Down:Select  Left/Right:Change  B:Back  M:Menu", 1, 0);
         int lvl = brightness_get();
         char bar[BRIGHTNESS_MAX + 1], line[80];
         for (int i = 0; i < BRIGHTNESS_MAX; i++) bar[i] = i < lvl ? '#' : '.';
         bar[BRIGHTNESS_MAX] = '\0';
         snprintf(line, sizeof line, "  Brightness  [%s]  %2d/%d", bar, lvl, BRIGHTNESS_MAX);
         body(0, line);
-        grid_invert(ROW_BODY0, 0, 1);
-        body(2, "  Applies at once. Saved. Never goes fully dark.");
+        int mins = screentimeout_minutes();
+        if (mins) snprintf(line, sizeof line, "  Screen Timeout  %d min", mins);
+        else      snprintf(line, sizeof line, "  Screen Timeout  Off");
+        body(1, line);
+        grid_invert(ROW_BODY0 + (selected == 1), 1, GRID_COLS - 2);
+        body(3, selected == 1 ? "  Idle in this menu that long: sleep. Power wakes."
+                              : "  Applies at once. Saved. Never goes fully dark.");
         break;
     }
     case SCREEN_UI_COLORS: {
