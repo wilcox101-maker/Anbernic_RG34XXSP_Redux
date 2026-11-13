@@ -23,14 +23,28 @@ refs: [AGENTS.md, frontend/src/launcher.c, notes/2026-11-13-claude-message-stock
 AGENTS.md: "Never run code from removable media without an explicit user opt-in." Every port and
 every card app is a script on the Roms card.
 
+## Update 02:35: every stock port is a RetroArch core + a data file
+All 11 scripts in Dale's stock `Roms/PORTS` do one thing: `retroarch -L <core> <data file>`. The six
+cores (`cannonball`, `nxengine`, `dinothawr`, `tyrquake`, `xrick`, `ecwolf`) are in appfs
+`deep/retro/cores`, and every data file named is present on the stock card. So Redux can launch all
+of them the way it launches a ROM, **without running the card's scripts**.
+
+| Port | Core | Data file (under `Roms/PORTS/`) |
+|---|---|---|
+| Cannonball | cannonball | `Cannonball/epr-10187.88` |
+| Cave Story | nxengine | `Cave_Story/Doukutsu.exe` |
+| Dinothawr | dinothawr | `Dinothawr/dinothawr.game` |
+| Quake, Dopa, Hipnotic, Rogue | tyrquake | `id1/PAK0.PAK`, `dopa/`, `hipnotic/`, `rogue/` `pak0.pak` |
+| Rick Dangerous | xrick | `Rick_Dangerous/data.zip` |
+| Wolfenstein 3D, Spear of Destiny, Super 3D Noah's Ark | ecwolf | `Wolfenstein_3D/WL6.ecwolf`, `wsd/SOD.ecwolf`, `Super_3D_Noahs_Ark/n3d.ecwolf` |
+
 ## Options
-- **A. Recommended: one opt-in switch, default Off.** Settings > System gets "Run scripts from the
-  card: Off/On" (3 s hold to turn on, like other confirms). When On, Game Room shows a **Ports**
-  system listing `Roms/PORTS/*.sh`, launched with `cd` into the folder and `bash`. Card `APPS`
-  scripts stay out of the App Center for now (the downloader is a network/update-path item).
-- B. Ask every time: no setting; each port launch shows a hold-to-confirm "Runs a script from the
-  card" screen. Safer, slower every launch.
-- C. Skip card scripts: list only ports we can map to a stock RetroArch core ourselves (Cannonball,
-  Dinothawr...), never running the card's `.sh`. Few ports work this way.
+- **A. Recommended: Ports as a known-ports table, no card scripts.** Game Room gets a **Ports**
+  system built from the table above: each entry shows only if its data file exists, and launches
+  through the existing RetroArch path (core + data file), like any ROM. Nothing from the card runs as
+  code, so no opt-in is needed. New ports later = new table rows.
+- B. A, plus a "Run scripts from the card" switch (Settings > System, default Off, 3 s hold) that
+  also lists any other `Roms/PORTS/*.sh` (third-party ports, PortMaster if ever installed).
+- C. Script switch only (the earlier option A): run the card's `.sh` files once switched on.
 
 Not verified on device: everything above comes from the image and the stock SD copy.
