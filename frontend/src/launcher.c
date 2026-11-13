@@ -4,6 +4,8 @@
 #include <string.h>
 
 static const char *next_path = "/tmp/.next";
+/* run.sh's log on appfs (never the Roms card). */
+#define REDUX_LOG "/mnt/vendor/redux/redux.log"
 
 void launcher_set_next_path(const char *path) {
     next_path = path;
@@ -74,11 +76,19 @@ int launcher_start_video(const char *bin) {
     if (!f) return -1;
     fprintf(f, "cd ");
     fwrite(bin, 1, (size_t)(slash - bin), f);
+    /* Diagnostics (queue 12a, 2026-11-13: two fixes failed on the device with no log): each
+       step's exit code, what the player left in /tmp/.next, and the last output of the player
+       and of the playback go to redux.log. Output is kept in /tmp (RAM) and only its tail is
+       logged. No single quote may appear inside this bash -c string. */
     fprintf(f, " && exec /bin/bash -c '"
-               "while :; do rm -f /tmp/.next; AUDIODEV=hw:2,0 ./%s; "
+               "L=" REDUX_LOG "; T=/tmp/redux-vp.out; "
+               "while :; do rm -f /tmp/.next; AUDIODEV=hw:2,0 ./%s >$T 2>&1; rc=$?; "
+               "{ echo \"[video] player exit=$rc next=$(head -c 300 /tmp/.next 2>/dev/null) ini=$(head -c 200 /tmp/vpRun.ini 2>/dev/null)\"; "
+               "tail -c 600 $T; echo; } >>$L 2>/dev/null; "
                "grep -q FFplay.sh /tmp/.next 2>/dev/null || break; "
-               "mv -f /tmp/.next /tmp/.vpnext; sh /tmp/.vpnext; done; "
-               "rm -f /tmp/vpRun.ini /tmp/.vpnext /tmp/.next'\n", slash + 1);
+               "mv -f /tmp/.next /tmp/.vpnext; sh /tmp/.vpnext >$T 2>&1; rc=$?; "
+               "{ echo \"[video] playback exit=$rc\"; tail -c 600 $T; echo; } >>$L 2>/dev/null; done; "
+               "rm -f /tmp/vpRun.ini /tmp/.vpnext /tmp/.next $T'\n", slash + 1);
     fclose(f);
     return 0;
 }
@@ -152,6 +162,12 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
         } else {
             fprintf(f, "/bin/bash %s ", script);
             if (rom_path) quote(f, rom_path);
+            if (target == LAUNCH_OPENBOR)
+                /* Diagnostics (queue 12b): OpenBOR crashed while loading on the device. Exit
+                   code and the last output go to redux.log. */
+                fprintf(f, " >/tmp/redux-app.out 2>&1; rc=$?; "
+                           "{ echo \"[openbor] exit=$rc\"; tail -c 1200 /tmp/redux-app.out; echo; } "
+                           ">>" REDUX_LOG " 2>/dev/null; rm -f /tmp/redux-app.out");
             fputc('\n', f);
         }
     }

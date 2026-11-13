@@ -40,7 +40,9 @@ int main(void) {
            "cd '/mnt/vendor/bin/music' && AUDIODEV=hw:2,0 ./'ap.dge'\n");
     expect(".dge bare name rejected", LAUNCH_DGE, "ap.dge", NULL, NULL);
     expect("openbor runs the stock script with the pak", LAUNCH_OPENBOR, NULL, "/mnt/mmc/Roms/OPENBOR/Final Fight LNS.pak",
-           "AUDIODEV=hw:2,0 /bin/bash /mnt/vendor/deep/openBOR/scripts/openbor.sh '/mnt/mmc/Roms/OPENBOR/Final Fight LNS.pak'\n");
+           "AUDIODEV=hw:2,0 /bin/bash /mnt/vendor/deep/openBOR/scripts/openbor.sh '/mnt/mmc/Roms/OPENBOR/Final Fight LNS.pak'"
+           " >/tmp/redux-app.out 2>&1; rc=$?; { echo \"[openbor] exit=$rc\"; tail -c 1200 /tmp/redux-app.out; echo; }"
+           " >>/mnt/vendor/redux/redux.log 2>/dev/null; rm -f /tmp/redux-app.out\n");
     expect("card script from its folder", LAUNCH_SCRIPT, "/mnt/mmc/Roms/PORTS/It's.sh", NULL,
            "cd '/mnt/mmc/Roms/PORTS' && AUDIODEV=hw:2,0 /bin/bash ./'It'\\''s.sh'\n");
     expect("script needs a path", LAUNCH_SCRIPT, NULL, NULL, NULL);
@@ -63,13 +65,19 @@ int main(void) {
         const char *path = "test_launcher_video.txt";
         launcher_set_next_path(path);
         int rc = launcher_start_video("/mnt/vendor/bin/video/vp.dge");
-        char got[512] = "";
+        char got[1024] = "";
         FILE *f = fopen(path, "r");
         if (f) { if (!fgets(got, sizeof got, f)) got[0] = '\0'; fclose(f); }
         remove(path);
-        const char *want = "cd /mnt/vendor/bin/video && exec /bin/bash -c 'while :; do rm -f /tmp/.next; "
-            "AUDIODEV=hw:2,0 ./vp.dge; grep -q FFplay.sh /tmp/.next 2>/dev/null || break; "
-            "mv -f /tmp/.next /tmp/.vpnext; sh /tmp/.vpnext; done; rm -f /tmp/vpRun.ini /tmp/.vpnext /tmp/.next'\n";
+        const char *want = "cd /mnt/vendor/bin/video && exec /bin/bash -c '"
+            "L=/mnt/vendor/redux/redux.log; T=/tmp/redux-vp.out; "
+            "while :; do rm -f /tmp/.next; AUDIODEV=hw:2,0 ./vp.dge >$T 2>&1; rc=$?; "
+            "{ echo \"[video] player exit=$rc next=$(head -c 300 /tmp/.next 2>/dev/null) ini=$(head -c 200 /tmp/vpRun.ini 2>/dev/null)\"; "
+            "tail -c 600 $T; echo; } >>$L 2>/dev/null; "
+            "grep -q FFplay.sh /tmp/.next 2>/dev/null || break; "
+            "mv -f /tmp/.next /tmp/.vpnext; sh /tmp/.vpnext >$T 2>&1; rc=$?; "
+            "{ echo \"[video] playback exit=$rc\"; tail -c 600 $T; echo; } >>$L 2>/dev/null; done; "
+            "rm -f /tmp/vpRun.ini /tmp/.vpnext /tmp/.next $T'\n";
         int ok = rc == 0 && strcmp(got, want) == 0;
         printf("%s video player loop\n", ok ? "ok  " : "FAIL");
         if (!ok) { printf("  want: %s  got:  %s", want, got); failures++; }
