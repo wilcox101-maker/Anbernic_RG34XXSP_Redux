@@ -800,7 +800,7 @@ int main(void) {
     remove("/tmp/redux-next-apps");
     remove("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
 
-    /* Task Monitor: SimpleTerminal from rootfs with -e htop (stock /usr/bin/htop). */
+    /* Task Monitor: SimpleTerminal from rootfs with -e htop (/usr/bin/htop; not stock, see apps.c). */
     mkdir("/tmp/redux-apps/mnt/mod", 0755); mkdir("/tmp/redux-apps/mnt/mod/ctrl", 0755);
     write_empty("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
     ui_init();

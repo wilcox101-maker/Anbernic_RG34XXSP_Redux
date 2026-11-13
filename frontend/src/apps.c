@@ -11,8 +11,9 @@ typedef struct {
     const char *bin, *env, *args; /* or a program run from its own folder (launcher_start_app) */
 } app_t;
 /* SimpleTerminal: on rootfs (/mnt/mod/ctrl), not the card. The mod starts it as
-   HOME=/root ./SimpleTerminal; it takes -e <command>, and MENU quits. htop is stock (Ubuntu
-   package htop 3.0.5, /usr/bin/htop; Dale's device listing 2026-11-13). */
+   HOME=/root ./SimpleTerminal; it takes -e <command>, and MENU quits. Task Monitor runs htop
+   (/usr/bin/htop, Ubuntu package htop). Not stock: Dale installed it with apt; Dale's decision
+   2026-11-13 is htop for all, so Redux must supply it on units that lack it (queue item). */
 #define TERM_BIN "/mnt/mod/ctrl/SimpleTerminal" 
 static const app_t apps[APP_COUNT] = {
     [APP_MUSIC]     = { "Music Player", "not verified", "/mnt/vendor/bin/music/ap.dge" },
