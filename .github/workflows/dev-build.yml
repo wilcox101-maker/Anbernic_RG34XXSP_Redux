@@ -1,0 +1,65 @@
+# After CI passes on main, publishes that build as the rolling "dev" pre-release:
+# https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux/releases/tag/dev
+# The page always holds main's newest green arm64 dmenu.bin, its SHA256 and the merge commit, so
+# Dale can download from his phone or PC without digging through Actions artifacts, and can't pick
+# up a PR preview build by mistake. Changes nothing on the device. Costs no Claude usage.
+name: dev-build
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: dev-build
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      RUN_URL: ${{ github.event.workflow_run.html_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: redux-dmenu-bin-aarch64
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Skip if main has moved on
+        id: latest
+        run: |
+          head=$(gh api "repos/$REPO/commits/main" --jq .sha)
+          if [ "$head" != "$SHA" ]; then
+            echo "main is at ${head:0:7}, this run built ${SHA:0:7}; the newer run will publish."
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish to the dev pre-release
+        if: steps.latest.outputs.skip != '1'
+        run: |
+          short=${SHA:0:7}
+          sha256sum dmenu.bin > SHA256SUMS.txt
+          cat > notes.md <<NOTES
+          Rolling build of **main** at \`$short\`. The Redux title bar shows \`v0.1-dev - $short\`.
+
+          - Built and tested by CI: $RUN_URL
+          - Deploy per \`phase1-stock-tweaks/DEPLOY.md\` / \`tools/deploy_frontend.py\`.
+          - Not a release. Device-verified items are listed in \`notes/\`, not here.
+          NOTES
+          if gh release view dev --repo "$REPO" >/dev/null 2>&1; then
+            gh api -X PATCH "repos/$REPO/git/refs/tags/dev" -f sha="$SHA" -F force=true >/dev/null
+            gh release edit dev --repo "$REPO" --title "Dev build $short" --notes-file notes.md --prerelease
+          else
+            gh release create dev --repo "$REPO" --target "$SHA" --prerelease \
+              --title "Dev build $short" --notes-file notes.md
+          fi
+          gh release upload dev dmenu.bin SHA256SUMS.txt --repo "$REPO" --clobber

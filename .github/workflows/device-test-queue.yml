@@ -1,0 +1,73 @@
+# When a PR merges into main, copies its "Not verified on device" bullets into one pinned issue,
+# "Device test queue", as tickable boxes tagged with the merge commit. Dale works through the queue
+# in batches on the device and ticks what passes; Claude reads the issue to write hw-result notes.
+# Comments and issue edits only; costs no Claude usage.
+name: device-test-queue
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: device-test-queue
+  cancel-in-progress: false
+
+jobs:
+  queue:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      PR_NUM: ${{ github.event.pull_request.number }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_BODY: ${{ github.event.pull_request.body }}
+      MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+    steps:
+      - name: Extract untested items
+        id: items
+        run: |
+          python3 - <<'PY'
+          import os, re
+          body = (os.environ.get("PR_BODY") or "").replace("\r\n", "\n")
+          m = re.search(r"^#{2,3}\s*Not verified on (the )?device\s*\n(.*?)(?=^#{1,3}\s|\Z)",
+                        body, re.M | re.S | re.I)
+          items = []
+          if m:
+              for line in m.group(2).splitlines():
+                  t = re.sub(r"^\s*[-*]\s*(\[[ xX]\]\s*)?", "", line).strip()
+                  if not line.strip().startswith(("-", "*")) or not t or t.startswith("<!--"):
+                      continue
+                  if re.fullmatch(r"(none|nothing|n/?a)\.?", t, re.I):
+                      continue
+                  items.append(t)
+          with open("items.txt", "w") as f:
+              f.write("\n".join(items))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"count={len(items)}\n")
+          PY
+      - name: Append to the Device test queue issue
+        if: steps.items.outputs.count != '0'
+        run: |
+          num=$(gh api "repos/$REPO/issues?state=open&labels=device-test&per_page=100" \
+                --jq '[.[] | select(.title=="Device test queue")][0].number // empty')
+          if [ -z "$num" ]; then
+            gh api "repos/$REPO/labels" -f name=device-test -f color=d93f0b \
+              -f description="Needs a run on the real RG34XXSP" >/dev/null 2>&1 || true
+            num=$(gh api "repos/$REPO/issues" -f title="Device test queue" -f labels[]=device-test \
+              -f body="Untested items from merged PRs. Run them in batches on main's newest dev build (Releases → dev), tick what passes, and comment \`DALE:\` with anything that fails." \
+              --jq .number)
+          fi
+          {
+            gh api "repos/$REPO/issues/$num" --jq '.body // ""'
+            printf '\n\n### #%s %s (`%s`)\n' "$PR_NUM" "$PR_TITLE" "${MERGE_SHA:0:7}"
+            sed 's/^/- [ ] /' items.txt
+          } > body.md
+          gh api -X PATCH "repos/$REPO/issues/$num" -F body=@body.md >/dev/null
+          echo "Queued $(wc -l < items.txt | tr -d ' ')+ item(s) on issue #$num"
