@@ -815,6 +815,28 @@ int main(void) {
                "Task Monitor runs SimpleTerminal -e htop from its folder");
     }
     remove("/tmp/redux-next-apps");
+
+    /* Tools (Core Apps A): each runs a stock program in SimpleTerminal. */
+    {
+        static const struct { int app; const char *args; } tools[] = {
+            { APP_MIXER, "-e alsamixer" }, { APP_NETWORK, "-e nmtui" },
+            { APP_BLUETOOTH, "-e bluetoothctl" }, { APP_INPUT_TEST, "-e evtest /dev/input/event1" },
+            { APP_SPEAKER_TEST, "-e speaker-test -t wav -c 2 -l 1" },
+        };
+        for (unsigned t = 0; t < sizeof tools / sizeof tools[0]; t++) {
+            ui_init();
+            down(5); press(LB_A);              /* Apps */
+            down(tools[t].app); press(LB_A);
+            char line[256] = "", want[256];
+            FILE *f = fopen("/tmp/redux-next-apps", "r");
+            if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
+            snprintf(want, sizeof want, "cd '/mnt/mod/ctrl' && HOME=/root ./'SimpleTerminal' %s\n", tools[t].args);
+            char label[96];
+            snprintf(label, sizeof label, "Tools: %s launches", apps_name(tools[t].app));
+            expect(ui_should_exit() == 1 && strcmp(line, want) == 0, label);
+            remove("/tmp/redux-next-apps");
+        }
+    }
     remove("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
     apps_set_root("");
 

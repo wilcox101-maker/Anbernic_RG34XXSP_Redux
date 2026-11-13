@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-13
 re: Dale 2026-11-13 10:00 "What is installed and stock but not utilized? Consider adding as Core App."
-status: open
+status: decided
 ---
 
 # Installed on the device but not used by Redux: Core App candidates
@@ -40,3 +40,7 @@ device reached its package sources and installed cleanly (the path an installer 
 - C. OpenBOR only; leave the tools in the Terminal for those who know them.
 
 Not verified on device: any of these launched from Redux.
+
+## Dale's answer, 2026-11-13 10:16: **A**
+Five Tools apps in the Apps list (after Task Monitor), then OpenBOR in Game Room. The Tools rows sit
+flat in the Apps list rather than in a sub-screen (13 rows fit); a Tools sub-screen can come later.
