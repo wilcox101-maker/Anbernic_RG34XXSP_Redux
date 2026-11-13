@@ -248,6 +248,7 @@ static void engine_name(const system_entry_t *sys, char *out, size_t n) {
         else snprintf(out, n, "RetroArch");
     } else if (sys->target == LAUNCH_PPSSPP) snprintf(out, n, "PPSSPP");
     else if (sys->target == LAUNCH_DRASTIC) snprintf(out, n, "Drastic");
+    else if (sys->target == LAUNCH_OPENBOR) snprintf(out, n, "OpenBOR");
     else if (sys->target == LAUNCH_PCSX) snprintf(out, n, "PCSX");
     else if (sys->target == LAUNCH_PORTMASTER) snprintf(out, n, "PortMaster");
     else if (sys->target == LAUNCH_SCRIPT) snprintf(out, n, "Script from the card");
