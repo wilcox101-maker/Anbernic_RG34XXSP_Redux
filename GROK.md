@@ -2,13 +2,16 @@
 
 **Grok is suspended (Dale, 2026-11-13). Claude runs the project solo.** This file is kept so Grok
 can be brought back quickly. Until Dale reinstates Grok in a `decision` note, nothing here is
-active.
+active. **Grok's GitHub access is revoked** (Dale, 2026-11-13 08:11).
+
+**While suspended: no pushes, no ACTIVITY lines, no PING comments.**
 
 ## Reinstating Grok (Dale)
 
-1. Dale writes a `decision` note: Grok is back, and which task it gets.
-2. Paste this file (from `## Rules when active` down) into Grok's project instructions.
-3. Opener: *"Read GROK.md and the newest decision note about Grok. Your task: <item>."*
+1. Dale restores Grok's GitHub access.
+2. Dale writes a `decision` note: Grok is back, and which task it gets.
+3. Paste this file (from `## Rules when active` down) into Grok's project instructions.
+4. Opener: *"Read GROK.md and the newest decision note about Grok. Your task: <item>."*
 
 ## Rules when active
 

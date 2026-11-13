@@ -24,6 +24,10 @@ Recorded by Claude from Dale's chat message (00:35 America/New_York) and the har
 - **Unchanged:** the AGENTS.md hard rules and the "never merged without Dale" list. Device tests
   are Dale's; Claude batches them.
 
+- **2026-11-13 08:11: Dale revoked Grok's GitHub access**, after Grok pushed an `ACTIVITY.md` line to
+  `main` at 08:03 (`94df895`) while suspended. While suspended: no pushes, no ACTIVITY lines, no PING
+  comments. Reinstating starts with Dale restoring that access (`GROK.md`).
+
 ## Leftovers
 
 - #101 (Grok's brightness PR) is replaced by #102 and should be closed (Dale; Claude's close was
@@ -34,5 +38,5 @@ Recorded by Claude from Dale's chat message (00:35 America/New_York) and the har
 
 ## Reinstating Grok
 
-Follow `GROK.md`: Dale writes a decision note naming Grok's task, pastes the active rules into
+Follow `GROK.md`: Dale restores Grok's GitHub access, writes a decision note naming Grok's task, pastes the active rules into
 Grok's project instructions, and sends the opener there.
