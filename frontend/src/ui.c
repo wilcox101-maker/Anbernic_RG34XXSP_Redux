@@ -660,7 +660,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (btn == LB_A && screen == SCREEN_APPS) {
-        app_start(selected);
+        app_start(apps_list_id(selected));
         return;
     }
     if (btn == LB_A && screen == SCREEN_SETTINGS) {
@@ -939,13 +939,15 @@ void ui_draw(void) {
     case SCREEN_APPS: {
         static char text[APP_COUNT][GRID_COLS - 8];
         const char *rows[APP_COUNT];
-        for (int i = 0; i < APP_COUNT; i++) {
-            snprintf(text[i], sizeof text[i], "%-22s%s", apps_name(i), apps_status(i));
+        int n = apps_count();
+        for (int i = 0; i < n; i++) {
+            int id = apps_list_id(i);
+            snprintf(text[i], sizeof text[i], "%-22s%s", apps_name(id), apps_status(id));
             rows[i] = text[i];
         }
         frame("Apps", "A:Launch  B:Back", 1, 0);
-        list(0, rows, APP_COUNT);
-        if (apps_msg[0]) body(APP_COUNT + 1, apps_msg);
+        list(0, rows, n);
+        if (apps_msg[0]) body(n + 1, apps_msg);
         break;
     }
     case SCREEN_SETTINGS:

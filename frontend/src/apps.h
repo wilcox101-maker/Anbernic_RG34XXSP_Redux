@@ -12,7 +12,11 @@ typedef enum {
     APP_COUNT
 } app_id_t;
 
+/* Rows in the Apps list (File Manager is on Main only), the app id on a row, and the row of an
+   app id (-1 if not listed). */
 int apps_count(void);
+int apps_list_id(int row);
+int apps_row_of(int id);
 /* App name, and its status column ("not verified", "later ..."). */
 const char *apps_name(int i);
 const char *apps_status(int i);
