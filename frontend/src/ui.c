@@ -12,6 +12,7 @@
 #include "volume.h"
 #include "brightness.h"
 #include "sysinfo.h"
+#include "apps.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -24,10 +25,11 @@
 #define BACK_MAX 8              /* back stack depth; deeper than any menu we have */
 
 static const char *main_items[] = {
-    "Game Room", "Music", "Video", "Documents", "File Manager",
+    "Game Room", "Music", "Video", "Documents", "File Manager", "Apps",
     "Internet", "Network", "Settings", "Engineering Mode"
 };
-enum { MAIN_GAME_ROOM = 0, MAIN_INTERNET = 5, MAIN_NETWORK = 6, MAIN_SETTINGS = 7, MAIN_ENGINEERING = 8 };
+enum { MAIN_GAME_ROOM = 0, MAIN_MUSIC = 1, MAIN_VIDEO = 2, MAIN_DOCUMENTS = 3, MAIN_FILES = 4,
+       MAIN_APPS = 5, MAIN_INTERNET = 6, MAIN_NETWORK = 7, MAIN_SETTINGS = 8, MAIN_ENGINEERING = 9 };
 
 /* ROM names come from romscan (read-only). The desktop fixture recreates the
    five F0 names so this screen still matches the mock-up. */
@@ -77,6 +79,7 @@ static char wifi_result_ssid[WIFI_SSID_MAX];
 static int wifi_result_ok;
 static char wifi_retry[64];
 static char stock_msg[48];
+static char apps_msg[48];
 
 /* Colour presets (docs/ui-brief.md section 3). Default BIOS cyan. Saved to THEME_PATH. */
 #ifdef REDUX_PLATFORM_STOCK
@@ -267,7 +270,7 @@ static void show_loading(const system_entry_t *sys, const char *path) {
 }
 
 void ui_init(void) {
-    should_exit = 0; back_top = 0; eng_tab = ENG_CPU; sys_index = 0; screen = SCREEN_MAIN;
+    should_exit = 0; apps_msg[0] = '\0'; back_top = 0; eng_tab = ENG_CPU; sys_index = 0; screen = SCREEN_MAIN;
     theme_load();
     volume_load();
     brightness_load();   /* no saved file: leave the hardware level as stock set it */
@@ -296,6 +299,7 @@ static int list_count(void) {
     case SCREEN_SETTINGS: return COUNT(settings_items);
     case SCREEN_UI_COLORS: return N_PRESETS;
     case SCREEN_INTERNET: return COUNT(internet_items);
+    case SCREEN_APPS:     return apps_count();
     case SCREEN_WIFI:     return wifi_count();
     case SCREEN_SYSTEM_DEFAULTS: return N_SYSTEM_ROWS;
     default:              return 0;
@@ -521,6 +525,24 @@ static void wifi_open_key(void) {
     go(SCREEN_WIFI_KEY);
 }
 
+/* App Center launch (menu option A: Music/Video/Documents/File Manager open the
+   stock app directly; Apps lists them all). */
+static void app_start(int app) {
+    apps_msg[0] = '\0';
+    if (!apps_launchable(app)) { snprintf(apps_msg, sizeof apps_msg, "Not available yet"); dirty = 1; return; }
+    volume_apply();
+    int rc = apps_launch(app);
+    if (rc == 0) {
+        char detail[160];
+        snprintf(detail, sizeof detail, "App     %s\n\nStarting, please wait...", apps_name(app));
+        ui_busy("Loading App", detail);
+        should_exit = 1;
+    } else {
+        snprintf(apps_msg, sizeof apps_msg, rc == -2 ? "Not installed on this device" : "Could not start");
+        dirty = 1;
+    }
+}
+
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if ((btn == LB_VOL_UP || btn == LB_VOL_DOWN) && pressed) {
         volume_step(btn == LB_VOL_UP ? +1 : -1);
@@ -599,6 +621,15 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         if (selected == MAIN_SETTINGS)    go(SCREEN_SETTINGS);
         if (selected == MAIN_ENGINEERING) go(SCREEN_ENG_CONFIRM);
         if (selected == MAIN_NETWORK)     { go(SCREEN_WIFI); wifi_rescan(); }
+        if (selected == MAIN_APPS)        { apps_msg[0] = '\0'; go(SCREEN_APPS); }
+        if (selected == MAIN_MUSIC)       app_start(APP_MUSIC);
+        if (selected == MAIN_VIDEO)       app_start(APP_VIDEO);
+        if (selected == MAIN_DOCUMENTS)   app_start(APP_EBOOK_TF1);
+        if (selected == MAIN_FILES)       app_start(APP_FILES);
+        return;
+    }
+    if (btn == LB_A && screen == SCREEN_APPS) {
+        app_start(selected);
         return;
     }
     if (btn == LB_A && screen == SCREEN_SETTINGS) {
@@ -805,6 +836,7 @@ void ui_draw(void) {
         snprintf(title, sizeof title, "RG34XXSP Redux  %s", id);
         frame(title, "A:Select  B:Back  M:Menu  Start:Search", 1, 0);
         list(0, main_items, COUNT(main_items));
+        if (apps_msg[0]) body(COUNT(main_items) + 1, apps_msg);
         break;
     }
     case SCREEN_ROMS:
@@ -823,6 +855,18 @@ void ui_draw(void) {
         if (romscan_systems() == 0) body(0, "   (no ROMs)");
         else list_scanned(0, 1);
         break;
+    case SCREEN_APPS: {
+        static char text[APP_COUNT][GRID_COLS - 8];
+        const char *rows[APP_COUNT];
+        for (int i = 0; i < APP_COUNT; i++) {
+            snprintf(text[i], sizeof text[i], "%-22s%s", apps_name(i), apps_status(i));
+            rows[i] = text[i];
+        }
+        frame("Apps", "A:Launch  B:Back", 1, 0);
+        list(0, rows, APP_COUNT);
+        if (apps_msg[0]) body(APP_COUNT + 1, apps_msg);
+        break;
+    }
     case SCREEN_SETTINGS:
         frame("Settings", "A:Enter  B:Back  M:Menu", 1, 0);
         list(0, settings_items, COUNT(settings_items));

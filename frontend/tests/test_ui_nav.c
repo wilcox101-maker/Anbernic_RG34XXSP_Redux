@@ -12,6 +12,7 @@
 #include "volume.h"
 #include "brightness.h"
 #include "sysinfo.h"
+#include "apps.h"
 #include "grid.h"
 #include <stdio.h>
 #include <unistd.h>
@@ -125,17 +126,17 @@ int main(void) {
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from the systems list returns to Main");
 
-    down(5); press(LB_A);              /* Internet */
+    down(6); press(LB_A);              /* Internet */
     expect(ui_screen() == SCREEN_INTERNET, "A on Internet opens the Internet menu");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Internet returns to Main");
 
-    ui_init(); down(7); press(LB_A);   /* Settings */
+    ui_init(); down(8); press(LB_A);   /* Settings */
     expect(ui_screen() == SCREEN_SETTINGS, "A on Settings opens Settings");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Settings returns to Main");
 
-    ui_init(); down(8); press(LB_A);   /* Engineering Mode */
+    ui_init(); down(9); press(LB_A);   /* Engineering Mode */
     expect(ui_screen() == SCREEN_ENG_CONFIRM, "A on Engineering opens the hold-to-enter screen");
     ui_button(LB_A, 1, 100); ui_tick(1000); ui_button(LB_A, 0, 1000);
     expect(ui_screen() == SCREEN_ENG_CONFIRM, "releasing A early cancels");
@@ -375,7 +376,7 @@ int main(void) {
     /* Network opens the Wi-Fi screen. The spawn hook stands in for nmcli. */
     wifi_set_spawn(nav_spawn);
     ui_init();
-    down(6); press(LB_A);
+    down(7); press(LB_A);
     expect(ui_screen() == SCREEN_WIFI, "A on Network opens Wi-Fi");
     expect(nav_saw_scan == 1, "opening Wi-Fi scans with the nmcli list command");
     expect(strcmp(nav_busy, "Scanning for Wi-Fi networks") == 0, "scan shows the busy screen first");
@@ -454,7 +455,7 @@ int main(void) {
     press(LB_B);
 
     ui_init();
-    down(7); press(LB_A); down(4); press(LB_A);
+    down(8); press(LB_A); down(4); press(LB_A);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "Settings has no Network; row 4 is System");
     press(LB_B);
     expect(ui_screen() == SCREEN_SETTINGS, "B from System returns to Settings");
@@ -462,7 +463,7 @@ int main(void) {
     /* Symbol layer: type 0x20..0x5E (63 bytes, the password cap) and require
        wifi_connect to receive that exact string. Not printed. */
     ui_init();
-    down(6); press(LB_A); press(LB_A);
+    down(7); press(LB_A); press(LB_A);
     expect(ui_screen() == SCREEN_WIFI_KEY, "keyboard opens again for a symbol password");
     tap(LB_DOWN, 4);
     tap(LB_RIGHT, 3);
@@ -507,7 +508,7 @@ int main(void) {
     stock_set_bak(0);
     stock_calls = 0;
     ui_init();
-    down(7); press(LB_A); down(4); press(LB_A);
+    down(8); press(LB_A); down(4); press(LB_A);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "Settings System opens System Defaults");
     {
         char dump[8192];
@@ -588,7 +589,7 @@ int main(void) {
     }
     sysinfo_set_root("/tmp/redux-sysinfo-nav");
     ui_init();
-    down(7); press(LB_A); down(4); press(LB_A); press(LB_A);
+    down(8); press(LB_A); down(4); press(LB_A); press(LB_A);
     expect(ui_screen() == SCREEN_SYSINFO, "System Tools opens from System Defaults");
     {
         char dump[8192];
@@ -610,7 +611,7 @@ int main(void) {
     /* Colour presets: Settings → UI opens Colors; A selects and saves. */
     remove("/tmp/redux.theme");
     ui_init();
-    down(7); press(LB_A);          /* Settings */
+    down(8); press(LB_A);          /* Settings */
     down(6); press(LB_A);          /* UI (last row) */
     expect(ui_screen() == SCREEN_UI_COLORS, "Settings → UI opens Colors");
     down(1); press(LB_A);          /* Amber */
@@ -625,7 +626,7 @@ int main(void) {
     expect(ui_screen() == SCREEN_SETTINGS, "B from Colors returns to Settings");
     /* reload confirms the save */
     ui_init();
-    down(7); press(LB_A); down(6); press(LB_A);
+    down(8); press(LB_A); down(6); press(LB_A);
     {
         char dump[8192];
         ui_draw();
@@ -637,7 +638,7 @@ int main(void) {
     /* Display: Settings → Display; Left/Right steps brightness 1-20 and saves; B returns. */
     remove("/tmp/redux.brightness");
     ui_init();
-    down(7); press(LB_A);          /* Settings */
+    down(8); press(LB_A);          /* Settings */
     press(LB_A);                   /* Display (row 0) */
     expect(ui_screen() == SCREEN_DISPLAY, "Settings → Display opens Display");
     {
@@ -663,7 +664,7 @@ int main(void) {
     power_set_run(power_hook);
     power_calls = 0;
     ui_init();
-    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_A);
+    down(8); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "Restart opens the confirm");
     press(LB_A);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "a short A stays on Restart confirm");
@@ -686,7 +687,7 @@ int main(void) {
 
     power_calls = 0;
     ui_init();
-    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    down(8); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_POWEROFF_CONFIRM, "Power Off opens the confirm");
     press(LB_A);
     expect(ui_screen() == SCREEN_POWEROFF_CONFIRM, "a short A stays on Power Off confirm");
@@ -720,11 +721,58 @@ int main(void) {
         expect(strstr(dump, "VOL ") == NULL, "VOL overlay clears after 1.5 s");
     }
     /* on a confirm screen, volume must not cancel */
-    down(7); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_A);
+    down(8); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "on Restart confirm");
     ui_button(LB_VOL_UP, 1, 3000);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "volume does not leave the confirm");
     unlink("/tmp/redux-volume-nav");
+
+    /* App Center (menu option A). Desktop has no stock binaries until a fixture root is set. */
+    launcher_set_next_path("/tmp/redux-next-apps");
+    remove("/tmp/redux-next-apps");
+    apps_set_root("/tmp/redux-apps-none");
+    ui_init();
+    down(5); press(LB_A);
+    expect(ui_screen() == SCREEN_APPS, "A on Apps opens the App Center");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Music Player") && strstr(dump, "not verified") && strstr(dump, "Terminal"),
+               "Apps lists stock apps as not verified, and Terminal");
+    }
+    press(LB_A);
+    expect(ui_should_exit() == 0 && ui_screen() == SCREEN_APPS, "a missing app does not launch");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Not installed on this device") != NULL, "missing app says not installed");
+    }
+    down(APP_TERMINAL); press(LB_A);
+    expect(ui_should_exit() == 0, "Terminal is not launchable yet");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_MAIN, "B from Apps returns to Main");
+
+    mkdir("/tmp/redux-apps", 0755); mkdir("/tmp/redux-apps/mnt", 0755);
+    mkdir("/tmp/redux-apps/mnt/vendor", 0755); mkdir("/tmp/redux-apps/mnt/vendor/bin", 0755);
+    mkdir("/tmp/redux-apps/mnt/vendor/bin/music", 0755);
+    write_empty("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
+    apps_set_root("/tmp/redux-apps");
+    ui_init();
+    down(1); press(LB_A);              /* Music, straight from Main */
+    expect(ui_should_exit() == 1, "Music on Main launches the stock music app");
+    expect(strcmp(ui_last_busy(), "Loading App") == 0, "app launch shows Loading App");
+    {
+        char line[256] = "";
+        FILE *f = fopen("/tmp/redux-next-apps", "r");
+        if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
+        expect(strcmp(line, "cd '/mnt/vendor/bin/music' && AUDIODEV=hw:2,0 ./'ap.dge'\n") == 0,
+               "music launch line cds into its folder");
+    }
+    remove("/tmp/redux-next-apps");
+    remove("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
+    apps_set_root("");
 
     printf("%d failed\n", fails);
     return fails ? 1 : 0;
