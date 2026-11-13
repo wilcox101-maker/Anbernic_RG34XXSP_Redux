@@ -44,6 +44,8 @@ jobs:
         run: ./build/test_stockmenu
       - name: Volume tests
         run: ./build/test_volume
+      - name: Brightness tests
+        run: ./build/test_brightness
       - name: Remap tests
         run: |
           if [ -x ./build/test_remap_device ]; then ./build/test_remap_device; fi
@@ -102,6 +104,7 @@ jobs:
           ./build-arm64/test_sysinfo
           ./build-arm64/test_stockmenu
           ./build-arm64/test_volume
+          ./build-arm64/test_brightness
       - name: Check it is an aarch64 ELF
         run: |
           python3 - build-arm64/rg34xxsp-redux <<'PY'

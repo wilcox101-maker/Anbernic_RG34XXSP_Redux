@@ -115,7 +115,7 @@ Matches the stock DTS setting `pmu_bat_temp_enable = <0x0>`.
 | Pixel clock | 26 MHz |
 | H total / V total | 820 / 536 |
 | **Refresh** | 26 MHz ÷ (820 × 536) ≈ **59.16 Hz** |
-| Backlight | PWM0, 50 kHz, max 255 (DT). **No `/sys/class/backlight` on the device** (Dale, 2026-11-12). The control is the AXP2202 attribute `/sys/class/power_supply/axp2202-battery/brightness` (full path `.../twi5/i2c-5/5-0034/axp2202-bat-power-supply.0/power_supply/axp2202-battery/brightness`). Range and where stock saves the value: not checked yet (no `bright` key in `system.cfg`) |
+| Backlight | PWM0, 50 kHz, max 255 (DT). **No `/sys/class/backlight` on the device** (Dale, 2026-11-12). The control is the AXP2202 attribute `/sys/class/power_supply/axp2202-battery/brightness` (full path `.../twi5/i2c-5/5-0034/axp2202-bat-power-supply.0/power_supply/axp2202-battery/brightness`). Measured on Dale's unit 2026-11-12: reads 5 after boot, writing 20 sticks, writing 255 is ignored, so the true maximum is between 20 and 254 and not yet found. Redux uses 1–20, never 0 (`frontend/src/brightness.h`, saved to `/mnt/data/redux/brightness`). Where stock saves its own value: not checked (no `bright` key in `system.cfg`) |
 
 720×480 is exactly **3× GBA** (240×160) and 3× Game Boy vertically (144 lines). That makes integer
 scaling the native mode. GBA runs at 59.73 Hz, so audio/video sync should target the panel's real
