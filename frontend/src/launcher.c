@@ -39,6 +39,8 @@ static const char *script_for(launch_target_t t) {
     case LAUNCH_DRASTIC:    return "/mnt/vendor/deep/drastic-modify/launch.sh";
     case LAUNCH_PCSX:       return "/mnt/vendor/bin/game/pcsx_rearmed/pcsx";
     case LAUNCH_PORTMASTER: return "/roms/ports/PortMaster/PortMaster.sh";
+    /* Stock dmenu.bin runs OpenBOR .pak games through this appfs script (strings, 2026-11-13). */
+    case LAUNCH_OPENBOR:    return "/mnt/vendor/deep/openBOR/scripts/openbor.sh";
     default:                return NULL;
     }
 }

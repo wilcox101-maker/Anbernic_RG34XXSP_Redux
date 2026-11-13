@@ -51,6 +51,7 @@ static const system_entry_t systems[] = {
     { "NAOMI",      LAUNCH_RETROARCH, "flycast_libretro.so" },
     { "ATOMISWAVE", LAUNCH_RETROARCH, "flycast_libretro.so" },
     { "NEOCD",      LAUNCH_RETROARCH, "neocd_libretro.so" },
+    { "OPENBOR", LAUNCH_OPENBOR, NULL },   /* .pak games; Core Apps decision A */
     { "PSP",  LAUNCH_PPSSPP,    NULL },
     { "NDS",  LAUNCH_DRASTIC,   NULL },
     { "FC",   LAUNCH_RETROARCH, "fceumm_libretro.so" },
