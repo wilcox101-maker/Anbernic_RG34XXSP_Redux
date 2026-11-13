@@ -49,6 +49,8 @@ jobs:
         run: ./build/test_volume
       - name: Brightness tests
         run: ./build/test_brightness
+      - name: Ports tests
+        run: ./build/test_ports
       - name: Remap tests
         run: |
           if [ -x ./build/test_remap_device ]; then ./build/test_remap_device; fi
