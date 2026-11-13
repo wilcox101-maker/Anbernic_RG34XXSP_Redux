@@ -8,7 +8,7 @@ Firmware: `rg34xxsp-fw-sd_202505` (`RG34XXSP.img`), GPT layout.
 |---|---|---|---|
 | *(raw, first 36 MiB)* | — | 36 MiB | boot0 at 8 KiB, u-boot/TOC1, GPT. **Copy raw and never modify.** |
 | mmcblk0p1 | `Roms` | ~44 GiB | exFAT: ROMs, BIOS, media. Physically first so Windows sees it |
-| mmcblk0p2 | `boot-resource` | 32 MiB | FAT: `bootlogo.bmp`, `fastbootlogo.bmp`, `bat/` charging frames, u-boot fonts, `magic.bin` |
+| mmcblk0p2 | `boot-resource` | 32 MiB | FAT16 (label `Volumn`): `bootlogo.bmp` (**640×480, 24-bit BMP, uncompressed, bottom-up, 921,654 bytes**), `fastbootlogo.bmp` (246×257, 24-bit), `bat/` charging frames, `font24.sft`/`font32.sft` (u-boot fonts), `magic.bin` (read from Dale's `RG34XXSP.img`, 2026-11-13) |
 | mmcblk0p3 | `env` | 16 MiB | u-boot environment (see [`env.txt`](../reference/stock-202505/env.txt)) |
 | mmcblk0p4 | `boot` | 64 MiB | Android boot image v2: kernel + initramfs + DTB, tail padded with 0xFF |
 | mmcblk0p5 | `rootfs` | 7 GiB | ext4: Ubuntu 22.04 base + an `/emuelec` tree |
