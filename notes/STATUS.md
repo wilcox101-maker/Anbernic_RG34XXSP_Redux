@@ -23,7 +23,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 
 ## Waiting on Dale
 - Device tests in the **Device test queue, issue #109** (pinned), from **Releases → dev**: #102 brightness, #104 TF2 ROMs, #88 Wi-Fi connect, #85 buttons; optional #95 accent bars. Deploy only a dev build whose SHA is a **merge** commit (the release at `f3ecab1` was an ACTIVITY commit; #117 fixes that from the next merge on).
-- App Center menu placement: **decided, option A** (#116). Nothing waiting.
+- **Ports decision** ([note](2026-11-13-claude-decision-ports.md)): card scripts need an opt-in; options A (one switch, default Off; recommended), B (confirm each launch), C (core-mapped ports only).
 - Dale's local clone `Documents\GitHub\Anbernic_RG34XXSP_Redux` is at `0afecd9` (#82), CRLF-only diffs. Before building from it: `git config core.autocrlf true && git fetch && git reset --hard origin/main`.
 
 ## Queue (inbox #41 is the source of truth; in order)
@@ -35,11 +35,12 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 3a. ~~Confirm screens: a short A tap stays on the screen and resets the hold bar~~ merged in #91, device-verified. **Grok**
 3b. ~~Settings → System layout~~ merged in #91, device-verified. Reset All still to come = Redux's own `/mnt/data/redux/` settings to defaults only, 3 s hold. **Grok**
 3c. ~~persistent volume~~ (#94, device-verified) → ~~brightness~~ merged in #102 (Settings > Display, 1–20) → ~~TF2 ROM scan~~ merged in #104 (TF1 + TF2 merged per system). Brightness and TF2 **not device-checked yet**. **Claude**
-4. ~~App Center~~ merged in #119 (Apps list; Music/Video/Documents/File Manager launch stock apps; .dge cd fix #115). **Not device-checked yet** (#109). **Claude** · 5. Ports/PortMaster · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. ~~TF2 scan~~ (#104) · 8. 640×480 boot logo (Dale-only installer)
+4. ~~App Center~~ merged in #119 (Apps list; Music/Video/Documents/File Manager launch stock apps; .dge cd fix #115). **Not device-checked yet** (#109). **Claude** · 5. Ports/PortMaster (**waiting on Dale's decision**, [note](2026-11-13-claude-decision-ports.md)) · 6. Terminal/htop (SimpleTerminal `-e htop`, MENU quits) · 7. ~~TF2 scan~~ (#104) · 8. 640×480 boot logo (Dale-only installer)
 - L3/R3 (313/316): stay unmapped, left available for mapping later ([decision](2026-11-12-dale-decision-brightness-l3r3.md)).
 - Backlog: **DOS Mode** (Dale: keep the development menu style as a DOS Mode option alongside BIOS Mode; he'll define the layout as menus grow), ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM upload after an ownership acknowledgement), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track.
 
 ## Open notes
+- [2026-11-13-claude-decision-ports.md](2026-11-13-claude-decision-ports.md): claude → dale (Ports run card scripts: opt-in A/B/C)
 - [2026-11-13-dale-decision-grok-suspended.md](2026-11-13-dale-decision-grok-suspended.md): dale → all (Grok suspended; Claude solo; replaces "sidelined")
 - [2026-11-13-dale-decision-app-center.md](2026-11-13-dale-decision-app-center.md): dale → all (App Center = local launcher, no downloads)
 - [2026-11-13-claude-message-stock-apps.md](2026-11-13-claude-message-stock-apps.md): claude → dale, all (stock apps and how dmenu.bin launches them; .dge needs cd, #114/#115)
