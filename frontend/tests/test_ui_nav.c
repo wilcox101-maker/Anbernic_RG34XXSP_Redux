@@ -816,6 +816,33 @@ int main(void) {
     }
     remove("/tmp/redux-next-apps");
 
+    /* After an app from the Apps list, Redux restarts on the Apps list at the same row. */
+    ui_init();
+    expect(ui_screen() == SCREEN_APPS, "after an Apps launch, Redux restarts on the Apps list");
+    expect(ui_list_selected() == APP_TOP, "the Apps list keeps the launched row");
+    {
+        FILE *sf = fopen(UI_RESUME_PATH, "r");
+        expect(sf == NULL, "apps resume file is removed after a valid read");
+        if (sf) fclose(sf);
+    }
+    press(LB_B);
+    expect(ui_screen() == SCREEN_MAIN, "B after an apps resume returns to Main");
+    {
+        FILE *sf = fopen(UI_RESUME_PATH, "w");
+        if (sf) { fputs("apps\n-\n999\n0\n", sf); fclose(sf); }
+        ui_init();
+        expect(ui_screen() == SCREEN_MAIN, "apps row out of range starts on Main");
+    }
+    /* Music from Main: no Apps resume, Redux comes back on Main. */
+    write_empty("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
+    ui_init();
+    down(1); press(LB_A);
+    expect(ui_should_exit() == 1, "Music from Main launches");
+    ui_init();
+    expect(ui_screen() == SCREEN_MAIN, "a launch from Main comes back to Main");
+    remove("/tmp/redux-next-apps");
+    remove("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
+
     /* Tools (Core Apps A): each runs a stock program in SimpleTerminal. */
     {
         static const struct { int app; const char *args; } tools[] = {
@@ -835,6 +862,7 @@ int main(void) {
             snprintf(label, sizeof label, "Tools: %s launches", apps_name(tools[t].app));
             expect(ui_should_exit() == 1 && strcmp(line, want) == 0, label);
             remove("/tmp/redux-next-apps");
+            remove(UI_RESUME_PATH);   /* each tool starts from Main */
         }
     }
     remove("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
