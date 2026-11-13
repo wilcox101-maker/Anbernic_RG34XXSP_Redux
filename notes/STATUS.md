@@ -38,8 +38,8 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 9. **Device result 2026-11-13** ([note](2026-11-13-dale-hw-result-app-center-ports-boot.md)), fixes in this order. **Claude**
    a. Brightness: bar moves, backlight unchanged; M button fails on Settings > Display
    b. ~~Boot Screen~~: build was `168c8bc`; the switch **works on the device** ([result](2026-11-13-dale-hw-result-boot-screen.md)); restore not reported yet
-   c. Ports: Y, X, Start, Select don't work in-game (RetroArch input mapping for the port cores)
-   d. Video Player: playing a video drops back to Redux · e. Ebook Reader: M drops back to Redux
+   c. Ports: Y, X, Start, Select don't work in-game. Dale tested **Dinothawr**, which uses only D-pad, B, A, X (libretro docs); `RA_launch.sh` sets nothing port-specific. Likely not a bug: re-checks on #109 (X reset, Wolf3D/Quake)
+   d. ~~Video Player: playing a video drops back to Redux~~ fix in #142: `vp.dge` hands playback back through a new `/tmp/.next` (`./FFplay.sh`) and `/tmp/vpRun.ini`, which only stock's menu slot runs; Redux now runs the player in a loop. Not device-checked · e. Ebook Reader: M drops back to Redux. The reader is Pixel Reader; M may be its normal quit. Re-check against the stock menu
    f. File Manager: screen tears while loading · g. Screen timeout setting (feature; stock timeout is on, Power wakes)
 - Tools: `tools/bench` (#130), Dale's read-only RAM/CPU probe over SSH, for the Phase 1/2 measurements; needs SSH on the device (stock mod's temporary SSH server).
 - L3/R3 (313/316): stay unmapped, left available for mapping later ([decision](2026-11-12-dale-decision-brightness-l3r3.md)).

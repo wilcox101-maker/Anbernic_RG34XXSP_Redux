@@ -50,6 +50,8 @@ int apps_launch(int i) {
     const char *bin = apps[i].dge ? apps[i].dge : apps[i].bin;
     snprintf(path, sizeof path, "%s%s", root, bin);
     if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return -2;
+    /* The video player hands playback back through /tmp/.next (launcher_start_video). */
+    if (i == APP_VIDEO) return launcher_start_video(apps[i].dge) == 0 ? 0 : -1;
     if (apps[i].dge) return launcher_start(LAUNCH_DGE, apps[i].dge, NULL) == 0 ? 0 : -1;
     return launcher_start_app(apps[i].bin, apps[i].env, apps[i].args) == 0 ? 0 : -1;
 }
