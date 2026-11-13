@@ -42,5 +42,20 @@ int main(void) {
     expect("card script from its folder", LAUNCH_SCRIPT, "/mnt/mmc/Roms/PORTS/It's.sh", NULL,
            "cd '/mnt/mmc/Roms/PORTS' && AUDIODEV=hw:2,0 /bin/bash ./'It'\\''s.sh'\n");
     expect("script needs a path", LAUNCH_SCRIPT, NULL, NULL, NULL);
+    {
+        const char *path = "test_launcher_app.txt";
+        launcher_set_next_path(path);
+        int rc = launcher_start_app("/mnt/mod/ctrl/SimpleTerminal", "HOME=/root", "-e top");
+        char got[256] = "";
+        FILE *f = fopen(path, "r");
+        if (f) { if (!fgets(got, sizeof got, f)) got[0] = '\0'; fclose(f); }
+        remove(path);
+        int ok = rc == 0 && strcmp(got, "cd '/mnt/mod/ctrl' && HOME=/root ./'SimpleTerminal' -e top\n") == 0;
+        printf("%s app from its folder with env and args\n", ok ? "ok  " : "FAIL");
+        if (!ok) failures++;
+        ok = launcher_start_app("SimpleTerminal", NULL, NULL) == -1;
+        printf("%s app needs a folder\n", ok ? "ok  " : "FAIL");
+        if (!ok) failures++;
+    }
     return failures ? 1 : 0;
 }

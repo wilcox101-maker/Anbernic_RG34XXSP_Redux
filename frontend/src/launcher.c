@@ -43,6 +43,28 @@ static const char *script_for(launch_target_t t) {
     }
 }
 
+int launcher_start_app(const char *bin, const char *env, const char *args) {
+    const char *slash = bin ? strrchr(bin, '/') : NULL;
+    if (!slash || slash == bin || !slash[1]) return -1;
+    char dir[512];
+    size_t n = (size_t)(slash - bin);
+    if (n >= sizeof dir) return -1;
+    memcpy(dir, bin, n);
+    dir[n] = '\0';
+    FILE *f = fopen(next_path, "w");
+    if (!f) return -1;
+    fprintf(f, "cd ");
+    quote(f, dir);
+    fprintf(f, " && ");
+    if (env && env[0]) fprintf(f, "%s ", env);
+    fprintf(f, "./");
+    quote(f, slash + 1);
+    if (args && args[0]) fprintf(f, " %s", args);
+    fputc('\n', f);
+    fclose(f);
+    return 0;
+}
+
 int launcher_start(launch_target_t target, const char *core, const char *rom_path) {
     FILE *f = fopen(next_path, "w");
     if (!f) return -1;
