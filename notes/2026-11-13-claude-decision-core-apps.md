@@ -10,9 +10,10 @@ status: open
 # Installed on the device but not used by Redux: Core App candidates
 
 Source: `stock-apps.txt` from Dale's unit (2026-11-13: `dpkg -l`, `/usr/bin` etc., appfs and
-`/mnt/mod/ctrl` listings). Read only, nothing copied. **Caveat:** Dale has apt-installed some
-packages himself (htop), and the listing can't tell those from stock. `/var/log/apt/history.log`
-would separate them; until then "stock" below means "on Dale's unit".
+`/mnt/mod/ctrl` listings). Read only, nothing copied. **Update 10:08:** Dale's
+`/var/log/apt/history.log` has one entry, `apt install htop` (2026-11-10), so **htop is the only
+package he added**; everything else below is stock on his unit. The same entry shows apt on the
+device reached its package sources and installed cleanly (the path an installer would use).
 
 ## Candidates
 
