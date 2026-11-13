@@ -341,11 +341,15 @@ static void page(int dir) {
 }
 
 /* Just before /tmp/.next: so the next start opens this list instead of Main.
-   Four lines: screen, system key, row, scroll. Only "roms" is restored. */
+   Four lines: screen, system key, row, scroll. "roms" (key = system) and "apps" (key = "-")
+   are restored. Dale 2026-11-13: apps returned to Main instead of the Apps list. */
 static void resume_save(void) {
     FILE *f = fopen(UI_RESUME_PATH, "w");
     if (!f) return;
-    fprintf(f, "roms\n%s\n%d\n%d\n", romscan_key(sys_index), selected, scroll);
+    if (screen == SCREEN_APPS)
+        fprintf(f, "apps\n-\n%d\n%d\n", selected, scroll);
+    else
+        fprintf(f, "roms\n%s\n%d\n%d\n", romscan_key(sys_index), selected, scroll);
     fclose(f);
 }
 
@@ -364,6 +368,18 @@ static int resume_load(void) {
     if (!got) return 0;
     screen_tok[strcspn(screen_tok, "\r\n")] = 0;
     key[strcspn(key, "\r\n")] = 0;
+    if (strcmp(screen_tok, "apps") == 0) {
+        int row = -1, scr = 0;
+        if (sscanf(rowb, "%d", &row) != 1 || row < 0 || row >= apps_count()) return 0;
+        sscanf(scrb, "%d", &scr);
+        push_back(SCREEN_MAIN);   /* B goes back to Main, as when Apps was opened from it */
+        screen = SCREEN_APPS;
+        selected = row;
+        scroll = scr < 0 ? 0 : scr;
+        clamp_scroll();
+        dirty = 1;
+        return 1;
+    }
     if (strcmp(screen_tok, "roms") != 0 || !key[0]) return 0;
     int sys = -1;
     for (int i = 0; i < romscan_systems(); i++)
@@ -538,7 +554,9 @@ static void app_start(int app) {
     apps_msg[0] = '\0';
     if (!apps_launchable(app)) { snprintf(apps_msg, sizeof apps_msg, "Not available yet"); dirty = 1; return; }
     volume_apply();
+    if (screen == SCREEN_APPS) resume_save();   /* come back to this row, not Main */
     int rc = apps_launch(app);
+    if (rc != 0 && screen == SCREEN_APPS) resume_clear();
     if (rc == 0) {
         char detail[160];
         snprintf(detail, sizeof detail, "App     %s\n\nStarting, please wait...", apps_name(app));
