@@ -113,9 +113,21 @@ jobs:
         run: |
           sudo apt-get update -qq -o Acquire::Retries=3
           sudo apt-get install -y -qq --no-install-recommends -o Acquire::Retries=3 \
-            cmake make gcc libc6-dev libsdl2-dev
+            cmake make gcc libc6-dev libsdl2-dev gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
+          # The vsync library is preloaded into stock SimpleTerminal, a 32-bit ARM (armhf) program:
+          # build it armhf and embed that copy (an aarch64 copy would be skipped by the loader).
+          mkdir -p build-armhf
+          arm-linux-gnueabihf-gcc -shared -fPIC -O2 -Wall -Wextra -Werror \
+            -o build-armhf/redux_vsync.so frontend/vsync/redux_vsync.c -ldl
+          python3 - build-armhf/redux_vsync.so <<'PY'
+          import sys
+          h = open(sys.argv[1], "rb").read(20)
+          assert h[:4] == b"\x7fELF" and h[4] == 1 and h[18] == 0x28, "vsync library is not 32-bit ARM"
+          print("vsync library: 32-bit ARM ok")
+          PY
           cmake -S frontend -B build-arm64 -DREDUX_PLATFORM=stock -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_FLAGS="-Werror" -DREDUX_BUILD=$(echo "$GITHUB_SHA" | cut -c1-7)
+            -DCMAKE_C_FLAGS="-Werror" -DREDUX_BUILD=$(echo "$GITHUB_SHA" | cut -c1-7) \
+            -DREDUX_VSYNC_EMBED="$PWD/build-armhf/redux_vsync.so"
           cmake --build build-arm64
           ./build-arm64/test_launcher
           ./build-arm64/test_remap_device

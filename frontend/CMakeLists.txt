@@ -20,12 +20,26 @@ add_library(redux_vsync SHARED vsync/redux_vsync.c)
 set_target_properties(redux_vsync PROPERTIES C_VISIBILITY_PRESET default)
 target_compile_options(redux_vsync PRIVATE -Wall -Wextra)
 target_link_libraries(redux_vsync PRIVATE ${CMAKE_DL_LIBS})
+# The device's SimpleTerminal is 32-bit ARM, so the device build embeds an armhf copy built
+# separately (CI arm64 job: arm-linux-gnueabihf-gcc) and passed in as REDUX_VSYNC_EMBED. Without
+# it, the library built here is embedded (desktop builds and tests).
+set(REDUX_VSYNC_EMBED "" CACHE FILEPATH "prebuilt vsync library to embed (armhf for the device)")
+if(REDUX_VSYNC_EMBED)
+    set(REDUX_VSYNC_IN ${REDUX_VSYNC_EMBED})
+    set(REDUX_VSYNC_DEP ${REDUX_VSYNC_EMBED})
+else()
+    set(REDUX_VSYNC_IN $<TARGET_FILE:redux_vsync>)
+    set(REDUX_VSYNC_DEP redux_vsync)
+    if(REDUX_PLATFORM STREQUAL "stock")
+        message(STATUS "vsync: REDUX_VSYNC_EMBED not set; embedding this machine's library (no effect on the 32-bit stock apps)")
+    endif()
+endif()
 set(REDUX_VSYNC_BLOB ${CMAKE_CURRENT_BINARY_DIR}/vsync_blob.c)
 add_custom_command(
     OUTPUT ${REDUX_VSYNC_BLOB}
-    COMMAND ${CMAKE_COMMAND} -DIN=$<TARGET_FILE:redux_vsync> -DOUT=${REDUX_VSYNC_BLOB}
+    COMMAND ${CMAKE_COMMAND} -DIN=${REDUX_VSYNC_IN} -DOUT=${REDUX_VSYNC_BLOB}
             -DNAME=redux_vsync_so -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
-    DEPENDS redux_vsync ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    DEPENDS ${REDUX_VSYNC_DEP} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
     COMMENT "Embedding the vsync library")
 
 add_executable(rg34xxsp-redux
@@ -150,4 +164,5 @@ add_executable(test_vsync tests/test_vsync.c src/vsync.c ${REDUX_VSYNC_BLOB})
 target_include_directories(test_vsync PRIVATE src)
 add_dependencies(test_vsync redux_vsync test_vsync_app)
 target_compile_definitions(test_vsync PRIVATE
-    VSYNC_SO="$<TARGET_FILE:redux_vsync>" VSYNC_APP="$<TARGET_FILE:test_vsync_app>")
+    VSYNC_SO="$<TARGET_FILE:redux_vsync>" VSYNC_APP="$<TARGET_FILE:test_vsync_app>"
+    VSYNC_EMBEDDED="${REDUX_VSYNC_IN}")

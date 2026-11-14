@@ -84,12 +84,15 @@ int apps_launch(int i) {
     if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return -2;
     /* The video player hands playback back through /tmp/.next (launcher_start_video). */
     if (i == APP_VIDEO) return launcher_start_video(apps[i].dge) == 0 ? 0 : -1;
-    /* SimpleTerminal and File Manager tear (stock SDL presents without vsync): preload the vsync
-       library for them (Dale's decision 2026-11-14, B). If it can't be written, launch without it. */
+    /* SimpleTerminal tears (stock SDL presents without vsync): preload the vsync library for it
+       (Dale's decision 2026-11-14, B). If it can't be written, launch without it. File Manager is
+       not covered: it never calls a present function (see frontend/vsync/redux_vsync.c). */
     char env[300];
-    if ((i == APP_FILES || (apps[i].bin && strcmp(apps[i].bin, TERM_BIN) == 0))
-        && vsync_install(env, sizeof env) == 0)
+    if (apps[i].bin && strcmp(apps[i].bin, TERM_BIN) == 0 && vsync_install(env, sizeof env) == 0)
         launcher_set_preload(env);
-    if (apps[i].dge) return launcher_start(LAUNCH_DGE, apps[i].dge, NULL) == 0 ? 0 : -1;
-    return launcher_start_app(apps[i].bin, apps[i].env, apps[i].args) == 0 ? 0 : -1;
+    int rc = apps[i].dge ? launcher_start(LAUNCH_DGE, apps[i].dge, NULL)
+                         : launcher_start_app(apps[i].bin, apps[i].env, apps[i].args);
+    /* A failed launch must not leave the preload for the next .dge or app launch. */
+    if (rc != 0) launcher_set_preload(NULL);
+    return rc == 0 ? 0 : -1;
 }

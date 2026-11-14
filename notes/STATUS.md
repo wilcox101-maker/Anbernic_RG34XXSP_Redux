@@ -56,7 +56,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
    a. `cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies` (the unit's CPU grade) · b. `find /sys -name '*adc_cal*'` (stick calibration file) · c. `evtest`, close and open the lid: which device sends KEY_DELETE / KEY_INSERT
 14. **F3 settings parity** (Dale: A, 2026-11-14 03:21). **Claude**
    a. UI font picker (Settings > Display, five fonts, ui-spec 8a): built, not device-checked · b. Reset All (Settings > System, 3 s hold): built, not device-checked
-15. **Vsync library for stock apps that tear** (Dale: B, 2026-11-14): SimpleTerminal and File Manager launch with `LD_PRELOAD=/tmp/redux-vsync.so`; self-off if `FBIO_WAITFORVSYNC` fails. Built, not device-checked. **Claude**
+15. **Vsync library for stock apps that tear** (Dale: B, 2026-11-14): SimpleTerminal launches with `LD_PRELOAD=/tmp/redux-vsync.so`; self-off if `FBIO_WAITFORVSYNC` fails. Built **armhf** since the vsync fixes PR, which follows Read Only's review: #179's aarch64 copy could never load into 32-bit SimpleTerminal. It also unsets LD_PRELOAD on load and clears the preload after a failed launch. File Manager is dropped: it never presents a frame, so it stays stock bug 9f ([correction](2026-11-14-claude-correction-vsync.md)). Not device-checked. **Claude**
 16. **Stock-card installer, option A** (Dale, 2026-11-14 13:41): ~~`tools/install.py` + `installer/redux_install.sh` + `installer/run.sh`~~ merged in #184/#187; `docs/install.md`; the dev release carries all three. CI-tested on a fake card tree, **not device-checked** (checks on #172 and #185). Start-failure guard: DECIDE pending. B (TF2 package) next. **Claude**
 - Tools: `tools/bench` (#130), Dale's read-only RAM/CPU probe over SSH, for the Phase 1/2 measurements; needs SSH on the device (stock mod's temporary SSH server).
 - L3/R3 (313/316): stay unmapped, left available for mapping later ([decision](2026-11-12-dale-decision-brightness-l3r3.md)).
@@ -64,6 +64,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 
 ## Open notes
 - [2026-11-14-dale-decision-manager-acts-for-dale.md](2026-11-14-dale-decision-manager-acts-for-dale.md): dale → all (Manager may relay SWAP, SWITCH, NOTE and most A/B/C answers; merges, hard rules, device writes, sign-offs stay Dale's)
+- [2026-11-14-claude-correction-vsync.md](2026-11-14-claude-correction-vsync.md): claude → all (vsync library: armhf build, SimpleTerminal only, File Manager dropped)
 - [2026-11-14-dale-decision-swap-check.md](2026-11-14-dale-decision-swap-check.md): dale → all (swap trigger 5 + Manager daily swap check, 06:40 ET)
 - [2026-11-14-dale-decision-relay-decide-plan.md](2026-11-14-dale-decision-relay-decide-plan.md): dale → all (Manager relay list adds DECIDE and PLAN)
 - [2026-11-14-dale-decision-vsync-shim.md](2026-11-14-dale-decision-vsync-shim.md): dale → all (option B: vsync library preloaded for SimpleTerminal and File Manager; self-off if unsupported)
