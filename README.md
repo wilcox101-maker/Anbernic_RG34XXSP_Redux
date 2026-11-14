@@ -85,8 +85,8 @@ Dale's device yet.**
   - **Lid:** stock reports it as `KEY_DELETE` (closed) / `KEY_INSERT` (opened), not a lid switch, and the
     kernel does nothing else, so Redux owns lid behaviour.
   - **CPU speeds:** the per-chip-grade speed/voltage table is recorded. Dale chose how mainline handles
-    it (ROCKNIX's table, 1512 MHz only via Expert Mode, after a stress test); the decision note is waiting
-    for his merge.
+    it ([decision](notes/2026-11-14-dale-decision-mainline-cpu-table.md): ROCKNIX's table, 1512 MHz only
+    via Expert Mode, after a stress test).
 - **A Wi-Fi crash to fix before mainline ships:** a known RTL8821CS receive bug (our chip) that neither
   upstream nor ROCKNIX patches yet.
 - **Ubuntu 24.04 track planned** ([plan](docs/kernel-research/ubuntu-track.md)): a newer userland in parallel
