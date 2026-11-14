@@ -85,7 +85,7 @@ hardware video decode for media, in-game HUD overlay, Wi-Fi idle scanning, featu
 earlier once Beta is out, if they don't put its exit test at risk.
 
 ### Progress estimate
-Rough, effort-weighted, as of 2026-11-13: **Beta ≈ 40%**, **1.0 ≈ 15%**. Phase 2 is the biggest
+Rough, effort-weighted, as of 2026-11-14: **Beta ≈ 40%**, **1.0 ≈ 20%** (research and design; nothing booted on mainline yet). Phase 2 is the biggest
 unknown: it exists only as a design and nothing has booted yet. Update this line when a phase is signed off.
 
 ## Non-goals
