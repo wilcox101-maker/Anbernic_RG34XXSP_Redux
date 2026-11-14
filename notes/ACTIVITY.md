@@ -102,3 +102,4 @@
 - 2026-11-14 08:55 · claude · read: Dale B (vsync); Dale's AGENTS.md edit a5fb3f9 (swap trigger 5: ~100 messages) · did: #179 vsync library (embedded in dmenu.bin, preloaded for SimpleTerminal/File Manager, self-off), CI green incl. arm64, merged. #172 now dev a5fb3f9 + checks 21-22. Asked Dale: Swap now (trigger 5). Waiting on Dale: #177 merge, #172 session (on hold).
 - 2026-11-14 09:05 · claude · read: Manager advice h · did: #180 swap approval 'triggers 1 to 3 and 5' + project-setup daily swap check + Dale decision note, NOT merged (AGENTS.md; Dale). notified Dale: #180 merge. Asked Swap now (trigger 5).
 - 2026-11-14 09:15 · claude · read: #177 merged by Dale · did: merged main into #177 earlier (conflict) and now into #180 (STATUS Open notes), CI green. Waiting on Dale: #180, SWAP/NO SWAP.
+- 2026-11-14 09:20 · claude · read: #180 merged by Dale · did: nothing new. No open PRs. Waiting on Dale: SWAP/NO SWAP; #172 device session (on hold).
