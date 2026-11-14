@@ -14,6 +14,20 @@ else()
     set(REDUX_PLATFORM_SRC src/platform.c)
 endif()
 
+# vsync library for stock apps that tear (frontend/vsync, Dale 2026-11-14 B): built as a shared
+# library, then embedded in dmenu.bin, which writes it to /tmp before those launches.
+add_library(redux_vsync SHARED vsync/redux_vsync.c)
+set_target_properties(redux_vsync PROPERTIES C_VISIBILITY_PRESET default)
+target_compile_options(redux_vsync PRIVATE -Wall -Wextra)
+target_link_libraries(redux_vsync PRIVATE ${CMAKE_DL_LIBS})
+set(REDUX_VSYNC_BLOB ${CMAKE_CURRENT_BINARY_DIR}/vsync_blob.c)
+add_custom_command(
+    OUTPUT ${REDUX_VSYNC_BLOB}
+    COMMAND ${CMAKE_COMMAND} -DIN=$<TARGET_FILE:redux_vsync> -DOUT=${REDUX_VSYNC_BLOB}
+            -DNAME=redux_vsync_so -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    DEPENDS redux_vsync ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    COMMENT "Embedding the vsync library")
+
 add_executable(rg34xxsp-redux
     src/main.c
     src/grid.c
@@ -33,6 +47,8 @@ add_executable(rg34xxsp-redux
     src/screentimeout.c
     src/sysinfo.c
     src/apps.c
+    src/vsync.c
+    ${REDUX_VSYNC_BLOB}
     src/ports.c
     src/cardscripts.c
     src/bootscreen.c
@@ -116,7 +132,7 @@ add_executable(test_sysinfo tests/test_sysinfo.c src/sysinfo.c)
 target_include_directories(test_sysinfo PRIVATE src)
 
 # Navigation test (back stack, Engineering tabs). Links the UI with the desktop platform; no window.
-add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/ports.c src/cardscripts.c src/bootscreen.c)
+add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/cardscripts.c src/bootscreen.c)
 target_include_directories(test_ui_nav PRIVATE src)
 if(TARGET SDL2::SDL2)
     target_link_libraries(test_ui_nav PRIVATE SDL2::SDL2)
@@ -124,3 +140,14 @@ else()
     target_include_directories(test_ui_nav PRIVATE ${SDL2_INCLUDE_DIRS})
     target_link_libraries(test_ui_nav PRIVATE ${SDL2_LIBRARIES})
 endif()
+
+# vsync library: loads it, checks it passes frames through and switches itself off when the
+# framebuffer can't wait for vblank (no device needed): ./test_vsync.
+add_library(test_fakesdl SHARED tests/fakesdl.c)
+add_executable(test_vsync_app tests/test_vsync_app.c)
+target_link_libraries(test_vsync_app PRIVATE test_fakesdl ${CMAKE_DL_LIBS})
+add_executable(test_vsync tests/test_vsync.c src/vsync.c ${REDUX_VSYNC_BLOB})
+target_include_directories(test_vsync PRIVATE src)
+add_dependencies(test_vsync redux_vsync test_vsync_app)
+target_compile_definitions(test_vsync PRIVATE
+    VSYNC_SO="$<TARGET_FILE:redux_vsync>" VSYNC_APP="$<TARGET_FILE:test_vsync_app>")

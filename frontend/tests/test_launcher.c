@@ -47,6 +47,11 @@ int main(void) {
            " >/tmp/redux-app.out 2>&1; rc=$?; { echo \"[openbor] engine exit=$rc\"; tail -c 1200 /tmp/redux-app.out; echo; }"
            " >>/mnt/vendor/redux/redux.log 2>/dev/null; rm -f /tmp/redux-app.out\n");
     expect("openbor needs a pak", LAUNCH_OPENBOR, NULL, NULL, NULL);
+    launcher_set_preload("LD_PRELOAD=/tmp/redux-vsync.so");
+    expect("a .dge with the vsync preload (File Manager)", LAUNCH_DGE, "/mnt/vendor/bin/fileM/dinguxCommand_en.dge", NULL,
+           "cd '/mnt/vendor/bin/fileM' && LD_PRELOAD=/tmp/redux-vsync.so AUDIODEV=hw:2,0 ./'dinguxCommand_en.dge'\n");
+    expect("the preload is used once", LAUNCH_DGE, "/mnt/vendor/bin/fileM/dinguxCommand_en.dge", NULL,
+           "cd '/mnt/vendor/bin/fileM' && AUDIODEV=hw:2,0 ./'dinguxCommand_en.dge'\n");
     expect("card script from its folder", LAUNCH_SCRIPT, "/mnt/mmc/Roms/PORTS/It's.sh", NULL,
            "cd '/mnt/mmc/Roms/PORTS' && AUDIODEV=hw:2,0 /bin/bash ./'It'\\''s.sh'\n");
     expect("script needs a path", LAUNCH_SCRIPT, NULL, NULL, NULL);

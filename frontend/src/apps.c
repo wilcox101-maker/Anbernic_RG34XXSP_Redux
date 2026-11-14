@@ -1,6 +1,8 @@
 #include "apps.h"
+#include "vsync.h"
 #include "launcher.h"
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 
 /* Every stock app is "not verified" until Dale runs it from Redux on the device.
@@ -82,6 +84,12 @@ int apps_launch(int i) {
     if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return -2;
     /* The video player hands playback back through /tmp/.next (launcher_start_video). */
     if (i == APP_VIDEO) return launcher_start_video(apps[i].dge) == 0 ? 0 : -1;
+    /* SimpleTerminal and File Manager tear (stock SDL presents without vsync): preload the vsync
+       library for them (Dale's decision 2026-11-14, B). If it can't be written, launch without it. */
+    char env[300];
+    if ((i == APP_FILES || (apps[i].bin && strcmp(apps[i].bin, TERM_BIN) == 0))
+        && vsync_install(env, sizeof env) == 0)
+        launcher_set_preload(env);
     if (apps[i].dge) return launcher_start(LAUNCH_DGE, apps[i].dge, NULL) == 0 ? 0 : -1;
     return launcher_start_app(apps[i].bin, apps[i].env, apps[i].args) == 0 ? 0 : -1;
 }

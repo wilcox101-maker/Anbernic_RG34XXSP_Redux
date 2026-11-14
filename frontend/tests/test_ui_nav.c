@@ -903,7 +903,7 @@ int main(void) {
         char line[256] = "";
         FILE *f = fopen("/tmp/redux-next-apps", "r");
         if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
-        expect(strcmp(line, "cd '/mnt/mod/ctrl' && HOME=/root ./'SimpleTerminal' -e htop\n") == 0,
+        expect(strcmp(line, "cd '/mnt/mod/ctrl' && LD_PRELOAD=/tmp/redux-vsync.so HOME=/root ./'SimpleTerminal' -e htop\n") == 0,
                "Task Monitor runs SimpleTerminal -e htop from its folder");
     }
     remove("/tmp/redux-next-apps");
@@ -949,7 +949,7 @@ int main(void) {
             char line[256] = "", want[256];
             FILE *f = fopen("/tmp/redux-next-apps", "r");
             if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
-            snprintf(want, sizeof want, "cd '/mnt/mod/ctrl' && HOME=/root ./'SimpleTerminal' %s\n", tools[t].args);
+            snprintf(want, sizeof want, "cd '/mnt/mod/ctrl' && LD_PRELOAD=/tmp/redux-vsync.so HOME=/root ./'SimpleTerminal' %s\n", tools[t].args);
             char label[96];
             snprintf(label, sizeof label, "Tools: %s launches", apps_name(tools[t].app));
             expect(ui_should_exit() == 1 && strcmp(line, want) == 0, label);

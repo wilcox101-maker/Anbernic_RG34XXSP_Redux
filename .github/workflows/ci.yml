@@ -55,6 +55,8 @@ jobs:
         run: ./build/test_ports
       - name: Boot Screen manager tests (temp folder, no device)
         run: ./build/test_bootscreen
+      - name: Vsync library (preload, pass-through, self-off)
+        run: ./build/test_vsync
       - name: Bench harness tests (host tool, no device)
         run: cd tools && python3 -B -m unittest discover -s bench/tests -t .
       - name: Extras installer tests (host tool, no device)
@@ -122,6 +124,7 @@ jobs:
           ./build-arm64/test_brightness
           ./build-arm64/test_screentimeout
           ./build-arm64/test_bootscreen
+          ./build-arm64/test_vsync
       - name: Check it is an aarch64 ELF
         run: |
           python3 - build-arm64/rg34xxsp-redux <<'PY'
