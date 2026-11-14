@@ -104,3 +104,4 @@
 - 2026-11-14 09:15 · claude · read: #177 merged by Dale · did: merged main into #177 earlier (conflict) and now into #180 (STATUS Open notes), CI green. Waiting on Dale: #180, SWAP/NO SWAP.
 - 2026-11-14 09:20 · claude · read: #180 merged by Dale · did: nothing new. No open PRs. Waiting on Dale: SWAP/NO SWAP; #172 device session (on hold).
 - 2026-11-14 09:08 · claude · read: Dale SWAP · did: #181 handoff-2026-11-14-2 + STATUS Handoff pointer, CI green, for Dale to merge (AGENTS swap step 2). Archive name: Redux 2026-11-13→11-14: OpenBOR stock launch, F3 font picker + Reset All, vsync library, Manager relay, kernel research. Chat ends here.
+- 2026-11-14 09:27 · claude · read: Dale HELLO 09:05 (new chat after SWAP; push access approved on retry 09:25), handoff-2026-11-14-2, inbox #41 nothing new, no open PRs · did: took ownership (this chat). Parked: #172 device session on hold until Dale's go; DOS Mode waits on Dale's layout.
