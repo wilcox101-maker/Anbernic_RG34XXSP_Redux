@@ -29,7 +29,7 @@ a fresh chat when **any** of these happens:
 4. **Dale says "SWAP"** at any time.
 5. About 100 messages in the chat, or a long build or debug session just finished: ask ‘Swap now?’ at the next checkpoint.
 
-**Dale approves every swap.** For triggers 1 to 3, the agent does not swap on its own. It asks
+**Dale approves every swap.** For triggers 1 to 3 and 5, the agent does not swap on its own. It asks
 *"Swap now? (reason)"* and waits. Dale replies **SWAP** to approve, or **NO SWAP** to keep going.
 Trigger 4 is Dale's approval already. Without Dale's SWAP, the agent keeps working in the current chat.
 
