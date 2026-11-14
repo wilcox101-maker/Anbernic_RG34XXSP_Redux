@@ -22,6 +22,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 **2026-11-13: Grok is suspended; Claude runs the project solo ([decision](2026-11-13-dale-decision-grok-suspended.md), `GROK.md` to reinstate).** Every queue item below is Claude's, whatever its old owner marker.
 
 ## Waiting on Dale
+- **CPU table on mainline** ([decision](2026-11-14-dale-decision-mainline-cpu-table.md), option 2: ROCKNIX's H700 table, 1512 MHz only via Expert Mode, stress test before Beta). Interprets a hard rule: Dale merges.
 - 2026-11-13: #109 and #143 (Device test queue) closed by Dale; results in [hw-result-143](2026-11-13-dale-hw-result-143.md). Older: device tests in **issue #109**, from **Releases → dev**: #102 brightness, #104 TF2 ROMs, #88 Wi-Fi connect, #85 buttons; optional #95 accent bars. Deploy only a dev build whose SHA is a **merge** commit (the release at `f3ecab1` was an ACTIVITY commit; #117 fixes that from the next merge on).
 - Dale's local clone `Documents\GitHub\Anbernic_RG34XXSP_Redux` is at `0afecd9` (#82), CRLF-only diffs. Before building from it: `git config core.autocrlf true && git fetch && git reset --hard origin/main`.
 
@@ -51,6 +52,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - Backlog: **vsync rebuilds of stock apps** that tear (SimpleTerminal from st-sdl, #41; File Manager, 9f), **DOS Mode** (Dale: keep the development menu style as a DOS Mode option alongside BIOS Mode; he'll define the layout as menus grow), ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM copy only in **[Xroot Mode]**, after the hidden ownership acknowledgement, [decision](2026-11-13-dale-decision-xroot-mode.md)), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track, **ZRAM: v1.x (after 1.0)** ([decision](2026-11-13-dale-decision-zram-v1x.md)).
 
 ## Open notes
+- [2026-11-14-dale-decision-mainline-cpu-table.md](2026-11-14-dale-decision-mainline-cpu-table.md): dale → all (mainline CPU table: ROCKNIX H700 table, 1512 MHz behind Expert Mode; stock track unchanged)
 - [2026-11-13-claude-decision-core-apps.md](2026-11-13-claude-decision-core-apps.md): claude → dale (Core Apps; Dale chose A: five Tools apps + OpenBOR)
 - [2026-11-13-dale-hw-result-boot-screen.md](2026-11-13-dale-hw-result-boot-screen.md): dale → all (Boot Screen switch works on 168c8bc)
 - [2026-11-13-dale-hw-result-app-center-ports-boot.md](2026-11-13-dale-hw-result-app-center-ports-boot.md): dale → all (device session 08:06: Terminal, Task Monitor, Music, Ports launch PASS; brightness, video, ebook M, port buttons FAIL; Boot Screen not seen)
