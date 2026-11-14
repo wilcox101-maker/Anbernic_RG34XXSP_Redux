@@ -62,6 +62,8 @@ Dale and Grok both post from the account `wilcox101-maker`. To tell them apart:
 - Dale starts his own comments with **`DALE:`**, for example `DALE: #89 tested OK on device` or
   `DALE: SWAP`.
 Agents treat only `DALE:` comments, merges and reviews from that account as Dale's own words.
+In chat, the Redux Manager may relay Dale's routine commands as `MGR for DALE:` (list and limits in
+`docs/commands.md`); decisions, merges, rule changes and swaps still come from Dale directly.
 
 ## "PING"
 
