@@ -36,6 +36,9 @@ void brightness_load(void);
 /* Re-apply the current level (startup). */
 int brightness_apply(void);
 
+/* Reset All: forget the saved level, go back to BRIGHTNESS_DEFAULT and apply it. */
+void brightness_reset(void);
+
 /* Backlight value 0-255 for a level: 16 at level 1 (never dark), 255 at level 20. */
 int brightness_disp_value(int level);
 

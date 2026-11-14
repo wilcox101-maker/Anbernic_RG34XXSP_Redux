@@ -56,6 +56,11 @@ void screentimeout_load(void) {
     fclose(f);
 }
 
+void screentimeout_reset(void) {
+    remove(path());
+    g_minutes = SCREENTIMEOUT_DEFAULT;
+}
+
 int screentimeout_due(uint32_t idle_ms) {
     return g_minutes > 0 && idle_ms >= (uint32_t)g_minutes * 60000u;
 }

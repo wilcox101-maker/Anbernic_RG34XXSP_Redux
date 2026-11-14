@@ -483,9 +483,9 @@ Settings → System, in order:
     <blank>
     <blank>
     Stock Menu
-    Reset All     not yet   (shown; cursor skips it)
+    Reset All               (3 s hold: Redux's own settings back to defaults)
 
-The cursor never lands on a blank row or a "not yet" item. Reset All (later) resets Redux's own settings in /mnt/data/redux/ to defaults. It never touches ROMs, saves, BIOS, Wi-Fi profiles or stock settings.
+The cursor never lands on a blank row. **Reset All** (built 2026-11-14, F3) opens a confirm; a 3 s hold of A puts Redux's own settings in /mnt/data/redux/ back to defaults: colours (BIOS cyan), brightness (level 5, applied at once), screen timeout (5 min), font (VGA), Card Scripts (Off), and the saved volume (forgotten; the current level stays until the next start, then stock's level applies). It removes those files by name, nothing else in the folder. It never touches ROMs, saves, BIOS, Wi-Fi profiles, stock settings or the **Boot Screen** marker (that records what is on the boot partition; use Boot Screen to change it). **Not verified on the device.**
 
 Restart and Power Off each open a confirm screen. Hold A for 3 seconds (HOLD_DESTRUCT_MS) to run. A tap that releases before 3 s stays on the confirm and resets the hold bar; nothing runs. Only B or another button leaves. The hold bar is the same as Stock Menu.
 

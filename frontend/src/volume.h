@@ -29,6 +29,11 @@ void volume_load(void);
 /* Re-apply the current level (startup and just before a game). */
 int volume_apply(void);
 
+/* Reset All: forget the saved level. The current level is left as it is (Redux's in-memory
+   default is the maximum, so applying it would jump the sound to full); the next start then
+   keeps stock's level, which is the default with no saved file. */
+void volume_reset(void);
+
 /* The command the last apply asked to run, or "". For tests. */
 const char *volume_last_command(void);
 

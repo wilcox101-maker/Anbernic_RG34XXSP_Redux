@@ -67,6 +67,12 @@ int brightness_apply(void) {
 #endif
 }
 
+void brightness_reset(void) {
+    remove(path());
+    g_level = BRIGHTNESS_DEFAULT;
+    brightness_apply();
+}
+
 int brightness_step(int dir) {
     int next = g_level + (dir > 0 ? 1 : dir < 0 ? -1 : 0);
     if (next < BRIGHTNESS_MIN) next = BRIGHTNESS_MIN;

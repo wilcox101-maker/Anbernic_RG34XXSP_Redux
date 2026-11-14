@@ -324,6 +324,11 @@ font_id_t font_step(int dir) {
     return g_font;
 }
 
+void font_reset(void) {
+    remove(path());
+    g_font = FONT_DEFAULT;
+}
+
 void font_load(void) {
     g_font = FONT_DEFAULT;
     FILE *f = fopen(path(), "r");
