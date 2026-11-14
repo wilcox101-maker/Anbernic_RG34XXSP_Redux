@@ -12,7 +12,8 @@ typedef enum {
     LAUNCH_PCSX,
     LAUNCH_PORTMASTER,
     LAUNCH_SCRIPT,   /* a .sh from the card, only with the Card Scripts switch On: core = script path */
-    LAUNCH_OPENBOR,  /* stock appfs script deep/openBOR/scripts/openbor.sh "<pak>" (dmenu.bin strings) */
+    LAUNCH_OPENBOR,  /* as stock dmenu.bin: openbor.sh "<pak>" (seeds cfg/controls), then
+                        cd deep/openBOR && ./OpenBOR.dge "<pak>" (decision 2026-11-14, option A) */
     LAUNCH_COUNT
 } launch_target_t;
 

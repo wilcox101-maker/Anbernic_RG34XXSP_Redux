@@ -94,6 +94,7 @@ int launcher_start_video(const char *bin) {
 }
 
 int launcher_start(launch_target_t target, const char *core, const char *rom_path) {
+    if (target == LAUNCH_OPENBOR && (!rom_path || !rom_path[0])) return -1;   /* the engine needs a pak */
     FILE *f = fopen(next_path, "w");
     if (!f) return -1;
 
@@ -162,12 +163,20 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
         } else {
             fprintf(f, "/bin/bash %s ", script);
             if (rom_path) quote(f, rom_path);
-            if (target == LAUNCH_OPENBOR)
-                /* Diagnostics (queue 12b): OpenBOR crashed while loading on the device. Exit
-                   code and the last output go to redux.log. */
+            if (target == LAUNCH_OPENBOR) {
+                /* openbor.sh only seeds the per-game cfg/controls and exits (queue 12b, #167);
+                   the engine is OpenBOR.dge, started from its folder with the pak, as stock does
+                   (no AUDIODEV, as stock). Both write on the card under the AGENTS.md exception
+                   (decision 2026-11-14, option A). Exit codes and the last output go to redux.log. */
                 fprintf(f, " >/tmp/redux-app.out 2>&1; rc=$?; "
-                           "{ echo \"[openbor] exit=$rc\"; tail -c 1200 /tmp/redux-app.out; echo; } "
+                           "{ echo \"[openbor] script exit=$rc\"; tail -c 600 /tmp/redux-app.out; echo; } "
+                           ">>" REDUX_LOG " 2>/dev/null; "
+                           "cd /mnt/vendor/deep/openBOR && ./OpenBOR.dge ");
+                quote(f, rom_path);
+                fprintf(f, " >/tmp/redux-app.out 2>&1; rc=$?; "
+                           "{ echo \"[openbor] engine exit=$rc\"; tail -c 1200 /tmp/redux-app.out; echo; } "
                            ">>" REDUX_LOG " 2>/dev/null; rm -f /tmp/redux-app.out");
+            }
             fputc('\n', f);
         }
     }
