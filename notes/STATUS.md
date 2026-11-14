@@ -28,7 +28,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - **DECIDE vsync** for SimpleTerminal/File Manager tearing: A, B or C ([note](2026-11-14-claude-decision-vsync-stock-apps.md)).
 - Paste both Project instruction blocks from `docs/project-setup.md` into the Redux and Redux Manager Projects (Manager relay, #174 merged 2026-11-14).
 - **Device test queue #172** for dev `fc17904`: OpenBOR, Video Player + redux-diag.txt, F3 font/Reset All, Apps resume, #109 leftovers, queue 13. (#109, #143 closed; results in [hw-result-143](2026-11-13-dale-hw-result-143.md).)
-- Dale's local clone `Documents\GitHub\Anbernic_RG34XXSP_Redux` is at `0afecd9` (#82), CRLF-only diffs. Before building from it: `git config core.autocrlf true && git fetch && git reset --hard origin/main`.
+- Dale's local clone `Documents\GitHub\Anbernic_RG34XXSP_Redux`: state unknown (it was at `0afecd9` on 11-12 and has been pulled since; the H700 project saw `d0de8e0` on 11-13). CRLF-only diffs are expected. Before building from it: `git config core.autocrlf true && git fetch && git reset --hard origin/main`.
 
 ## Queue (inbox #41 is the source of truth; in order)
 1. ~~Wi-Fi part 2: Connecting and result screens~~ merged in #73 (device test 2026-11-12: connect failed; fixed in #88). **Grok**

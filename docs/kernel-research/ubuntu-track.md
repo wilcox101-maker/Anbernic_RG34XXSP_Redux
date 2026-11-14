@@ -5,7 +5,7 @@ Status: **plan only, nothing built. Dale is reviewing it; not on the ROADMAP yet
 
 ## Why
 Stock is Ubuntu 22.04 (Jammy) on Allwinner's 4.9.170 BSP kernel. Jammy standard support ends
-**April 2027** (ESM to 2032). 24.04 (Noble) runs to April 2029 (ESM 2034); 26.04 to 2031.
+**spring 2027** (Canonical's table says April; the cut-off has been the end of May, as for 20.04 on 2025-05-31; ESM to 2032). 24.04 (Noble) runs to April 2029 (ESM 2034); 26.04 to 2031.
 A newer userland brings current SDL2, Mesa (Panfrost for Phase 2), Python 3.12, NetworkManager, BlueZ.
 
 ## Where it fits (no change to Beta)
