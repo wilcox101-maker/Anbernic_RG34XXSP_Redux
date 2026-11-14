@@ -14,6 +14,11 @@ Redux Manager chat (read-only), for Dale.
 | [stock-kernel-ghidra.md](stock-kernel-ghidra.md) | Function map of the V1.0.6 stock kernel from Ghidra (backlight, panel, lid, sticks, OPP) |
 | [open-questions.md](open-questions.md) | What to verify next, on the desk and on the device |
 
+**Canonical source for Phase 2 desk work: the [H700 Kernel Research](https://github.com/wilcox101-maker/Allwinner-H700-Custom-Kernel-Research) repo (KR),**
+checked at `c77891f` (2026-11-14): patches, device trees, build scripts, test kits, and the task list
+`docs/master-task-list.md` (K-IDs). Redux keeps the summaries here and links to KR by path and commit;
+KR keeps the patches. KR is GPL-2.0, like Redux. Nothing in KR has booted on an RG34XX-SP either.
+
 Related: [`../kernel-strategy.md`](../kernel-strategy.md) (the strategy, still valid),
 [`../hardware-map.md`](../hardware-map.md), [`../stock-boot-chain.md`](../stock-boot-chain.md),
 [`../ram-system-design.md`](../ram-system-design.md), [`../field-reports.md`](../field-reports.md).
