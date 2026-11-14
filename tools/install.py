@@ -7,11 +7,12 @@
     python tools/install.py --print-script install [--binary ...]   # show what would be sent
 
 One SSH session per run, so the root password is asked once. The device side is
-installer/redux_install.sh, sent with the binary (base64) on the session's standard input; nothing
-is copied with scp and nothing is left on the device but Redux itself.
+installer/redux_install.sh, sent with the binary and installer/run.sh (base64) on the session's
+standard input; nothing is copied with scp and nothing is left on the device but Redux itself.
 
-What it changes on the handheld: /mnt/vendor/redux/ (the Redux binary, and the boot logo if you pass
---bootlogo), one line of /mnt/vendor/ctrl/dmenu_ln (backed up once to dmenu_ln.bak), and a log in
+What it changes on the handheld: /mnt/vendor/redux/ (the Redux binary, run.sh, and the boot logo if
+you pass --bootlogo), one line of /mnt/vendor/ctrl/dmenu_ln (CMD= becomes run.sh; the stock file is
+backed up once to dmenu_ln.bak), and a log in
 /mnt/data/redux/install.log. Never the Roms card, never the boot partition. --uninstall puts the
 stock dmenu_ln back. See docs/install.md.
 
@@ -27,9 +28,21 @@ import subprocess
 import sys
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# In the repo: installer/redux_install.sh. From the dev release: next to install.py.
-DEVICE_SCRIPTS = (os.path.join(ROOT_DIR, "installer", "redux_install.sh"),
-                  os.path.join(os.path.dirname(os.path.abspath(__file__)), "redux_install.sh"))
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def find_file(name):
+    """installer/<name> in the repo, or <name> next to install.py (dev release folder)."""
+    for p in (os.path.join(ROOT_DIR, "installer", name), os.path.join(HERE, name)):
+        if os.path.isfile(p):
+            return p
+    sys.exit(f"{name} not found: keep it in the same folder as install.py")
+
+
+def read_lf(name):
+    """A device script as LF text (a Windows checkout with core.autocrlf would give CRLF)."""
+    with open(find_file(name), "rb") as f:
+        return f.read().decode("utf-8").replace("\r\n", "\n")
 LOGO_BYTES = 921654
 
 
@@ -53,29 +66,33 @@ def _b64_lines(data):
     return "\n".join(enc[i:i + 76] for i in range(0, len(enc), 76))
 
 
-def build_stream(mode, binary=None, logo=None, script_text=None):
+def _payload(name, data, end):
+    return (f"{name}() {{\nbase64 -d <<'{end}'\n" + _b64_lines(data) + f"\n{end}\n}}")
+
+
+def build_stream(mode, binary=None, logo=None, script_text=None, run_text=None):
     """Return the bytes sent to `sh -s` on the device: settings, payload functions, the script.
 
     Line endings are forced to LF: a Windows checkout with core.autocrlf would otherwise send
     CRLF, which sh on the device can't run.
     """
     if script_text is None:
-        path = next((p for p in DEVICE_SCRIPTS if os.path.isfile(p)), None)
-        if path is None:
-            sys.exit("redux_install.sh not found: keep it in the same folder as install.py")
-        with open(path, "rb") as f:
-            script_text = f.read().decode("utf-8")
+        script_text = read_lf("redux_install.sh")
     script_text = script_text.replace("\r\n", "\n")
     head = [f"REDUX_MODE='{mode}'"]
     if binary is not None:
         head.append(f"REDUX_SHA256='{hashlib.sha256(binary).hexdigest()}'")
         head.append(f"REDUX_SIZE='{len(binary)}'")
-        head.append("redux_payload() {\nbase64 -d <<'REDUX_PAYLOAD_END'\n"
-                    + _b64_lines(binary) + "\nREDUX_PAYLOAD_END\n}")
+        head.append(_payload("redux_payload", binary, "REDUX_PAYLOAD_END"))
+        if run_text is None:
+            run_text = read_lf("run.sh")
+        run = run_text.replace("\r\n", "\n").encode("utf-8")
+        head.append(f"REDUX_RUN_SHA256='{hashlib.sha256(run).hexdigest()}'")
+        head.append(f"REDUX_RUN_SIZE='{len(run)}'")
+        head.append(_payload("redux_payload_run", run, "REDUX_RUN_END"))
     if logo is not None:
         head.append(f"REDUX_LOGO_SHA256='{hashlib.sha256(logo).hexdigest()}'")
-        head.append("redux_payload_logo() {\nbase64 -d <<'REDUX_LOGO_END'\n"
-                    + _b64_lines(logo) + "\nREDUX_LOGO_END\n}")
+        head.append(_payload("redux_payload_logo", logo, "REDUX_LOGO_END"))
     return ("\n".join(head) + "\n" + script_text).encode("utf-8")
 
 

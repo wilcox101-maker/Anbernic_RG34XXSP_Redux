@@ -70,12 +70,14 @@ class DeviceScript(unittest.TestCase):
         self.assertEqual(rc, 0, out)
         self.assertEqual(self.read("mnt/vendor/redux/dmenu.bin"), FAKE_BIN)
         ln = self.read("mnt/vendor/ctrl/dmenu_ln").decode()
-        self.assertIn('CMD="/mnt/vendor/redux/dmenu.bin"\n', ln)
+        self.assertIn('CMD="/mnt/vendor/redux/run.sh"\n', ln)
         self.assertNotIn('CMD="/mnt/vendor/bin/dmenu.bin"', ln)
         self.assertIn("CMD=/mnt/vendor/bin/video/vp.dge", ln)          # only the one line changed
         self.assertEqual(len(ln.splitlines()), len(STOCK_LN.splitlines()))
         self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln.bak").decode(), STOCK_LN)
         self.assertTrue(os.access(os.path.join(self.root, "mnt/vendor/redux/dmenu.bin"), os.X_OK))
+        self.assertTrue(os.access(os.path.join(self.root, "mnt/vendor/redux/run.sh"), os.X_OK))
+        self.assertEqual(self.read("mnt/vendor/redux/run.sh"), install.read_lf("run.sh").encode())
         self.assertIn(hashlib.sha256(FAKE_BIN).hexdigest(), self.read("mnt/data/redux/install.log").decode())
         self.assertFalse(any(n.endswith((".new", ".tmp")) for n in os.listdir(os.path.join(self.root, "mnt/vendor/redux"))))
 
@@ -142,11 +144,89 @@ class DeviceScript(unittest.TestCase):
         self.assertNotEqual(rc, 0)
         self.assertIn("no dmenu_ln.bak", out)
 
+    def test_old_hand_deploy_moves_to_run_sh(self):
+        # Before the installer: dmenu_ln ran dmenu.bin directly, with a stock backup made by hand.
+        bak = os.path.join(self.root, "mnt/vendor/ctrl/dmenu_ln.bak")
+        self.write(bak, STOCK_LN)
+        self.write(self.ln, STOCK_LN.replace("/mnt/vendor/bin/dmenu.bin", "/mnt/vendor/redux/dmenu.bin"))
+        rc, out = self.run_mode("check")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("redux-old", out)
+        rc, out = self.run_mode("install", FAKE_BIN)
+        self.assertEqual(rc, 0, out)
+        self.assertIn('CMD="/mnt/vendor/redux/run.sh"', self.read("mnt/vendor/ctrl/dmenu_ln").decode())
+        self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln.bak").decode(), STOCK_LN)
+        rc, out = self.run_mode("uninstall")
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln").decode(), STOCK_LN)
+
+    def test_bad_run_sh_checksum_changes_nothing(self):
+        stream = install.build_stream("install", FAKE_BIN).decode()
+        good = hashlib.sha256(install.read_lf("run.sh").encode()).hexdigest()
+        stream = stream.replace(f"REDUX_RUN_SHA256='{good}'", "REDUX_RUN_SHA256='" + "1" * 64 + "'", 1)
+        rc, out = self.run_mode("install", stream=stream.encode())
+        self.assertNotEqual(rc, 0)
+        self.assertIn("run.sh copy failed", out)
+        self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln").decode(), STOCK_LN)
+        self.assertFalse(self.exists("mnt/vendor/redux/run.sh"))
+
     def test_bootlogo_is_copied(self):
         logo = b"BM" + b"\0" * (install.LOGO_BYTES - 2)
         rc, out = self.run_mode("install", FAKE_BIN, logo)
         self.assertEqual(rc, 0, out)
         self.assertEqual(self.read("mnt/vendor/redux/bootlogo.bmp"), logo)
+
+
+@unittest.skipUnless(HAVE_SH, "needs a POSIX shell with coreutils")
+class RunWrapper(unittest.TestCase):
+    """installer/run.sh with a fake dmenu.bin (REDUX_DIR)."""
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        self.run_sh = os.path.join(self.d, "run.sh")
+        with open(self.run_sh, "w", newline="\n") as f:
+            f.write(install.read_lf("run.sh"))
+
+    def tearDown(self):
+        shutil.rmtree(self.d)
+
+    def fake_menu(self, body):
+        p = os.path.join(self.d, "dmenu.bin")
+        with open(p, "w", newline="\n") as f:
+            f.write("#!/bin/sh\n" + body + "\n")
+        os.chmod(p, 0o755)
+
+    def run_wrapper(self):
+        return subprocess.run(["sh", self.run_sh], env=dict(os.environ, REDUX_DIR=self.d),
+                              capture_output=True).returncode
+
+    def log(self):
+        with open(os.path.join(self.d, "redux.log"), "rb") as f:
+            return f.read()
+
+    def test_exit_code_and_log_lines(self):
+        self.fake_menu('echo hello; echo oops >&2; exit 3')
+        self.assertEqual(self.run_wrapper(), 3)
+        log = self.log().decode()
+        self.assertIn("=== start", log)
+        self.assertIn("hello\noops\n", log)
+        self.assertIn("=== exit 3", log)
+        self.fake_menu('exit 0')
+        self.assertEqual(self.run_wrapper(), 0)
+
+    def test_log_is_capped(self):
+        self.fake_menu('exit 0')
+        with open(os.path.join(self.d, "redux.log"), "wb") as f:
+            f.write(b"x" * 400_000)
+        self.run_wrapper()
+        size = len(self.log())
+        self.assertLess(size, 140_000)
+        self.assertGreater(size, 131_072)
+        self.assertIn(b"log trimmed", self.log())
+        self.run_wrapper()                      # under the cap now: only appended
+        self.assertGreater(len(self.log()), size)
+
+    def test_syntax(self):
+        self.assertEqual(subprocess.run(["sh", "-n", self.run_sh]).returncode, 0)
 
 
 class HostSide(unittest.TestCase):
