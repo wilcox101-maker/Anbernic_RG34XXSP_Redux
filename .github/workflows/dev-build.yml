@@ -35,6 +35,12 @@ jobs:
           name: redux-dmenu-bin-aarch64
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          path: src
+      - name: Installer files for the release
+        run: cp src/tools/install.py src/installer/redux_install.sh .
       - name: Skip if main has moved on
         id: latest
         run: |
@@ -50,12 +56,12 @@ jobs:
         if: steps.latest.outputs.skip != '1'
         run: |
           short=${SHA:0:7}
-          sha256sum dmenu.bin bootlogo.bmp > SHA256SUMS.txt
+          sha256sum dmenu.bin bootlogo.bmp install.py redux_install.sh > SHA256SUMS.txt
           cat > notes.md <<NOTES
           Rolling build of **main** at \`$short\`. The Redux title bar shows \`v0.1-dev - $short\`.
 
           - Built and tested by CI: $RUN_URL
-          - Deploy per \`phase1-stock-tweaks/DEPLOY.md\` / \`tools/deploy_frontend.py\`.
+          - Install from a PC: put \`dmenu.bin\`, \`install.py\` and \`redux_install.sh\` in one folder, then \`python install.py <device-ip>\` (see \`docs/install.md\`; \`--uninstall\` puts stock back). Not device-checked yet.
           - \`bootlogo.bmp\`: the Redux boot screen (stock format). Copy with \`deploy_frontend.py --bootlogo\`, install in Settings > System > Boot Screen.
           - Not a release. Device-verified items are listed in \`notes/\`, not here.
           NOTES
@@ -66,4 +72,4 @@ jobs:
             gh release create dev --repo "$REPO" --target "$SHA" --prerelease \
               --title "Dev build $short" --notes-file notes.md
           fi
-          gh release upload dev dmenu.bin bootlogo.bmp SHA256SUMS.txt --repo "$REPO" --clobber
+          gh release upload dev dmenu.bin bootlogo.bmp install.py redux_install.sh SHA256SUMS.txt --repo "$REPO" --clobber

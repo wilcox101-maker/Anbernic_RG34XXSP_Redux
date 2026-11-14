@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-14
 re: Beta "Stock-card install" (ROADMAP), relayed as MGR for DALE PLAN stock-card installer (2026-11-14 13:36); Dale A (13:37)
-status: open
+status: closed (by dale, 2026-11-14)
 ---
 
 # Decision: how Redux gets onto a stock card (Beta installer)
