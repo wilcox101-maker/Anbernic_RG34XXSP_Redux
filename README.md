@@ -63,8 +63,34 @@ merged and passes CI but hasn't been confirmed on hardware yet. Live task list:
 | Milestone | What it is | Progress (rough) |
 |---|---|---|
 | **Beta (v0.5)** | Redux frontend on the stock kernel, installable by anyone | ≈ 40% |
-| **1.0** | Purpose-built OS on a mainline kernel | ≈ 15% |
+| **1.0** | Purpose-built OS on a mainline kernel | ≈ 20% (research and design; nothing booted on mainline yet) |
 | **1.x** | After 1.0: ZRAM on mainline | not started |
+
+### Latest: kernel research leap (2026-11-13 → 14)
+
+One long session moved Phase 2 (the mainline OS behind 1.0) from a plan to a researched path. Details in
+[`docs/kernel-research/`](docs/kernel-research/README.md). **Desk research: nothing here has booted on
+Dale's device yet.**
+
+- **Mainline is already running on our hardware elsewhere.** ROCKNIX runs the RG34XX-SP on Linux 7.2,
+  with separate builds for the original (LPDDR4) and revised (LPDDR3) boards, two panel variants and a real
+  suspend-to-RAM. A Debian 13 port shows a full distro on the same chip family with no Anbernic code.
+- **We know exactly what upstream Linux lacks** (7.4-rc2): screen output, the backlight PWM driver, the
+  SPI panel driver and an RG34XX-SP device tree. The sticks can be described with upstream drivers, so
+  Redux won't need ROCKNIX's out-of-tree joypad driver.
+- **The stock kernel is mapped in Ghidra.** The V1.0.6 kernel was unpacked, its config recovered, and about
+  2,850 functions named automatically. That settled three open questions in one night:
+  - **Brightness:** the `axp2202-battery/brightness` file only stores 0–100 and never reaches the backlight;
+    the real control is `/dev/disp` (0–255), which Redux already uses.
+  - **Lid:** stock reports it as `KEY_DELETE` (closed) / `KEY_INSERT` (opened), not a lid switch, and the
+    kernel does nothing else, so Redux owns lid behaviour.
+  - **CPU speeds:** the per-chip-grade speed/voltage table is recorded. Dale chose how mainline handles
+    it (ROCKNIX's table, 1512 MHz only via Expert Mode, after a stress test); the decision note is waiting
+    for his merge.
+- **A Wi-Fi crash to fix before mainline ships:** a known RTL8821CS receive bug (our chip) that neither
+  upstream nor ROCKNIX patches yet.
+- **Ubuntu 24.04 track planned** ([plan](docs/kernel-research/ubuntu-track.md)): a newer userland in parallel
+  with Beta, on a bench card only. Waiting on Dale's first decision.
 
 ### Completed
 - **Phase 0, dissect stock:** partitions, boot chain, hardware map, stock userspace inventory.
@@ -133,6 +159,7 @@ The details are in [`docs/hardware-map.md`](docs/hardware-map.md).
 AGENTS.md             rules for AI collaborators; they talk through notes/
 notes/                dated hand-off notes between AIs + STATUS.md board
 docs/                 hardware map, stock boot chain and userspace, kernel strategy, frontend brief
+docs/kernel-research/  kernel, bootloader and Ubuntu research (desk only)
 reference/stock-202505/  device tree source, kernel .config, u-boot env and
                       initramfs init script, extracted from Anbernic firmware
                       rg34xxsp-fw-sd_202505 (sources only, no binaries)

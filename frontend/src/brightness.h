@@ -4,8 +4,8 @@
 /* Persistent display brightness.
    The backlight is set with the sunxi display driver: ioctl(/dev/disp, DISP_LCD_SET_BRIGHTNESS
    0x102, {screen 0, value 0-255}). Device-checked by Dale 2026-11-13: 40 dims, 200 brightens.
-   The AXP2202 attribute /sys/class/power_supply/axp2202-battery/brightness only stores a number
-   (writing it never changed the screen, Dale 2026-11-13); Redux still writes the level there too,
+   The AXP2202 attribute /sys/class/power_supply/axp2202-battery/brightness only stores 0-100 and
+   the kernel never applies it (Ghidra 2026-11-14, docs/kernel-research); Redux still writes the level there too,
    in case a stock script reads it. Levels 1-20, never 0.
    Min, max and default live here so a later builder can widen the range once
    the real upper limit is known. Do not probe above BRIGHTNESS_MAX.
