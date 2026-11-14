@@ -163,6 +163,10 @@ and the next PING report. No notification.
   safeguards: password, local network only, delete moves files to `.trash`, overwrite asks, and ROM uploads
   (ROM copy) only in **[Xroot Mode]**, the state after the one-time ownership acknowledgement
   ([decision](notes/2026-11-13-dale-decision-xroot-mode.md)). Nothing else in Redux writes to p1.
+  **Second exception, stock engines' own data:** a stock engine Redux launches may write its own saves,
+  logs, screenshots and config where it is built to (OpenBOR: `/mnt/mmc/openbor`, and the per-game
+  `.cfg`/`.controls` its stock `openbor.sh` seeds); Redux's own code still never writes there
+  ([decision](notes/2026-11-14-dale-decision-openbor-launch.md)).
 - Never write code that formats a partition automatically. Never run code from removable media
   without an explicit user opt-in.
 - Host tools: Python 3 standard library only, must run on Windows.

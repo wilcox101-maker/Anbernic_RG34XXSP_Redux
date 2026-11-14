@@ -138,7 +138,7 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
         const char *script = script_for(target);
         if (!script) { fclose(f); return -1; }
 
-        if (!elf_dir_for(target)) fputs(audiodev, f);
+        if (!elf_dir_for(target) && target != LAUNCH_OPENBOR) fputs(audiodev, f);
 
         /* The stock launch scripts are bash (RA_launch.sh uses [[ ]] and declare -A);
            plain sh fails on them at once. bash also runs any POSIX sh script. */
@@ -159,15 +159,24 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
             fprintf(f, " && %s./%s ", audiodev, name);
             if (rom_path) quote(f, rom_path);
             fputc('\n', f);
+        } else if (target == LAUNCH_OPENBOR) {
+            /* Same two steps as stock dmenu.bin (strings + appfs image, 2026-11-14): openbor.sh only
+               seeds <pak>.cfg / .controls (Anbernic's button map) and exits; then the engine runs
+               from its folder with the pak, no AUDIODEV (stock's format for it). The engine keeps
+               its data in /mnt/mmc/openbor (compiled in): Dale's exception to the Roms-card rule,
+               2026-11-14 (notes/2026-11-14-dale-decision-openbor-launch.md). Exit code and the last
+               output go to redux.log (queue 12b diagnostics). */
+            if (!rom_path) { fclose(f); return -1; }
+            fprintf(f, "/bin/bash %s ", script);
+            quote(f, rom_path);
+            fprintf(f, " >/tmp/redux-app.out 2>&1; cd /mnt/vendor/deep/openBOR && ./OpenBOR.dge ");
+            quote(f, rom_path);
+            fprintf(f, " >>/tmp/redux-app.out 2>&1; rc=$?; "
+                       "{ echo \"[openbor] exit=$rc\"; tail -c 1200 /tmp/redux-app.out; echo; } "
+                       ">>" REDUX_LOG " 2>/dev/null; rm -f /tmp/redux-app.out\n");
         } else {
             fprintf(f, "/bin/bash %s ", script);
             if (rom_path) quote(f, rom_path);
-            if (target == LAUNCH_OPENBOR)
-                /* Diagnostics (queue 12b): OpenBOR crashed while loading on the device. Exit
-                   code and the last output go to redux.log. */
-                fprintf(f, " >/tmp/redux-app.out 2>&1; rc=$?; "
-                           "{ echo \"[openbor] exit=$rc\"; tail -c 1200 /tmp/redux-app.out; echo; } "
-                           ">>" REDUX_LOG " 2>/dev/null; rm -f /tmp/redux-app.out");
             fputc('\n', f);
         }
     }

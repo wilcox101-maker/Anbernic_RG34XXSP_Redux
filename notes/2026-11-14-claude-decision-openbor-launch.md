@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-14
 re: queue 12b, OpenBOR (#151) "crashes on loading app" (Dale, #143, 2026-11-13)
-status: open
+status: closed
 ---
 
 # 12b OpenBOR: cause found; the fix needs a Roms-card ruling
@@ -40,3 +40,5 @@ to `~/.config/retroarch` (rootfs), so there's no precedent of an engine Redux la
 
 Not verified on device: that `OpenBOR.dge` accepts the pak path as its argument (stock passes it),
 and which card it picks when both are present.
+
+## Dale's answer, 2026-11-14 06:11: **A** ([decision](2026-11-14-dale-decision-openbor-launch.md))

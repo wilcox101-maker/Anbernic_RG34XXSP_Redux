@@ -39,10 +39,12 @@ int main(void) {
     expect(".dge app, no rom", LAUNCH_DGE, "/mnt/vendor/bin/music/ap.dge", NULL,
            "cd '/mnt/vendor/bin/music' && AUDIODEV=hw:2,0 ./'ap.dge'\n");
     expect(".dge bare name rejected", LAUNCH_DGE, "ap.dge", NULL, NULL);
-    expect("openbor runs the stock script with the pak", LAUNCH_OPENBOR, NULL, "/mnt/mmc/Roms/OPENBOR/Final Fight LNS.pak",
-           "AUDIODEV=hw:2,0 /bin/bash /mnt/vendor/deep/openBOR/scripts/openbor.sh '/mnt/mmc/Roms/OPENBOR/Final Fight LNS.pak'"
-           " >/tmp/redux-app.out 2>&1; rc=$?; { echo \"[openbor] exit=$rc\"; tail -c 1200 /tmp/redux-app.out; echo; }"
+    expect("openbor: seed script, then the engine with the pak", LAUNCH_OPENBOR, NULL, "/mnt/mmc/Roms/OPENBOR/Final Fight LNS.pak",
+           "/bin/bash /mnt/vendor/deep/openBOR/scripts/openbor.sh '/mnt/mmc/Roms/OPENBOR/Final Fight LNS.pak'"
+           " >/tmp/redux-app.out 2>&1; cd /mnt/vendor/deep/openBOR && ./OpenBOR.dge '/mnt/mmc/Roms/OPENBOR/Final Fight LNS.pak'"
+           " >>/tmp/redux-app.out 2>&1; rc=$?; { echo \"[openbor] exit=$rc\"; tail -c 1200 /tmp/redux-app.out; echo; }"
            " >>/mnt/vendor/redux/redux.log 2>/dev/null; rm -f /tmp/redux-app.out\n");
+    expect("openbor needs a pak", LAUNCH_OPENBOR, NULL, NULL, NULL);
     expect("card script from its folder", LAUNCH_SCRIPT, "/mnt/mmc/Roms/PORTS/It's.sh", NULL,
            "cd '/mnt/mmc/Roms/PORTS' && AUDIODEV=hw:2,0 /bin/bash ./'It'\\''s.sh'\n");
     expect("script needs a path", LAUNCH_SCRIPT, NULL, NULL, NULL);
