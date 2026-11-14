@@ -96,3 +96,4 @@
 - 2026-11-14 07:02 · claude · read: Dale CLOSE · did: closed #171 (duplicate of #170, from another chat) with a comment. Open: which chat owns the repo (asked Dale).
 - 2026-11-14 07:10 · claude · read: Manager advice d; Dale 07:02 (repo control is my call), STOP 07:03, GO 07:05 · did: ownership: this chat owns, 'Device fixes 9a-g' chat read-only (STATUS). Device test queue #172 for dev fc17904 (pin needs GraphQL: not pinned). #173 STATUS merged. Parked until Dale's RESULT. notified Dale: #172 device session.
 - 2026-11-14 07:15 · claude · read: Manager advice e (relayed in this chat at Dale's request) · did: #174 Manager relay (docs/commands.md, CLAUDE.md, AGENTS.md, project-setup, Dale decision note, STATUS), CI green, NOT merged (AGENTS.md; Dale). notified Dale: #174 merge. Parked on #172.
+- 2026-11-14 07:20 · claude · read: #174 merged by Dale · did: STATUS PR (paste instruction blocks left), merged. Manager relay now in force. Parked on #172.
