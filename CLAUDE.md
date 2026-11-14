@@ -50,6 +50,7 @@ Dale's decision of 2026-11-13: Claude runs the project alone until Dale reinstat
 - GitHub GraphQL is blocked in Claude cloud sessions, so `gh pr list` / `gh pr view` fail. Use REST:
   `gh api repos/wilcox101-maker/anbernic_rg34xxsp_redux/pulls?state=open`, and
   `.../issues/41/comments?since=<ISO time>` for the inbox.
+- ACTIVITY times come from the clock, never from memory: `TZ=America/New_York date '+%Y-%m-%d %H:%M'`.
 - Clone shallow (`git clone --depth 1`). Push with `git -c push.negotiate=true push -u origin <branch>`.
   Force-push is blocked; open a new PR instead.
 - Stage explicit paths, never `git add -A` (build output was committed that way once, in #79).

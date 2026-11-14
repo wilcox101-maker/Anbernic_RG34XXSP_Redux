@@ -40,7 +40,8 @@ Procedure (after Dale's SWAP). This is the routine every time, to keep usage dow
    It is the session's memory for the next chat: current state, what was done and device-verified,
    decisions, what has not run on the device, the next task and its checkpoint, open PRs, and the
    archive name below. No passwords, no credentials.
-2. Update the **Handoff** section of `notes/STATUS.md` to point at that file (current state, device
+2. Update the **Handoff** section of `notes/STATUS.md` to point at that file, and add the old chat's
+   archive name to its "Previous chats archived as" list (current state, device
    location, deploy rule, lessons, decisions, queue). Docs PR; Dale merges it.
 3. Last message in the old chat gives Dale an **archive name** to rename it with, in the form
    `Redux <start date>→<end date>: <milestones>`, for example
