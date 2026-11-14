@@ -25,7 +25,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - 2026-11-14 07:02, Dale: repo control is the owning chat's call. **Owner: the "Attach with push" chat in the Redux Project.** The "Device fixes 9a-g" chat is advisory and read-only (it opened #171, closed as a duplicate of #170). A revived old chat is advisory unless Dale names it owner.
 
 ## Waiting on Dale
-- **Merge the Manager relay PR** (changes AGENTS.md), then paste both Project instruction blocks from `docs/project-setup.md` (Redux and Redux Manager).
+- Paste both Project instruction blocks from `docs/project-setup.md` into the Redux and Redux Manager Projects (Manager relay, #174 merged 2026-11-14).
 - **Device test queue #172** for dev `fc17904`: OpenBOR, Video Player + redux-diag.txt, F3 font/Reset All, Apps resume, #109 leftovers, queue 13. (#109, #143 closed; results in [hw-result-143](2026-11-13-dale-hw-result-143.md).)
 - Dale's local clone `Documents\GitHub\Anbernic_RG34XXSP_Redux` is at `0afecd9` (#82), CRLF-only diffs. Before building from it: `git config core.autocrlf true && git fetch && git reset --hard origin/main`.
 
