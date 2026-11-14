@@ -9,6 +9,7 @@ static SDL_Color accent = { 0, 255, 255, 255 };
 /* Glyph atlas: 256 glyphs side by side, white on transparent, built once per renderer. */
 static SDL_Texture *atlas;
 static SDL_Renderer *atlas_owner;
+static font_id_t atlas_font = FONT_COUNT;   /* font the atlas was built from */
 
 /* The only non-ASCII characters the UI uses, and their CP437 codes. */
 static const struct { uint32_t cp; unsigned char cp437; } box_map[] = {
@@ -81,7 +82,7 @@ void grid_set_accent(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 static int build_atlas(SDL_Renderer *ren) {
-    if (atlas && atlas_owner == ren) return 0;
+    if (atlas && atlas_owner == ren && atlas_font == font_current()) return 0;
     if (atlas) SDL_DestroyTexture(atlas);
     SDL_Surface *s = SDL_CreateRGBSurfaceWithFormat(0, 256 * FONT_W, FONT_H, 32, SDL_PIXELFORMAT_RGBA32);
     if (!s) return -1;
@@ -101,6 +102,7 @@ static int build_atlas(SDL_Renderer *ren) {
     if (!atlas) return -1;
     SDL_SetTextureBlendMode(atlas, SDL_BLENDMODE_BLEND);
     atlas_owner = ren;
+    atlas_font = font_current();
     return 0;
 }
 

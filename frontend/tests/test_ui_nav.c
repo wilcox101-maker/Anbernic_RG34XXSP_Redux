@@ -15,6 +15,8 @@
 #include "apps.h"
 #include "cardscripts.h"
 #include "bootscreen.h"
+#include "screentimeout.h"
+#include "font.h"
 #include "grid.h"
 #include <stdio.h>
 #include <unistd.h>
@@ -686,6 +688,50 @@ int main(void) {
         expect(strstr(dump, "Screen Timeout  Off") != NULL, "Left stops at Off");
     }
     remove("/tmp/redux.screen_timeout");
+
+    /* Display row 3: Font (docs/ui-spec.md 8a). Right steps VGA -> Spleen, saved, reloaded;
+       Left from VGA wraps to Chunky; the preview shows the box characters. */
+    remove("/tmp/redux.font");
+    ui_init();
+    expect(font_current() == FONT_VGA, "no saved font: VGA");
+    down(8); press(LB_A); press(LB_A);             /* Settings > Display */
+    {
+        char dump[8192];
+        press(LB_DOWN); press(LB_DOWN); press(LB_RIGHT);
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(font_current() == FONT_SPLEEN && strstr(dump, "Font  < Spleen >") != NULL,
+               "Down Down Right: Font VGA -> Spleen");
+        expect(strstr(dump, "\u250c\u2500\u2500\u2500\u2510") != NULL, "Font row shows the box preview");
+        expect(screentimeout_minutes() == SCREENTIMEOUT_DEFAULT, "changing the font leaves the timeout alone");
+        ui_init();
+        expect(font_current() == FONT_SPLEEN, "saved font reloads");
+        down(8); press(LB_A); press(LB_A); press(LB_DOWN); press(LB_DOWN);
+        press(LB_LEFT); press(LB_LEFT);
+        expect(font_current() == FONT_CHUNKY, "Left from VGA wraps to Chunky");
+        FILE *f = fopen("/tmp/redux.font", "w");
+        if (f) { fputs("comic\n", f); fclose(f); }
+        ui_init();
+        expect(font_current() == FONT_VGA, "unknown saved font falls back to VGA");
+    }
+    {
+        /* A glyph Unifont lacks is drawn from VGA; one it has is its own. */
+        int missing = -1;
+        for (int c = 0x21; c < 256 && missing < 0; c++) {
+            int blank = 1;
+            for (int y = 0; y < 16; y++) if (font_unifont_8x16[c][y]) blank = 0;
+            if (blank && c != 0x7F) missing = c;
+        }
+        const uint8_t *vga_a = font_glyph('A'), *vga_m = missing >= 0 ? font_glyph((unsigned char)missing) : NULL;
+        FILE *f = fopen("/tmp/redux.font", "w");
+        if (f) { fputs("unifont\n", f); fclose(f); }
+        font_load();
+        expect(font_current() == FONT_UNIFONT && font_glyph('A') != vga_a, "Unifont draws its own A");
+        expect(missing >= 0 && font_glyph((unsigned char)missing) == vga_m, "a glyph Unifont lacks comes from VGA");
+        remove("/tmp/redux.font");
+        font_load();
+    }
+    remove("/tmp/redux.font");
 
     /* Restart / Power Off: one A does nothing; 3 s hold runs the hook once; B cancels. */
     power_set_run(power_hook);

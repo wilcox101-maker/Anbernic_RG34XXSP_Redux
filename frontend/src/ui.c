@@ -12,6 +12,7 @@
 #include "volume.h"
 #include "brightness.h"
 #include "screentimeout.h"
+#include "font.h"
 #include "sysinfo.h"
 #include "apps.h"
 #include "cardscripts.h"
@@ -280,6 +281,7 @@ void ui_init(void) {
     volume_load();
     brightness_load();   /* no saved file: leave the hardware level as stock set it */
     screentimeout_load();
+    font_load();
     ui_busy("Scanning for ROMs", NULL);
     romscan_init();
     go_replace(SCREEN_MAIN);
@@ -308,7 +310,7 @@ static int list_count(void) {
     case SCREEN_APPS:     return apps_count();
     case SCREEN_WIFI:     return wifi_count();
     case SCREEN_SYSTEM_DEFAULTS: return N_SYSTEM_ROWS;
-    case SCREEN_DISPLAY:  return 2;   /* Brightness, Screen Timeout */
+    case SCREEN_DISPLAY:  return 3;   /* Brightness, Screen Timeout, Font */
     default:              return 0;
     }
 }
@@ -622,8 +624,10 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (screen == SCREEN_WIFI && btn == LB_Y) { wifi_rescan(); return; }
 
     if (screen == SCREEN_DISPLAY && (btn == LB_LEFT || btn == LB_RIGHT)) {
-        if (selected == 1) screentimeout_step(btn == LB_RIGHT ? +1 : -1);
-        else               brightness_step(btn == LB_RIGHT ? +1 : -1);
+        int dir = btn == LB_RIGHT ? +1 : -1;
+        if (selected == 1)      screentimeout_step(dir);
+        else if (selected == 2) font_step(dir);   /* live preview: the whole screen redraws in it */
+        else                    brightness_step(dir);
         dirty = 1;
         return;
     }
@@ -966,9 +970,17 @@ void ui_draw(void) {
         if (mins) snprintf(line, sizeof line, "  Screen Timeout  %d min", mins);
         else      snprintf(line, sizeof line, "  Screen Timeout  Off");
         body(1, line);
-        grid_invert(ROW_BODY0 + (selected == 1), 1, GRID_COLS - 2);
-        body(3, selected == 1 ? "  Idle in this menu that long: sleep. Power wakes."
+        snprintf(line, sizeof line, "  Font  < %s >", font_name(font_current()));
+        body(2, line);
+        grid_invert(ROW_BODY0 + selected, 1, GRID_COLS - 2);
+        body(4, selected == 1 ? "  Idle in this menu that long: sleep. Power wakes."
+              : selected == 2 ? "  Applies at once. Saved. Same layout in every font."
                               : "  Applies at once. Saved. Never goes fully dark.");
+        if (selected == 2) {
+            body(6, "  ABCDEFGHIJKLMNOPQRSTUVWXYZ  abcdefghijklmnopqrstuvwxyz  0123456789");
+            body(7, "  \u250c\u2500\u2500\u2500\u2510  \u2593\u2593\u2593  Redux BIOS Setup Utility");
+            body(8, "  \u2514\u2500\u2500\u2500\u2518");
+        }
         break;
     }
     case SCREEN_UI_COLORS: {

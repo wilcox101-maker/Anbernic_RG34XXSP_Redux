@@ -458,6 +458,12 @@ Implementation is in **F3** (settings parity): fonts are converted by a stdlib P
 arrays at build time, keep their copyright/licence headers, and are listed in a `LICENSES` section of
 `frontend/README.md`. The picker lives in Settings → Display and previews the font live.
 
+**Built (F3, 2026-11-14):** Settings → Display row 3, `Font  < name >`, Left/Right cycles the five
+fonts and the whole screen redraws in the new one; a sample line and box preview show while the row
+is selected. Saved to `/mnt/data/redux/font` (one key, e.g. `spleen`). Generated tables are committed
+(`frontend/src/font_extra.c`); the sources are fetched when regenerating, not kept in the repo.
+Unifont lacks 16 CP437 glyphs, which come from VGA. **Not verified on the device.**
+
 ## 9. F0 exit criteria
 - Dale approves the five mock-ups and the settings schema.
 - No contradictions with `docs/ui-brief.md` or stock documentation.
