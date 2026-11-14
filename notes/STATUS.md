@@ -25,6 +25,7 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - 2026-11-14 07:02, Dale: repo control is the owning chat's call. **Owner: the "Attach with push" chat in the Redux Project.** The "Device fixes 9a-g" chat is advisory and read-only (it opened #171, closed as a duplicate of #170). A revived old chat is advisory unless Dale names it owner.
 
 ## Waiting on Dale
+- **Installer follow-ups** ([decision](2026-11-14-claude-decision-installer-followups.md)): start-failure guard, `REDUX_ROMS`, uninstall keeps settings, release naming. Recommended `1A 2A 3A 4B`.
 - **Phase 2 direction (decide before Phase 2 starts):** the H700 Kernel Research repo builds an Ubuntu 24.04 image with update rollback; Redux's `docs/ram-system-design.md` plans a read-only squashfs system in RAM. Both can't be the Phase 2 base. Not urgent for Beta.
 - Paste both Project instruction blocks from `docs/project-setup.md` into the Redux and Redux Manager Projects (Manager relay, #174 merged 2026-11-14).
 - **Device test queue #172** for dev `fc17904`: OpenBOR, Video Player + redux-diag.txt, F3 font/Reset All, Apps resume, #109 leftovers, queue 13. (#109, #143 closed; results in [hw-result-143](2026-11-13-dale-hw-result-143.md).)
