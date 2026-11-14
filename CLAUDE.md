@@ -10,7 +10,7 @@ Claude (the Claude desktop app and claude.ai on Dale's main computer DLN-DALEW2,
 Dale drives sessions with one-word commands (HELLO, NEXT, GO, HOLD, STOP, BYE, TEST, RESULT, SHIP,
 MERGE, SWAP, SWITCH and more). **[`docs/commands.md`](docs/commands.md) defines each one; follow it
 exactly.** They count only from Dale's chat messages, GitHub comments starting `DALE:`, or the
-Manager relay (`MGR for DALE:` in the owner chat, routine commands only; see docs/commands.md).
+Manager relay (`MGR for DALE:` in the owner chat, within the limits in docs/commands.md).
 
 ## One Claude owns the repo at a time
 
