@@ -41,7 +41,7 @@ static const char *settings_items[] = {
     "Display", "Audio", "Input", "Power & Lid", "System", "Emulation", "UI"
 };
 enum { SETTINGS_DISPLAY = 0, SETTINGS_SYSTEM = 4, SETTINGS_UI = 6 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
-enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3, SYSTEM_SCRIPTS = 4, SYSTEM_BOOT = 5 };
+enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3, SYSTEM_SCRIPTS = 4, SYSTEM_BOOT = 5, SYSTEM_RESET = 6 };
 typedef struct { const char *label; int selectable; int action; } system_row_t;
 static const system_row_t system_rows[] = {
     { "System Tools",         1, SYSTEM_TOOLS },
@@ -52,7 +52,7 @@ static const system_row_t system_rows[] = {
     { "",                     0, -1 },
     { "",                     0, -1 },
     { "Stock Menu",           1, SYSTEM_STOCK },
-    { "Reset All     not yet", 0, -1 }
+    { "Reset All",            1, SYSTEM_RESET }
 };
 #define N_SYSTEM_ROWS ((int)(sizeof system_rows / sizeof system_rows[0]))
 static int system_selectable(int i) {
@@ -125,6 +125,23 @@ static void theme_load(void) {
         fclose(f);
     }
     theme_apply(i);
+}
+
+/* Reset All (docs/ui-spec.md section 9): Redux's own settings in /mnt/data/redux/ back to their
+   defaults, file by file. Not touched: ROMs, saves, BIOS, Wi-Fi profiles, stock settings, and the
+   Boot Screen marker (it records what is on the boot partition, so resetting it would make Redux
+   misreport the logo; Settings > System > Boot Screen changes that). */
+static void reset_all(void) {
+    remove(THEME_PATH);
+    theme_apply(0);
+    brightness_reset();      /* back to the default level, applied: never dark */
+    volume_reset();          /* saved level forgotten; current level kept until restart */
+    screentimeout_reset();
+    font_reset();
+    if (cardscripts_enabled()) {
+        cardscripts_set(0);
+        romscan_init();      /* card scripts leave the Ports list */
+    }
 }
 
 static int stock_started;
@@ -588,7 +605,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
        button, leaves the screen without running it. */
     if (screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
         || screen == SCREEN_POWEROFF_CONFIRM || screen == SCREEN_SCRIPTS_CONFIRM
-        || screen == SCREEN_BOOT_CONFIRM) {
+        || screen == SCREEN_BOOT_CONFIRM || screen == SCREEN_RESET_CONFIRM) {
         if (btn == LB_A) {
             if (pressed) {
                 if (!a_down_at && !stock_started)
@@ -734,6 +751,12 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             }
             return;
         }
+        if (action == SYSTEM_RESET) {
+            stock_msg[0] = '\0';
+            stock_started = 0;
+            go(SCREEN_RESET_CONFIRM);
+            return;
+        }
         if (action == SYSTEM_RESTART || action == SYSTEM_POWEROFF || action == SYSTEM_STOCK) {
             stock_msg[0] = '\0';
             stock_started = 0;
@@ -772,7 +795,7 @@ void ui_tick(uint32_t now_ms) {
     }
     if ((screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
          || screen == SCREEN_POWEROFF_CONFIRM || screen == SCREEN_SCRIPTS_CONFIRM
-         || screen == SCREEN_BOOT_CONFIRM)
+         || screen == SCREEN_BOOT_CONFIRM || screen == SCREEN_RESET_CONFIRM)
         && a_down_at && !stock_started) {
         hold_ms = now_ms - a_down_at;
         if (hold_ms >= HOLD_DESTRUCT_MS) {
@@ -785,6 +808,10 @@ void ui_tick(uint32_t now_ms) {
                 int rc = to_stock ? bootscreen_restore() : bootscreen_install();
                 stock_started = 1;
                 snprintf(stock_msg, sizeof stock_msg, "%s", bootscreen_message(rc));
+            } else if (screen == SCREEN_RESET_CONFIRM) {
+                reset_all();
+                stock_started = 1;
+                snprintf(stock_msg, sizeof stock_msg, "Done: Redux settings are back to defaults. B: back");
             } else if (screen == SCREEN_SCRIPTS_CONFIRM) {
                 cardscripts_set(1);
                 romscan_init();
@@ -821,7 +848,8 @@ uint32_t ui_wait_ms(void) {
     if (vol_until) return 100;
     if (a_down_at && (screen == SCREEN_ENG_CONFIRM || screen == SCREEN_STOCK_CONFIRM
         || screen == SCREEN_RESTART_CONFIRM || screen == SCREEN_POWEROFF_CONFIRM
-        || screen == SCREEN_SCRIPTS_CONFIRM || screen == SCREEN_BOOT_CONFIRM))
+        || screen == SCREEN_SCRIPTS_CONFIRM || screen == SCREEN_BOOT_CONFIRM
+        || screen == SCREEN_RESET_CONFIRM))
         return HOLD_WAIT_MS;
     return IDLE_WAIT_MS;
 }
@@ -1122,6 +1150,19 @@ void ui_draw(void) {
         }
         break;
     }
+    case SCREEN_RESET_CONFIRM:
+        frame("Reset All", stock_started ? "B:Back" : "Hold A 3s:Reset  B:Cancel", 1, 0);
+        body(0, "  Puts Redux's own settings back to defaults: colours, brightness, screen");
+        body(1, "  timeout, font, Card Scripts (Off) and the saved volume.");
+        body(2, "  Never touches games, saves, BIOS, Wi-Fi networks, the boot screen or stock settings.");
+        if (!stock_started) body(4, "  Hold A for 3 seconds. Release, or any other button, cancels.");
+        draw_hold_bar(6, HOLD_DESTRUCT_MS);
+        if (stock_msg[0]) {
+            char line[GRID_COLS];
+            snprintf(line, sizeof line, "  %s", stock_msg);
+            body(8, line);
+        }
+        break;
     case SCREEN_RESTART_CONFIRM:
         frame("Restart", "Hold A 3s:Restart  B:Cancel", 1, 0);
         body(0, "  Runs sync, then reboot.");

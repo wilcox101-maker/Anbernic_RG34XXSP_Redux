@@ -527,23 +527,27 @@ int main(void) {
         expect(strstr(dump, "System Tools") != NULL, "System Tools is first");
         expect(strstr(dump, "Stock Menu") != NULL, "Stock Menu is listed");
         expect(strstr(dump, "Boot Screen   Stock") != NULL, "Boot Screen is shown as Stock");
-        expect(strstr(dump, "Reset All     not yet") != NULL, "Reset All is still not yet");
+        expect(strstr(dump, "not yet") == NULL, "Reset All is no longer \"not yet\"");
         expect(strstr(dump, "Reset All") != NULL, "Reset All is shown");
     }
-    /* cursor skips the blanks and Reset All */
+    /* cursor skips the blanks; Reset All is the last selectable row */
     expect(ui_list_selected() == 0, "cursor starts on System Tools");
     press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN);
     expect(ui_list_selected() == 7, "five downs land on Stock Menu (via Boot Screen and Card Scripts)");
     press(LB_DOWN);
-    expect(ui_list_selected() == 0, "down from Stock Menu wraps to System Tools");
+    expect(ui_list_selected() == 8, "down from Stock Menu lands on Reset All");
+    press(LB_DOWN);
+    expect(ui_list_selected() == 0, "down from Reset All wraps to System Tools");
     press(LB_UP);
-    expect(ui_list_selected() == 7, "up from System Tools wraps to Stock Menu");
+    expect(ui_list_selected() == 8, "up from System Tools wraps to Reset All");
+    press(LB_UP);
+    expect(ui_list_selected() == 7, "up again: Stock Menu");
     press(LB_A);
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "Stock Menu accepts A");
     press(LB_B);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B cancels back to System Defaults");
     expect(stock_calls == 0, "cancel does not run S7");
-    press(LB_UP);   /* back() leaves the cursor on System Tools; Up wraps to Stock Menu */
+    press(LB_UP); press(LB_UP);   /* back() leaves the cursor on System Tools; Up, Up: Stock Menu */
     press(LB_A);
     press(LB_A);
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "a short A stays on the confirm");
@@ -560,7 +564,7 @@ int main(void) {
     expect(stock_calls == 0, "cancel during the hold does not run S7");
     ui_button(LB_B, 0, 6200);
     ui_button(LB_A, 0, 6300);
-    press(LB_UP);   /* back() leaves the cursor on System Tools; Up wraps to Stock Menu */
+    press(LB_UP); press(LB_UP);   /* back() leaves the cursor on System Tools; Up, Up: Stock Menu */
     press(LB_A);
     ui_button(LB_A, 1, 8000);
     ui_button(LB_A, 1, 10000);   /* a repeat press must not restart the 3 s clock */
@@ -570,7 +574,7 @@ int main(void) {
     ui_button(LB_A, 0, 11100);
     stock_set_bak(1);
     press(LB_B);
-    press(LB_UP);   /* back() leaves the cursor on System Tools; Up wraps to Stock Menu */
+    press(LB_UP); press(LB_UP);   /* back() leaves the cursor on System Tools; Up, Up: Stock Menu */
     press(LB_A);
     ui_button(LB_A, 1, 12000);
     ui_tick(15000);
@@ -732,6 +736,45 @@ int main(void) {
         font_load();
     }
     remove("/tmp/redux.font");
+
+    /* Reset All (ui-spec 9): 3 s hold puts Redux's own settings back; the boot-screen marker and
+       anything else in the folder stay. */
+    {
+        FILE *f;
+        remove("/tmp/redux.font"); remove("/tmp/redux.screen_timeout"); remove("/tmp/redux.brightness");
+        ui_init();
+        font_step(+1); screentimeout_step(+1);
+        f = fopen("/tmp/redux.theme", "w"); if (f) { fputs("1\n", f); fclose(f); }
+        f = fopen("/tmp/redux-nav-keep", "w"); if (f) { fputs("x\n", f); fclose(f); }
+        ui_init();
+        expect(font_current() == FONT_SPLEEN && screentimeout_minutes() == 10, "settings set before Reset All");
+        down(8); press(LB_A); down(4); press(LB_A); press(LB_UP);
+        expect(ui_list_selected() == 8, "Up from System Tools: Reset All");
+        press(LB_A);
+        expect(ui_screen() == SCREEN_RESET_CONFIRM, "Reset All opens its confirm");
+        press(LB_A);
+        expect(font_current() == FONT_SPLEEN, "a short A resets nothing");
+        ui_button(LB_A, 1, 50000);
+        ui_tick(52900);
+        expect(font_current() == FONT_SPLEEN, "2.9 s: nothing yet");
+        ui_tick(53000);
+        expect(font_current() == FONT_VGA && screentimeout_minutes() == SCREENTIMEOUT_DEFAULT
+               && brightness_get() == BRIGHTNESS_DEFAULT, "3 s hold: font, timeout, brightness back to defaults");
+        f = fopen("/tmp/redux.font", "r");
+        expect(f == NULL, "saved font file removed"); if (f) fclose(f);
+        f = fopen("/tmp/redux.theme", "r");
+        expect(f == NULL, "saved colour file removed"); if (f) fclose(f);
+        f = fopen("/tmp/redux-nav-keep", "r");
+        expect(f != NULL, "other files are left alone"); if (f) fclose(f);
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Done: Redux settings are back to defaults") != NULL, "Reset All says Done");
+        ui_button(LB_A, 0, 53100);
+        press(LB_B);
+        expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B leaves the Reset All confirm");
+        remove("/tmp/redux-nav-keep"); remove("/tmp/redux.brightness");
+    }
 
     /* Restart / Power Off: one A does nothing; 3 s hold runs the hook once; B cancels. */
     power_set_run(power_hook);

@@ -26,6 +26,9 @@ int screentimeout_step(int dir);
 /* Load the saved choice; a missing or unknown value keeps the default. */
 void screentimeout_load(void);
 
+/* Reset All: forget the saved choice and go back to SCREENTIMEOUT_DEFAULT. */
+void screentimeout_reset(void);
+
 /* 1 when the timeout is on and idle_ms has reached it. */
 int screentimeout_due(uint32_t idle_ms);
 

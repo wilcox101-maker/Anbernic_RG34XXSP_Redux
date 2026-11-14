@@ -23,6 +23,9 @@ font_id_t font_step(int dir);
 /* Load the saved font; a missing or unknown value keeps VGA. */
 void font_load(void);
 
+/* Reset All: forget the saved font and go back to VGA. */
+void font_reset(void);
+
 /* Tests point at a temp file. NULL restores the build default
    (/mnt/data/redux/font on the device, /tmp/redux.font on desktop). */
 void font_set_path(const char *path);

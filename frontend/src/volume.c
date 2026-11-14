@@ -53,6 +53,8 @@ int volume_apply(void) {
 #endif
 }
 
+void volume_reset(void) { remove(path()); }
+
 int volume_step(int dir) {
     int next = g_level + (dir > 0 ? 1 : dir < 0 ? -1 : 0);
     if (next < VOLUME_MIN) next = VOLUME_MIN;
