@@ -127,11 +127,13 @@ do_install() {
         say "boot logo copied (install it on the handheld: Settings > System > Boot Screen)"
     fi
 
-    # 3. Launcher switch: one backup, never overwritten; change only the one CMD= line
-    #    (stock, or an older Redux deploy that ran dmenu.bin directly) to run.sh.
+    # 3. Launcher switch: the backup is only ever taken from a stock launcher, so a Redux one
+    #    never overwrites it. A stock launcher (first install, or after an uninstall, which keeps
+    #    .bak) refreshes it, so it stays the newest stock. Change only the one CMD= line (stock,
+    #    or an older Redux deploy that ran dmenu.bin directly) to run.sh.
     if [ "$st" != redux ]; then
-        if [ "$st" = stock ] && [ ! -f "$BAK" ]; then
-            cp -p "$LN" "$BAK.tmp" && sync && mv "$BAK.tmp" "$BAK" || fail "cannot back up dmenu_ln"
+        if [ "$st" = stock ]; then
+            cp -p "$LN" "$BAK.tmp" && sync && mv -f "$BAK.tmp" "$BAK" || fail "cannot back up dmenu_ln"
             say "dmenu_ln backed up to dmenu_ln.bak"
         fi
         cp -p "$LN" "$LN.tmp" || fail "cannot copy dmenu_ln"
@@ -158,12 +160,16 @@ do_uninstall() {
     esac
     [ -f "$BAK" ] || fail "no dmenu_ln.bak to restore"
     [ "$(ln_state "$BAK")" = stock ] || fail "dmenu_ln.bak is not the stock launcher; nothing touched"
-    mv -f "$BAK" "$LN" || fail "cannot restore dmenu_ln"
+    # Copy, not move: dmenu_ln.bak stays as the way back. Temp name + rename on the same
+    # filesystem, so a running dmenu_ln keeps its old inode.
+    cp -p "$BAK" "$LN.tmp" || { rm -f "$LN.tmp"; fail "cannot copy dmenu_ln.bak"; }
+    [ "$(ln_state "$LN.tmp")" = stock ] || { rm -f "$LN.tmp"; fail "dmenu_ln.bak copy did not read back as stock; nothing touched"; }
+    sync && mv -f "$LN.tmp" "$LN" || fail "cannot restore dmenu_ln"
     sync
     [ "$(ln_state "$LN")" = stock ] || fail "dmenu_ln does not read back as stock"
     log "ok restored stock launcher"
     say "stock launcher restored. Restart the handheld. $DIR is left in place (unused; delete it by hand if you like). Your Redux settings in $DATA are kept, so a reinstall comes back as you left it."
-    say "For the stock boot logo: Settings > System > Boot Screen > Restore, before restarting."
+    say "For the stock boot logo: Settings > System > Boot Screen > Restore, before restarting (or over SSH: docs/install.md, 'Boot logo by hand')."
 }
 
 case "$MODE" in

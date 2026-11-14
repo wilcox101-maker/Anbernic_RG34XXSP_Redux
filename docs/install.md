@@ -44,11 +44,30 @@ To **upgrade**, run the same install command with a newer `dmenu.bin`. Your Redu
 python install.py --uninstall 192.168.1.13
 ```
 Then restart. If you installed the Redux boot screen, first go to **Settings > System > Boot Screen >
-Restore** in Redux, before you uninstall and restart.
+Restore** in Redux, before you uninstall and restart. If Redux doesn't start, do it over SSH instead
+([Boot logo by hand](#boot-logo-by-hand)).
 The Redux program stays in `/mnt/vendor/redux/` but is no longer used. You can delete that folder by hand.
 Your Redux settings in `/mnt/data/redux/` are kept, so installing again brings them back as you left them.
 
-If the handheld doesn't start at all, flash the stock image you downloaded from Anbernic.
+If Redux won't start, the handheld itself still boots and **SSH still works**, so go back over SSH
+first (see [If Redux won't start](#if-redux-wont-start)). Flashing the stock image is the **last
+resort**: see [Reflashing](#reflashing-last-resort).
+
+### Boot logo by hand
+Only if you installed the Redux boot screen and can't reach **Settings > System > Boot Screen >
+Restore**. Log in over SSH as root and paste this one line. It overwrites the logo **in place**
+(same size, no new file on that partition, as Redux does), checks the copy and unmounts:
+```
+mkdir -p /tmp/redux-bootres && mount -t vfat -o rw,noatime /dev/mmcblk0p2 /tmp/redux-bootres && [ "$(wc -c < /mnt/vendor/redux/bootlogo.stock.bmp)" -eq 921654 ] && [ "$(wc -c < /tmp/redux-bootres/bootlogo.bmp)" -eq 921654 ] && dd if=/mnt/vendor/redux/bootlogo.stock.bmp of=/tmp/redux-bootres/bootlogo.bmp bs=4096 conv=notrunc,fsync && cmp /mnt/vendor/redux/bootlogo.stock.bmp /tmp/redux-bootres/bootlogo.bmp && echo RESTORED; sync; umount /tmp/redux-bootres
+```
+It prints `RESTORED` when it worked. No `RESTORED` means a size check or the copy failed; stop there
+and ask. `bootlogo.stock.bmp` is the stock logo Redux saved the first time it installed its own. If
+that file isn't there, Redux never changed the logo.
+
+### Reflashing (last resort)
+Flashing the stock image you downloaded from Anbernic rewrites the **whole card**: the system, and
+also the **Roms partition (games, BIOS files)** and **saves** on the same card. **Back up the Roms
+partition and your saves first** (put the card in your PC and copy them off), then flash.
 
 ## What exactly changes on the handheld
 | Where | What |
@@ -57,7 +76,7 @@ If the handheld doesn't start at all, flash the stock image you downloaded from 
 | `/mnt/vendor/redux/run.sh` | the start wrapper the stock launcher runs: starts Redux and logs to `redux.log` (kept under 256 KiB) |
 | `/mnt/vendor/redux/bootlogo.bmp` | only with `--bootlogo` |
 | `/mnt/vendor/ctrl/dmenu_ln` | one line: `CMD="/mnt/vendor/bin/dmenu.bin"` becomes `CMD="/mnt/vendor/redux/run.sh"` (an older hand install that ran `dmenu.bin` directly is moved to `run.sh`) |
-| `/mnt/vendor/ctrl/dmenu_ln.bak` | the stock `dmenu_ln`, saved once before the first install and never overwritten |
+| `/mnt/vendor/ctrl/dmenu_ln.bak` | the stock `dmenu_ln`, saved whenever an install finds the stock launcher (never from a Redux one); uninstall copies it back and keeps it |
 | `/mnt/data/redux/install.log` | one line per install or uninstall |
 | `/tmp/redux-start.fails`, `/tmp/redux-start.stock` | the start-failure guard's counter and switch; in RAM, gone at the next boot |
 
@@ -70,8 +89,15 @@ file working.
 starts the **stock menu** instead, for the rest of that boot, and writes why in `redux.log`. The next
 boot tries Redux again; nothing on the card is changed. (Between failures the stock launcher waits about
 30 s, so the stock menu appears after roughly a minute.)
-If it keeps happening, look at `/mnt/vendor/redux/redux.log`, and go back to stock over SSH with
-`python install.py --uninstall <ip>`, or reflash the stock image.
+If it keeps happening, look at `/mnt/vendor/redux/redux.log`, and go back to stock **over SSH** (the
+handheld still boots and SSH still works):
+1. From the PC: `python install.py --uninstall <ip>`, then restart.
+2. Or, logged in over SSH, the one-liner **S7** from [dale-scripts.md](dale-scripts.md) (copies
+   `dmenu_ln.bak` back and reboots).
+3. If the Redux boot screen is installed: [Boot logo by hand](#boot-logo-by-hand).
+
+Reflash the stock image only as a last resort, and **back up the Roms partition and saves first**
+([Reflashing](#reflashing-last-resort)): they are on the same card.
 
 ## When it stops
 The installer stops before changing anything it can't confirm. It prints `STOPPED:` and the reason:
