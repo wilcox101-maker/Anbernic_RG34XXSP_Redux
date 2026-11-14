@@ -77,8 +77,8 @@ PortMaster where stock uses them.
 | Input Test | `evtest` on the buttons: every press prints | device-checked |
 | Speaker Test | says "Front Left", "Front Right" | device-checked |
 
-Terminal apps quit with **M**. Terminal and File Manager start with a vsync helper that reduces the
-stock screen tearing **[not yet on device]**.
+Terminal apps quit with **M**. The terminal apps start with a vsync helper meant to reduce the
+stock screen tearing **[not yet on device]**. File Manager can't use it and still tears (a stock bug).
 
 ## Settings
 | Item | Status |
@@ -133,5 +133,5 @@ the handheld, it can break RetroArch. **[device-checked]** (htop).
 ## Known problems (2026-11-14)
 - Video Player crashes when you play a video (12a).
 - Stock File Manager and Terminal tear when the screen changes (stock graphics library has no
-  vsync); the vsync helper is not yet tested.
+  vsync). The vsync helper covers Terminal only and is not yet tested; File Manager stays as stock.
 - Placeholders listed above.
