@@ -12,8 +12,10 @@ status: closed
 Dale, 2026-11-14 13:41 ET, in the owning chat: **"a"**.
 
 ## What it means
-- `tools/install.py` (Python stdlib, Windows `ssh`) sends `installer/redux_install.sh` and the
-  `dmenu.bin` payload over **one** SSH session: `--check`, install (also upgrade), `--uninstall`.
+- `tools/install.py` (Python stdlib, Windows `ssh`) sends `installer/redux_install.sh`, the
+  `dmenu.bin` payload and `installer/run.sh` (start wrapper, capped `redux.log`; it replaces the
+  hand-made one on Dale's unit) over **one** SSH session: `--check`, install (also upgrade), `--uninstall`.
+- `dmenu_ln`'s `CMD=` becomes `/mnt/vendor/redux/run.sh`, as on Dale's unit today.
 - Writes appfs (`/mnt/vendor/redux/`, the one `CMD=` line of `dmenu_ln` + its one-time backup) and
   `/mnt/data/redux/install.log` only. No p1, no boot partition, no formatting.
 - The dev release carries `install.py` and `redux_install.sh` next to `dmenu.bin`. User guide: `docs/install.md`.

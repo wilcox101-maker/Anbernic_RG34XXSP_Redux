@@ -14,7 +14,7 @@ back.
   `/mnt/mod/ctrl/configs/system.cfg`), and its root password.
 - A PC with Python 3 and the `ssh` command (built into Windows 10 and 11).
 - From the [dev release](https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux/releases/tag/dev):
-  `dmenu.bin`, `install.py`, `redux_install.sh` (and `bootlogo.bmp` if you want the Redux boot screen).
+  `dmenu.bin`, `install.py`, `redux_install.sh`, `run.sh` (and `bootlogo.bmp` if you want the Redux boot screen).
   Put them in one folder.
 
 Find the handheld's IP address in the stock Wi-Fi settings.
@@ -51,14 +51,20 @@ If the handheld doesn't start at all, flash the stock image you downloaded from 
 | Where | What |
 |---|---|
 | `/mnt/vendor/redux/dmenu.bin` | the Redux program (checked by size and SHA256 after copying) |
+| `/mnt/vendor/redux/run.sh` | the start wrapper the stock launcher runs: starts Redux and logs to `redux.log` (kept under 256 KiB) |
 | `/mnt/vendor/redux/bootlogo.bmp` | only with `--bootlogo` |
-| `/mnt/vendor/ctrl/dmenu_ln` | one line: `CMD="/mnt/vendor/bin/dmenu.bin"` becomes `CMD="/mnt/vendor/redux/dmenu.bin"` |
+| `/mnt/vendor/ctrl/dmenu_ln` | one line: `CMD="/mnt/vendor/bin/dmenu.bin"` becomes `CMD="/mnt/vendor/redux/run.sh"` (an older hand install that ran `dmenu.bin` directly is moved to `run.sh`) |
 | `/mnt/vendor/ctrl/dmenu_ln.bak` | the stock `dmenu_ln`, saved once before the first install and never overwritten |
 | `/mnt/data/redux/install.log` | one line per install or uninstall |
 
 Nothing is written to the ROM card. The boot partition is untouched and nothing is formatted. Every
 file goes to a temporary name first and is renamed into place, so an interrupted run leaves the old
 file working.
+
+## If Redux won't start
+The stock launcher has no fallback: if Redux exits with an error, it waits 30 s and starts Redux
+again. Until a guard is added, the way out is SSH:
+`python install.py --uninstall <ip>`, or reflash the stock image.
 
 ## When it stops
 The installer stops before changing anything it can't confirm. It prints `STOPPED:` and the reason:
