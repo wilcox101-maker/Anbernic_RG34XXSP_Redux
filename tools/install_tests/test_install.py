@@ -88,7 +88,8 @@ class DeviceScript(unittest.TestCase):
         rc, out = self.run_mode("uninstall")
         self.assertEqual(rc, 0, out)
         self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln").decode(), STOCK_LN)
-        self.assertFalse(self.exists("mnt/vendor/ctrl/dmenu_ln.bak"))
+        self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln.bak").decode(), STOCK_LN)   # kept
+        self.assertFalse(self.exists("mnt/vendor/ctrl/dmenu_ln.tmp"))
         rc, out = self.run_mode("uninstall")                          # second time: nothing to do
         self.assertEqual(rc, 0, out)
         self.assertIn("already stock", out)
@@ -128,7 +129,18 @@ class DeviceScript(unittest.TestCase):
         self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln").decode(), STOCK_LN)
         self.assertFalse(self.exists("mnt/vendor/redux/dmenu.bin"))
         self.assertFalse(self.exists("mnt/vendor/redux/dmenu.bin.new"))
-        self.assertFalse(self.exists("mnt/vendor/ctrl/dmenu_ln.bak"))
+
+    def test_reinstall_after_uninstall_refreshes_backup_from_stock(self):
+        self.assertEqual(self.run_mode("install", FAKE_BIN)[0], 0)
+        self.assertEqual(self.run_mode("uninstall")[0], 0)
+        newer_stock = STOCK_LN + "# stock update\n"                  # stock launcher changed meanwhile
+        with open(os.path.join(self.root, "mnt/vendor/ctrl/dmenu_ln"), "w", newline="\n") as f:
+            f.write(newer_stock)
+        rc, out = self.run_mode("install", FAKE_BIN)
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln.bak").decode(), newer_stock)
+        self.assertEqual(self.run_mode("uninstall")[0], 0)
+        self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln").decode(), newer_stock)
 
     def test_uninstall_refuses_without_backup(self):
         self.assertEqual(self.run_mode("install", FAKE_BIN)[0], 0)

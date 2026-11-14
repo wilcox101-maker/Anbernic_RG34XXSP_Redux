@@ -45,7 +45,8 @@ logo refuses a file that fails this check.
    (`/mnt/vendor/redux/bootlogo.stock.bmp`, first time only), then overwrites `bootlogo.bmp` on the
    boot-resource partition in place and reads it back. The same screen restores the saved one.
    Details and the reasons are in `frontend/src/bootscreen.h`. Not run on a device yet.
-3. A full way back that needs no Redux: reflash the stock image.
+3. Without Redux: the SSH one-liner in [install.md](../docs/install.md#boot-logo-by-hand). Reflashing the
+   stock image is the last resort, and erases the Roms partition and saves on the same card.
 
 ## Credits and licence
 
