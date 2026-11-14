@@ -957,6 +957,33 @@ int main(void) {
             remove(UI_RESUME_PATH);   /* each tool starts from Main */
         }
     }
+    /* A failed launch must not leave the vsync preload for the next one (Read Only review, #4);
+       File Manager gets no preload (it never presents a frame, so the library can't help it). */
+    {
+        char line[256] = "";
+        FILE *f;
+        launcher_set_next_path("/tmp/redux-no-such-dir/next");
+        expect(apps_launch(APP_TERMINAL) != 0, "Terminal launch fails when .next can't be written");
+        launcher_set_next_path("/tmp/redux-next-apps");
+        write_empty("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
+        expect(apps_launch(APP_MUSIC) == 0, "Music launches after the failed Terminal launch");
+        f = fopen("/tmp/redux-next-apps", "r");
+        if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
+        expect(line[0] && strstr(line, "LD_PRELOAD") == NULL, "no LD_PRELOAD left over from the failed launch");
+        remove("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
+        mkdir("/tmp/redux-apps/mnt/vendor/bin/fileM", 0755);
+        write_empty("/tmp/redux-apps/mnt/vendor/bin/fileM/dinguxCommand_en.dge");
+        line[0] = '\0';
+        expect(apps_launch(APP_FILES) == 0, "File Manager launches");
+        f = fopen("/tmp/redux-next-apps", "r");
+        if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
+        expect(strstr(line, "dinguxCommand_en.dge") && !strstr(line, "LD_PRELOAD"),
+               "File Manager launches without the vsync preload");
+        remove("/tmp/redux-apps/mnt/vendor/bin/fileM/dinguxCommand_en.dge");
+        rmdir("/tmp/redux-apps/mnt/vendor/bin/fileM");
+        remove("/tmp/redux-next-apps");
+        remove(UI_RESUME_PATH);
+    }
     remove("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
     apps_set_root("");
 

@@ -52,6 +52,12 @@ cp build/rg34xxsp-redux /mnt/vendor/redux/dmenu.bin
 
 ## Notes
 
+- **vsync library (SimpleTerminal only):** SimpleTerminal is a 32-bit ARM (armhf) program, so the
+  vsync library embedded in `dmenu.bin` must be armhf. CI does this. For your own build, compile it
+  with `arm-linux-gnueabihf-gcc -shared -fPIC -O2 -o redux_vsync.so frontend/vsync/redux_vsync.c -ldl`
+  and add `-DREDUX_VSYNC_EMBED=<path to redux_vsync.so>` to the cmake line. Without it the build
+  works, but the library has no effect on the device.
+
 - Link against the stock SDL2 if you cross-build. The device has it in `/usr/lib`.
 - The deploy script (`tools/deploy_frontend.py`) refuses anything that is not an aarch64 ELF.
 - The install name **must** be `dmenu.bin` so `pwr_new.sh` sees the process on power-key shutdown.

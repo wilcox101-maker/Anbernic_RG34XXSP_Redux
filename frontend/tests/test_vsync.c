@@ -15,8 +15,8 @@ static void expect(int ok, const char *label) {
 
 int main(void) {
     struct stat st;
-    expect(stat(VSYNC_SO, &st) == 0 && (size_t)st.st_size == redux_vsync_so_len,
-           "embedded library has the built library's size");
+    expect(stat(VSYNC_EMBEDDED, &st) == 0 && (size_t)st.st_size == redux_vsync_so_len,
+           "embedded library has the size of the file it was made from");
 
     char env[300];
     vsync_set_path("/tmp/redux-vsync-test.so");
@@ -29,16 +29,18 @@ int main(void) {
     if (f) fclose(f);
     setenv("REDUX_VSYNC_FB", "/tmp/redux-vsync-fb", 1);   /* not a framebuffer: ioctl fails */
 
-    /* As on the device: the app is started with the library in LD_PRELOAD. */
+    /* As on the device: the app is started with the library in LD_PRELOAD. The library built for
+       this machine is used (the embedded one may be armhf for the device). */
     char out[128] = "";
-    FILE *p = popen("LD_PRELOAD=/tmp/redux-vsync-test.so " VSYNC_APP " 2>/dev/null", "r");
+    FILE *p = popen("LD_PRELOAD=" VSYNC_SO " " VSYNC_APP " 2>/dev/null", "r");
     if (p) { if (!fgets(out, sizeof out, p)) out[0] = '\0'; pclose(p); }
-    expect(strcmp(out, "presents=3 state=-1\n") == 0,
-           "preloaded: every frame reaches SDL; no vblank wait on this file, so it switched off");
+    expect(strcmp(out, "presents=3 state=-1 preload=unset\n") == 0,
+           "preloaded: every frame reaches SDL; no vblank wait on this file, so it switched off;"
+           " LD_PRELOAD removed so child programs don't inherit it");
     p = popen(VSYNC_APP, "r");
     out[0] = '\0';
     if (p) { if (!fgets(out, sizeof out, p)) out[0] = '\0'; pclose(p); }
-    expect(strcmp(out, "presents=3 state=99\n") == 0, "without the preload the app runs unchanged");
+    expect(strcmp(out, "presents=3 state=99 preload=unset\n") == 0, "without the preload the app runs unchanged");
     remove("/tmp/redux-vsync-test.so");
     remove("/tmp/redux-vsync-fb");
     printf("%d failed\n", failures);
