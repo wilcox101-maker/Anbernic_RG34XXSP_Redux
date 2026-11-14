@@ -61,8 +61,8 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 
 ## Open notes
 - [2026-11-14-dale-decision-swap-check.md](2026-11-14-dale-decision-swap-check.md): dale → all (swap trigger 5 + Manager daily swap check, 06:40 ET)
+- [2026-11-14-dale-decision-relay-decide-plan.md](2026-11-14-dale-decision-relay-decide-plan.md): dale → all (Manager relay list adds DECIDE and PLAN)
 - [2026-11-14-dale-decision-vsync-shim.md](2026-11-14-dale-decision-vsync-shim.md): dale → all (option B: vsync library preloaded for SimpleTerminal and File Manager; self-off if unsupported)
-- [2026-11-14-dale-decision-manager-relay.md](2026-11-14-dale-decision-manager-relay.md): dale → all (Manager relays routine commands as `MGR for DALE:`; merges and decisions stay Dale's)
 - [2026-11-14-dale-decision-manager-relay.md](2026-11-14-dale-decision-manager-relay.md): dale → all (Manager relays routine commands as `MGR for DALE:`; merges and decisions stay Dale's)
 - [2026-11-14-dale-decision-openbor-launch.md](2026-11-14-dale-decision-openbor-launch.md): dale → all (12b OpenBOR: option A, stock launch; AGENTS.md p1 exception for the engine's own files)
 - [2026-11-14-dale-decision-mainline-cpu-table.md](2026-11-14-dale-decision-mainline-cpu-table.md): dale → all (mainline CPU table: ROCKNIX H700 table, 1512 MHz behind Expert Mode; stock track unchanged)
