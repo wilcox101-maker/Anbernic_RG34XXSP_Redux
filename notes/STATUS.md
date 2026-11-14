@@ -25,10 +25,9 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 - 2026-11-14 07:02, Dale: repo control is the owning chat's call. **Owner: the "Attach with push" chat in the Redux Project.** The "Device fixes 9a-g" chat is advisory and read-only (it opened #171, closed as a duplicate of #170). A revived old chat is advisory unless Dale names it owner.
 
 ## Waiting on Dale
-- **DECIDE vsync** for SimpleTerminal/File Manager tearing: A, B or C ([note](2026-11-14-claude-decision-vsync-stock-apps.md)).
 - Paste both Project instruction blocks from `docs/project-setup.md` into the Redux and Redux Manager Projects (Manager relay, #174 merged 2026-11-14).
 - **Device test queue #172** for dev `fc17904`: OpenBOR, Video Player + redux-diag.txt, F3 font/Reset All, Apps resume, #109 leftovers, queue 13. (#109, #143 closed; results in [hw-result-143](2026-11-13-dale-hw-result-143.md).)
-- Dale's local clone `Documents\GitHub\Anbernic_RG34XXSP_Redux` is at `0afecd9` (#82), CRLF-only diffs. Before building from it: `git config core.autocrlf true && git fetch && git reset --hard origin/main`.
+- Dale's local clone `Documents\GitHub\Anbernic_RG34XXSP_Redux`: state unknown (it was at `0afecd9` on 11-12 and has been pulled since; the H700 project saw `d0de8e0` on 11-13). CRLF-only diffs are expected. Before building from it: `git config core.autocrlf true && git fetch && git reset --hard origin/main`.
 
 ## Queue (inbox #41 is the source of truth; in order)
 1. ~~Wi-Fi part 2: Connecting and result screens~~ merged in #73 (device test 2026-11-12: connect failed; fixed in #88). **Grok**
@@ -55,13 +54,14 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
    a. `cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies` (the unit's CPU grade) · b. `find /sys -name '*adc_cal*'` (stick calibration file) · c. `evtest`, close and open the lid: which device sends KEY_DELETE / KEY_INSERT
 14. **F3 settings parity** (Dale: A, 2026-11-14 03:21). **Claude**
    a. UI font picker (Settings > Display, five fonts, ui-spec 8a): built, not device-checked · b. Reset All (Settings > System, 3 s hold): built, not device-checked
+15. **Vsync library for stock apps that tear** (Dale: B, 2026-11-14): SimpleTerminal and File Manager launch with `LD_PRELOAD=/tmp/redux-vsync.so`; self-off if `FBIO_WAITFORVSYNC` fails. Built, not device-checked. **Claude**
 - Tools: `tools/bench` (#130), Dale's read-only RAM/CPU probe over SSH, for the Phase 1/2 measurements; needs SSH on the device (stock mod's temporary SSH server).
 - L3/R3 (313/316): stay unmapped, left available for mapping later ([decision](2026-11-12-dale-decision-brightness-l3r3.md)).
-- Backlog: **vsync rebuilds of stock apps** that tear (SimpleTerminal from st-sdl, #41; File Manager, 9f), **DOS Mode** (Dale: keep the development menu style as a DOS Mode option alongside BIOS Mode; he'll define the layout as menus grow), ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM copy only in **[Xroot Mode]**, after the hidden ownership acknowledgement, [decision](2026-11-13-dale-decision-xroot-mode.md)), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track, **ZRAM: v1.x (after 1.0)** ([decision](2026-11-13-dale-decision-zram-v1x.md)).
+- Backlog: **DOS Mode** (Dale: keep the development menu style as a DOS Mode option alongside BIOS Mode; he'll define the layout as menus grow), ASCII art maker (Draw, Convert, Edit, Share/Save As; App Center app), PC link (browser file manager for both cards and Redux data; security item, Dale-gated; ROM copy only in **[Xroot Mode]**, after the hidden ownership acknowledgement, [decision](2026-11-13-dale-decision-xroot-mode.md)), Expert Mode shortcut code (undocumented; thermals untouched by any unlock), chiptune composer (port LittleGPTracker's RG35XXPLUS build, App Center app, after Ports; #41), power and lid (lid already sleeps; wake is power-only), Wi-Fi idle scanning, media (mpv/ffplay present), features.ini, Expert Mode, the Phase 2 mainline track, **ZRAM: v1.x (after 1.0)** ([decision](2026-11-13-dale-decision-zram-v1x.md)).
 
 ## Open notes
 - [2026-11-14-dale-decision-relay-decide-plan.md](2026-11-14-dale-decision-relay-decide-plan.md): dale → all (Manager relay list adds DECIDE and PLAN)
-- [2026-11-14-claude-decision-vsync-stock-apps.md](2026-11-14-claude-decision-vsync-stock-apps.md): claude → dale (tearing in SimpleTerminal/File Manager: A rebuild, B vsync shim (recommended, after a vblank check), C leave as stock)
+- [2026-11-14-dale-decision-vsync-shim.md](2026-11-14-dale-decision-vsync-shim.md): dale → all (option B: vsync library preloaded for SimpleTerminal and File Manager; self-off if unsupported)
 - [2026-11-14-dale-decision-manager-relay.md](2026-11-14-dale-decision-manager-relay.md): dale → all (Manager relays routine commands as `MGR for DALE:`; merges and decisions stay Dale's)
 - [2026-11-14-dale-decision-openbor-launch.md](2026-11-14-dale-decision-openbor-launch.md): dale → all (12b OpenBOR: option A, stock launch; AGENTS.md p1 exception for the engine's own files)
 - [2026-11-14-dale-decision-mainline-cpu-table.md](2026-11-14-dale-decision-mainline-cpu-table.md): dale → all (mainline CPU table: ROCKNIX H700 table, 1512 MHz behind Expert Mode; stock track unchanged)

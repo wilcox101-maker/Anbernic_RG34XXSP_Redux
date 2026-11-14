@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-14
 re: backlog, tearing in stock SimpleTerminal and File Manager (#41 2026-11-11, #144)
-status: open
+status: closed
 ---
 
 # Decision: what to do about tearing in SimpleTerminal and File Manager

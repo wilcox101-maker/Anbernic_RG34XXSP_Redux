@@ -7,6 +7,13 @@ static const char *next_path = "/tmp/.next";
 /* run.sh's log on appfs (never the Roms card). */
 #define REDUX_LOG "/mnt/vendor/redux/redux.log"
 
+/* One-shot environment prefix for the next .dge or app launch (vsync preload). */
+static char preload[300];
+void launcher_set_preload(const char *env) {
+    snprintf(preload, sizeof preload, "%s", env ? env : "");
+}
+
+
 void launcher_set_next_path(const char *path) {
     next_path = path;
 }
@@ -60,6 +67,8 @@ int launcher_start_app(const char *bin, const char *env, const char *args) {
     fprintf(f, "cd ");
     quote(f, dir);
     fprintf(f, " && ");
+    if (preload[0]) fprintf(f, "%s ", preload);
+    preload[0] = '\0';
     if (env && env[0]) fprintf(f, "%s ", env);
     fprintf(f, "./");
     quote(f, slash + 1);
@@ -131,7 +140,8 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
         dir[n] = '\0';
         fprintf(f, "cd ");
         quote(f, dir);
-        fprintf(f, " && %s./", audiodev);
+        fprintf(f, " && %s%s%s./", preload, preload[0] ? " " : "", audiodev);
+        preload[0] = '\0';
         quote(f, slash + 1);
         if (rom_path) { fputc(' ', f); quote(f, rom_path); }
         fputc('\n', f);

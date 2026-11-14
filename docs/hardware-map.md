@@ -4,7 +4,7 @@ Source: the device tree embedded in the stock `boot.img` (firmware `rg34xxsp-fw-
 decompiled to [`reference/stock-202505/board.dts`](../reference/stock-202505/board.dts).
 
 > Anbernic ships **one device tree for the whole H700 family**. Some nodes describe hardware the
-> SP doesn't have (L3/R3, the analog-stick mux, the rumble motor pin). Those are marked *family*
+> SP may not have (L3/R3, the rumble motor pin; the analog-stick mux is real: the SP has two sticks, below). Those are marked *family*
 > below and need confirming on real hardware.
 
 ## SoC and memory
@@ -70,7 +70,7 @@ can be regenerated with `python3 tools/dt_keys.py`.
 | Right Y | ABS_RZ | 5 |
 
 In the stock DT they have no node of their own. The `ANBERNIC-keys` node carries an analog
-multiplexer, `amux-en-gpios` (PI8), mux selects `A0_gpio` / `A1_gpio` (PI1 / PI2) and
+multiplexer, `amux-en-gpios` (**PI0**: cells `0x8 0x0` = bank I, pin 0; earlier docs said PI8), mux selects `A0_gpio` / `A1_gpio` (PI1 / PI2) and
 `adc-en-gpios` (PE11), read through the GPADC by Anbernic's driver (stock also loads
 `gpio_keys_gpadc.ko` from the SD card if present). Mainline's RG35XX-H tree models the same idea as
 `adc-joystick` over an `adc_mux` (`ABS_X/Y/RX/RY`), the model for Phase 2.
