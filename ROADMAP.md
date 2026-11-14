@@ -21,11 +21,17 @@ Changes only the `boot` partition. Flash a copy of the stock card, then `dd` the
 - [ ] Find UART pads for a serial console
 
 ## Phase 2: Mainline + purpose-built OS
-- [ ] Diff ROCKNIX RG34XX-SP DTS against the stock tree (see [docs/kernel-strategy.md](docs/kernel-strategy.md))
-- [ ] Build environment (WSL2): cross toolchain, kernel, mainline u-boot, DRAM type confirmed
-- [ ] Boot mainline kernel with a minimal BusyBox initramfs and a serial console
-- [ ] Display, input, audio, PMIC/battery, Wi-Fi bring-up checklist
-- [ ] Read-only squashfs system loaded into RAM; ext4 data partition with barriers; watchdog (design: [docs/ram-system-design.md](docs/ram-system-design.md))
+The desk work (device tree, build scripts, DRAM sets, test kits) lives in the
+[H700 Kernel Research](https://github.com/wilcox101-maker/Allwinner-H700-Custom-Kernel-Research) repo (KR), checked at `c77891f`; Redux links to it rather than redoing
+it. **Nothing in KR has booted on an RG34XX-SP.** Task IDs (K3, K4…) are KR's
+`docs/master-task-list.md`.
+- [ ] Device tree: desk-done in KR (patch 0006, the SP tree with stock DT values; ROCKNIX comparison in
+      `docs/kernel-findings-2026-11-13.md`). Stick directions unconfirmed (K5). See also [docs/kernel-strategy.md](docs/kernel-strategy.md)
+- [ ] Build environment: desk-done in KR (`scripts/workbench.sh`, `build-kernel.sh`, `build-uboot.sh`;
+      DRAM sets in `docs/r3-v106-boot0-dram-sets.md`). DRAM type on Dale's unit still needs K3 (UART)
+- [ ] Boot mainline kernel with a minimal initramfs and a serial console (KR kits: K3 UART pads, K4 FEL boot `docs/r2-fel-test-kit.md`)
+- [ ] Display, input, audio, PMIC/battery, Wi-Fi bring-up checklist (KR K-tasks: K2, K9/K18, K14–K16, K19, K21)
+- [ ] Read-only squashfs system loaded into RAM; ext4 data partition with barriers; watchdog (design: [docs/ram-system-design.md](docs/ram-system-design.md)). **Decision pending:** KR builds an Ubuntu 24.04 image instead (`docs/r7-image-tooling.md`, `r8-update-rollback.md`, `r13-ram-tier-defaults.md`); Dale picks which one Phase 2 follows before it starts
 - [ ] Lid: `SW_LID` with lid-open as a wake source → flush saves → sync → suspend → resume to the same frame
 - [ ] Standard gamepad event codes; integer-scaled 3× output; audio/video sync to the panel's real refresh
 - [ ] Frontend + RetroArch, tuned for 720×480
