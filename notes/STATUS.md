@@ -22,7 +22,6 @@ Updated by whoever writes a note. Who visited and when is in [ACTIVITY.md](ACTIV
 **2026-11-13: Grok is suspended; Claude runs the project solo ([decision](2026-11-13-dale-decision-grok-suspended.md), `GROK.md` to reinstate).** Every queue item below is Claude's, whatever its old owner marker.
 
 ## Waiting on Dale
-- **CPU table on mainline** ([decision](2026-11-14-dale-decision-mainline-cpu-table.md), option 2: ROCKNIX's H700 table, 1512 MHz only via Expert Mode, stress test before Beta). Interprets a hard rule: Dale merges.
 - 2026-11-13: #109 and #143 (Device test queue) closed by Dale; results in [hw-result-143](2026-11-13-dale-hw-result-143.md). Older: device tests in **issue #109**, from **Releases → dev**: #102 brightness, #104 TF2 ROMs, #88 Wi-Fi connect, #85 buttons; optional #95 accent bars. Deploy only a dev build whose SHA is a **merge** commit (the release at `f3ecab1` was an ACTIVITY commit; #117 fixes that from the next merge on).
 - Dale's local clone `Documents\GitHub\Anbernic_RG34XXSP_Redux` is at `0afecd9` (#82), CRLF-only diffs. Before building from it: `git config core.autocrlf true && git fetch && git reset --hard origin/main`.
 
