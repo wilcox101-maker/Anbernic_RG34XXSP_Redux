@@ -128,7 +128,10 @@ the handheld, it can break RetroArch. **[device-checked]** (htop).
 ## Going back to stock
 - Boot picture first: Settings > System > **Boot Screen** while it shows Redux.
 - Menu: Settings > System > **Stock Menu** (reboots into the stock launcher), or from your PC
-  `python install.py --uninstall <device address>` ([install.md](install.md)).
+  `python install.py --uninstall <device address>` ([install.md](install.md)). Your Redux settings
+  are kept for a later reinstall.
+- If Redux fails to start three times in a row, the stock menu starts instead for that boot
+  ([install.md](install.md#if-redux-wont-start)).
 
 ## Known problems (2026-11-14)
 - Video Player crashes when you play a video (12a).

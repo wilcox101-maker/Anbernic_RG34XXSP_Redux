@@ -195,9 +195,22 @@ class RunWrapper(unittest.TestCase):
             f.write("#!/bin/sh\n" + body + "\n")
         os.chmod(p, 0o755)
 
-    def run_wrapper(self):
-        return subprocess.run(["sh", self.run_sh], env=dict(os.environ, REDUX_DIR=self.d),
-                              capture_output=True).returncode
+    def run_wrapper(self, **extra):
+        stock = os.path.join(self.d, "stock_menu")
+        with open(stock, "w", newline="\n") as f:
+            f.write("#!/bin/sh\necho stock >> \"$REDUX_DIR/stock_ran\"\nexit 0\n")
+        os.chmod(stock, 0o755)
+        env = dict(os.environ, REDUX_DIR=self.d, REDUX_GUARD=os.path.join(self.d, "guard"),
+                   REDUX_STOCK_MENU=stock)
+        env.update(extra)
+        return subprocess.run(["sh", self.run_sh], env=env, capture_output=True).returncode
+
+    def stock_runs(self):
+        p = os.path.join(self.d, "stock_ran")
+        if not os.path.exists(p):
+            return 0
+        with open(p) as f:
+            return len(f.read().split())
 
     def log(self):
         with open(os.path.join(self.d, "redux.log"), "rb") as f:
@@ -227,6 +240,46 @@ class RunWrapper(unittest.TestCase):
 
     def test_syntax(self):
         self.assertEqual(subprocess.run(["sh", "-n", self.run_sh]).returncode, 0)
+
+    def test_three_quick_failures_start_stock_menu(self):
+        self.fake_menu('exit 1')
+        self.assertEqual(self.run_wrapper(), 1)
+        self.assertEqual(self.run_wrapper(), 1)
+        self.assertEqual(self.stock_runs(), 0)
+        self.assertEqual(self.run_wrapper(), 0)          # third: stock menu runs at once
+        self.assertEqual(self.stock_runs(), 1)
+        self.assertIn(b"3 quick failures in a row", self.log())
+        self.fake_menu('echo redux-ran; exit 0')          # rest of this boot: stock only
+        self.assertEqual(self.run_wrapper(), 0)
+        self.assertEqual(self.stock_runs(), 2)
+        self.assertNotIn(b"redux-ran", self.log())
+        self.assertIn(b"failed to start 3 times this boot", self.log())
+
+    def test_success_resets_the_count(self):
+        self.fake_menu('exit 1')
+        self.run_wrapper()
+        self.run_wrapper()
+        self.fake_menu('exit 0')                          # a game chosen: count starts over
+        self.run_wrapper()
+        self.fake_menu('exit 1')
+        self.run_wrapper()
+        self.run_wrapper()
+        self.assertEqual(self.stock_runs(), 0)
+        self.assertFalse(os.path.exists(os.path.join(self.d, "guard.stock")))
+
+    def test_slow_failure_does_not_count(self):
+        self.fake_menu('exit 1')
+        for _ in range(4):                                # ran longer than the window
+            self.assertEqual(self.run_wrapper(REDUX_QUICK_SECS="0"), 1)
+        self.assertEqual(self.stock_runs(), 0)
+
+    def test_garbage_counter_is_ignored(self):
+        with open(os.path.join(self.d, "guard.fails"), "w") as f:
+            f.write("junk\n")
+        self.fake_menu('exit 1')
+        self.assertEqual(self.run_wrapper(), 1)
+        with open(os.path.join(self.d, "guard.fails")) as f:
+            self.assertEqual(f.read().strip(), "1")
 
 
 class HostSide(unittest.TestCase):

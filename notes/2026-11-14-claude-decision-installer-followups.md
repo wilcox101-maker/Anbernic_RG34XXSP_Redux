@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-14
 re: installer follow-ups (#184, #187); Read Only's installer plan (FROM-REDUX-READONLY-2026-11-14-b) questions 2-4 and its start-failure guard
-status: open
+status: closed (by dale, 2026-11-14)
 ---
 
 # Decision: installer follow-ups (four answers)

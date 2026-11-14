@@ -162,7 +162,7 @@ do_uninstall() {
     sync
     [ "$(ln_state "$LN")" = stock ] || fail "dmenu_ln does not read back as stock"
     log "ok restored stock launcher"
-    say "stock launcher restored. Restart the handheld. $DIR is left in place (unused; delete it by hand if you like)."
+    say "stock launcher restored. Restart the handheld. $DIR is left in place (unused; delete it by hand if you like). Your Redux settings in $DATA are kept, so a reinstall comes back as you left it."
     say "For the stock boot logo: Settings > System > Boot Screen > Restore, before restarting."
 }
 
