@@ -162,7 +162,11 @@ and the next PING report. No notification.
   (decision on inbox #41, 2026-11-12) may write there, only while the user has switched it on, with its
   safeguards: password, local network only, delete moves files to `.trash`, overwrite asks, and ROM uploads
   (ROM copy) only in **[Xroot Mode]**, the state after the one-time ownership acknowledgement
-  ([decision](notes/2026-11-13-dale-decision-xroot-mode.md)). Nothing else in Redux writes to p1.
+  ([decision](notes/2026-11-13-dale-decision-xroot-mode.md)). **Second exception:** a stock engine
+  Redux launches exactly as stock does may write its own saves, logs and config on the card; today that
+  is only OpenBOR (`openbor.sh` + `OpenBOR.dge`, data in `/mnt/mmc/openbor` or the pak's `Saves`;
+  [decision](notes/2026-11-14-dale-decision-openbor-launch.md)). Redux's own code still never writes
+  there. Nothing else in Redux writes to p1.
 - Never write code that formats a partition automatically. Never run code from removable media
   without an explicit user opt-in.
 - Host tools: Python 3 standard library only, must run on Windows.

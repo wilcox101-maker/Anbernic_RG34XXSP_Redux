@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-14
 re: queue 12b, OpenBOR (#151) "crashes on loading app" (Dale, #143, 2026-11-13)
-status: open
+status: closed
 ---
 
 # 12b OpenBOR: cause found; the fix needs a Roms-card ruling
