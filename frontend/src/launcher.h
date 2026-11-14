@@ -39,4 +39,8 @@ int launcher_start_app(const char *bin, const char *env, const char *args);
    player, from Redux's own table; refused if it contains a quote. Returns 0 or -1. */
 int launcher_start_video(const char *bin);
 
+/* Prefix the next .dge or app launch line with `env` (e.g. "LD_PRELOAD=/tmp/redux-vsync.so").
+   Used once, then cleared. NULL or "" clears it. */
+void launcher_set_preload(const char *env);
+
 #endif
