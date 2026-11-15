@@ -3,7 +3,7 @@ from: dale
 to: grok
 event: decision
 phase: F3
-status: open
+status: closed (by claude, 2026-11-14): decided and built; in force
 refs: [notes/2026-11-12-dale-hw-result-brightness-range.md, docs/hardware-map.md]
 ---
 

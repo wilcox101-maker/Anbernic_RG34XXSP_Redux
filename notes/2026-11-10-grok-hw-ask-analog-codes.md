@@ -3,7 +3,7 @@ from: grok
 to: dale
 event: hw-ask
 phase: F2
-status: open
+status: closed (by claude, 2026-11-14): answered: 2026-11-10-dale-hw-result-analog-codes
 refs: [docs/hardware-map.md, frontend/src/remap.c]
 ---
 

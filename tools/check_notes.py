@@ -7,19 +7,23 @@ Exit 0 = clean, 1 = a problem. Python 3 standard library only, runs on Windows.
 Notes dated before 2026-11-13 are grandfathered (notes are append-only, so old ones can't be fixed).
 Checks: file name pattern, front matter present, required keys, allowed values, and that every
 note STATUS.md lists under "Open notes" exists.
+Warns (never fails) about a note still `open` more than STALE_DAYS days after its date: close it with
+a one-line reason, or keep it open on purpose and list it in STATUS.md's "Open notes".
 """
+import datetime
 import os
 import re
 import sys
 
 NOTES = "notes"
-SKIP = {"README.md", "STATUS.md", "ACTIVITY.md"}
+SKIP = {"README.md", "STATUS.md", "ACTIVITY.md", "status-archive.md"}
 WHO = {"claude", "grok", "dale"}
 EVENTS = {"phase-start", "milestone", "phase-gate", "handoff", "review-request", "review",
           "question", "decision", "blocker", "hw-result", "correction", "message"}
 NAME = re.compile(r"^\d{4}-\d{2}-\d{2}-(claude|grok|dale)-([a-z0-9-]+)\.md$")
 STATUS = re.compile(r"^(open|acknowledged|closed)\b")
 SINCE = "2026-11-13"   # first date the check applies to
+STALE_DAYS = 3
 
 
 def front_matter(text):
@@ -35,6 +39,31 @@ def front_matter(text):
             k, v = line.split(":", 1)
             keys[k.strip()] = v.strip()
     return keys
+
+
+def stale_warnings(today=None):
+    """Open notes older than STALE_DAYS that STATUS.md doesn't list as open on purpose."""
+    today = today or datetime.date.today()
+    listed = ""
+    status = os.path.join(NOTES, "STATUS.md")
+    if os.path.isfile(status):
+        with open(status, encoding="utf-8") as f:
+            listed = f.read().split("## Open notes", 1)[-1]
+    out = []
+    for name in sorted(os.listdir(NOTES)):
+        if not re.match(r"^\d{4}-\d{2}-\d{2}-", name) or not name.endswith(".md"):
+            continue
+        try:
+            day = datetime.date.fromisoformat(name[:10])
+        except ValueError:
+            continue
+        if (today - day).days <= STALE_DAYS or name in listed:
+            continue
+        with open(os.path.join(NOTES, name), encoding="utf-8") as f:
+            fm = front_matter(f.read()) or {}
+        if fm.get("status", "").startswith("open"):
+            out.append(f"warning: {name} is still open after {(today - day).days} days")
+    return out
 
 
 def main():
@@ -80,6 +109,8 @@ def main():
                 if "/" not in target and not os.path.isfile(os.path.join(NOTES, target)):
                     problems.append(f"STATUS.md links to missing note {target}")
 
+    for w in stale_warnings():
+        print(w)
     for p in problems:
         print(p)
     print(f"check_notes: {len(problems)} problem(s)")

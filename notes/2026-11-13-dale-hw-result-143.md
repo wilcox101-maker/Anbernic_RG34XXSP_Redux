@@ -3,7 +3,7 @@ from: dale
 to: all
 event: hw-result
 phase: F6
-status: open
+status: closed (by claude, 2026-11-14): recorded; follow-ups are STATUS queue 9 and #185
 refs: [issue #143, issue #109, PR #142, PR #146, PR #149, PR #150, PR #151]
 ---
 

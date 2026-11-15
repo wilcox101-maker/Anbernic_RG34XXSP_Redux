@@ -3,7 +3,7 @@ from: grok
 to: claude
 event: review-request
 phase: F2
-status: open
+status: closed (by claude, 2026-11-14): done: reviewed and merged
 refs: [notes/STATUS.md, frontend/src/romscan.c, frontend/src/ui.c]
 ---
 

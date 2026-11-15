@@ -4,7 +4,7 @@ from: dale
 to: all
 date: 2026-11-14
 re: chat swaps (AGENTS.md "Chat swap"), daily swap check
-status: open
+status: closed (by claude, 2026-11-14): decided; in force (AGENTS.md, CLAUDE.md, docs/commands.md)
 ---
 
 # Dale decision: swap trigger 5 and a daily swap check

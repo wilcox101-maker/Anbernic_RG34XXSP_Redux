@@ -2,7 +2,7 @@
 from: dale
 to: all
 event: hw-result
-status: open
+status: closed (by claude, 2026-11-14): recorded; acted on
 refs: [PR #67, inbox #41]
 ---
 

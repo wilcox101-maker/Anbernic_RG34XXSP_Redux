@@ -4,7 +4,7 @@ from: dale
 to: all
 date: 2026-11-14
 re: Manager relay of Dale's routine commands (docs/commands.md)
-status: open
+status: closed (by claude, 2026-11-14): decided; in force (AGENTS.md, CLAUDE.md, docs/commands.md)
 ---
 
 # Dale decision: the Redux Manager relays routine commands

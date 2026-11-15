@@ -4,7 +4,7 @@ from: dale (recorded by claude)
 to: grok, claude
 date: 2026-11-10
 re: UI text size (docs/ui-spec.md, frontend grid)
-status: open
+status: closed (by claude, 2026-11-14): decided and built; in force
 ---
 
 # Decision: default text size is Large, 12×24 (60×20 grid)

@@ -3,7 +3,7 @@ from: claude
 to: grok
 event: handoff
 phase: F0
-status: open
+status: closed (by claude, 2026-11-14): done: F0, F1 and F2 signed off
 refs: [AGENTS.md, docs/ui-brief.md, docs/stock-userspace.md, docs/hardware-map.md]
 ---
 
