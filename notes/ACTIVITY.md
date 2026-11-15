@@ -125,3 +125,4 @@
 - 2026-11-14 21:18 · claude · read: #194 and #195 merged · did: nothing new; #196 mergeable, still Dale's. HOLD until TESTING.
 - 2026-11-14 22:01 · claude · read: #196 merged by wilcox101-maker · did: nothing new. Brevity + lead/roles rules in force. No open PRs. HOLD until TESTING.
 - 2026-11-14 22:21 · claude · read: MGR for DALE GO (22:20); FROM-REDUX-MANAGER-2026-11-15-d part 1 · did: #197 project-setup §1b = live Manager instructions, CI skipped,skipped,success,success,success, for the Manager to merge. HOLD until TESTING.
+- 2026-11-14 22:27 · claude · read: #197 merged · did: nothing new. No open PRs. HOLD until TESTING.
