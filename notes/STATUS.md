@@ -29,6 +29,9 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 5. Extras installer (#149): REFUSED path and a fresh install still not run on the device.
 - Backlog: **DOS Mode** (Dale defines the layout), ASCII art maker, PC link (Dale-gated security item; ROM copy only in [Xroot Mode]), Expert Mode and its shortcut, chiptune composer (after 1.0, separate GPL-3 program), Wi-Fi idle scanning, features.ini, ZRAM (v1.x), the Phase 2 mainline track. L3/R3 stay unmapped.
 
+## Improvement ideas (AGENTS.md "Improvements"; Dale's `IMPROVE` lists them)
+- `precheck.py` prints every C test's own lines; show only the summary and failures (shorter output).
+
 ## Open notes
 - [2026-11-14-dale-decision-mainline-cpu-table.md](2026-11-14-dale-decision-mainline-cpu-table.md): dale → all (ROCKNIX H700 table on mainline, 1512 MHz only behind Expert Mode)
 - [2026-11-13-dale-message-kernel-research.md](2026-11-13-dale-message-kernel-research.md): dale → all (kernel/Ubuntu research; never use the Knulli guide's `dd` offsets)

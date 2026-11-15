@@ -21,24 +21,26 @@ Manager relay (`MGR for DALE:` in the owner chat, within the limits in docs/comm
   owner. It does not push branches, open PRs, comment on #41, or append to `ACTIVITY.md`.
 - Ownership moves only through the SWAP routine in AGENTS.md, or when Dale says so.
 
-## Solo mode (current: Grok is suspended)
+## Lead mode
 
-Dale's decision of 2026-11-13: Claude runs the project alone until Dale reinstates Grok.
+Claude is the lead (`docs/roles.md`); no helper is active today (Grok suspended 2026-11-13).
 - Claude takes every queue item in `notes/STATUS.md`, whatever its old owner marker.
-- No second reviewer, so each PR gets a **self-review** before merging: CI green, hard rules
-  re-read against the diff, `Not verified on device` section filled in, one topic per PR. Claude
-  merges with Dale's standing permission. The "never merged without Dale" list is unchanged.
-- Event notes still go in `notes/`: they are the memory between chats, not just messages to Grok.
-  Address them to `dale` or `all`.
-- `notify-claude.yml` and #41 stay as they are; they go quiet with no `grok/` branches. Don't
-  delete them.
+- Each PR gets a **self-review** before merging: CI green, hard rules re-read against the diff,
+  `Not verified on device` section filled in, one topic per PR. Claude merges with Dale's standing
+  permission, **including its own handoff/STATUS docs-only PRs**. The "never merged without Dale"
+  list in AGENTS.md still applies.
+- Event notes go in `notes/`: they are the memory between chats. Address them to `dale` or `all`.
+- `notify-claude.yml` and #41 stay; they are dormant while no helper with a `grok/` branch is active.
 - Hardware tests are Dale's. Batch them so he runs several per device session.
+- Assistants: Claude may use a subagent inside its own chat for a scoped task without asking
+  (session-only, `docs/roles.md`); a separate chat or another AI needs Dale's `ADD`.
 
 ## Session start (owner)
 
 1. Dale's opener: **`HELLO`** inside the Redux Project (its instructions are in
    `docs/project-setup.md`), or *"Approve repo push access. Read AGENTS.md and notes/STATUS.md, then
-   continue."* outside it. Attach the repo with **push** access before anything else.
+   continue."* outside it. Attach the repo with **push** access before anything else. If the attach
+   is refused, ask Dale once to reply "retry" (it has worked on the retry every time so far).
 2. Read the Claude inbox, **PR #41**, by REST (Tooling notes): comments posted since the last
    `ACTIVITY.md` line by `claude`. Subscribe to it too if the session has a tool for that (Project
    chats so far haven't).
@@ -50,12 +52,17 @@ Dale's decision of 2026-11-13: Claude runs the project alone until Dale reinstat
 - GitHub GraphQL is blocked in Claude cloud sessions, so `gh pr list` / `gh pr view` fail. Use REST:
   `gh api repos/wilcox101-maker/anbernic_rg34xxsp_redux/pulls?state=open`, and
   `.../issues/41/comments?since=<ISO time>` for the inbox.
-- ACTIVITY times come from the clock, never from memory: `TZ=America/New_York date '+%Y-%m-%d %H:%M'`.
+- ACTIVITY lines: `python3 tools/log_activity.py --read "…" --did "…" --trailer "<attribution line>"`
+  (time from the clock, works from any branch, retries once if main moved). By hand, the time is
+  `TZ=America/New_York date '+%Y-%m-%d %H:%M'`, and fetch main first: a shallow clone that is behind
+  gets its push rejected.
 - Clone shallow (`git clone --depth 1`). Push with `git -c push.negotiate=true push -u origin <branch>`.
   Force-push is blocked; open a new PR instead.
 - Stage explicit paths, never `git add -A` (build output was committed that way once, in #79).
-- Before every push: `python3 tools/check_rules.py`, then both frontend builds and the tests the
-  same way `.github/workflows/ci.yml` runs them.
+- Before every push: `python3 tools/precheck.py` (the `ci.yml` and notes-lint steps for what you
+  changed; `--all` for everything).
+- GitHub wake-ups on a watched PR: say nothing for "subscribed" and "CI green" unless a step waits
+  on it; speak on a CI failure, a review comment, or a merge.
 - Deploy only main's CI arm64 artifact. The title-bar SHA must be a **merge** commit in `git log`.
 
 ## Model checkpoints

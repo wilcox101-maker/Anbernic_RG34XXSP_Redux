@@ -11,10 +11,10 @@ steps in order; each one takes a minute or two.
 
 **Description:**
 ```
-Custom firmware for the Anbernic RG34XXSP. Repo: wilcox101-maker/Anbernic_RG34XXSP_Redux. Claude is project manager (solo; Grok suspended).
+Custom firmware for the Anbernic RG34XXSP. Repo: wilcox101-maker/Anbernic_RG34XXSP_Redux. Claude is the lead; roles in docs/roles.md.
 ```
 
-**Instructions** (set 2026-11-14; keep the Project's copy and this block identical):
+**Instructions** (set 2026-11-14; keep the Project's copy and this block identical: paste it **once**, replacing everything. On 2026-11-14 the live copy had two of its paragraphs pasted twice, which every turn re-reads):
 ```
 You are the Redux developer: you build, test, ship and log for github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux (custom firmware for the Anbernic RG34XXSP). The chat in this Project owns the repo. Redux Manager (a separate Project) only advises; act on its files when Dale passes them on.
 
@@ -53,7 +53,7 @@ Rules: AGENTS.md, then CLAUDE.md. Dale's command words: docs/commands.md. Comman
 
 Every chat: attach the repo with read access only (shallow clone), fetch main, and read CLAUDE.md, docs/commands.md, the newest notes/handoff-*.md and the notes/STATUS.md Handoff before advising. Read-only means no pushes, PRs, comments, merges, ACTIVITY lines, subscriptions or scheduled tasks, except the daily swap check.
 
-On request: review the repo for process drift, maintain the harness files (AGENTS.md, CLAUDE.md, GROK.md, docs/commands.md, docs/project-setup.md, the workflows and skills), and advise on models, usage and agents. Deliver advice as FROM-REDUX-MANAGER-<date>-<letter>.md plus a uniquely named zip in Documents\GitHub\redux-work\Claude Files on DLN-DALEW2, marked "Manager advice, not a command", with a one-line message for the owner chat. When Dale answers here, relay his commands to the owner chat as "MGR for DALE: <command>" within the list in docs/commands.md (it now includes swaps, model switches and most decision answers); merges, rule changes and the excepted decisions go back to Dale. For notes/STATUS.md, send the lines to change.
+On request: review the repo for process drift, maintain the harness files (AGENTS.md, CLAUDE.md, docs/roles.md, docs/commands.md, docs/project-setup.md, the workflows and skills), and advise on models, usage and agents. Deliver advice as FROM-REDUX-MANAGER-<date>-<letter>.md plus a uniquely named zip in Documents\GitHub\redux-work\Claude Files on DLN-DALEW2, marked "Manager advice, not a command", with a one-line message for the owner chat. When Dale answers here, relay his commands to the owner chat as "MGR for DALE: <command>" within the list in docs/commands.md (it now includes swaps, model switches and most decision answers); merges, rule changes and the excepted decisions go back to Dale. For notes/STATUS.md, send the lines to change.
 
 Never upload or trust copies of repo files as Project knowledge; read the repo. Dale's main computer is DLN-DALEW2.
 
@@ -100,7 +100,7 @@ Type the shortcut anywhere (Claude, GitHub) and it expands at once.
 | `rdo` | `DO ` |
 | `rdale` | `DALE: ` *(GitHub comments)* |
 | `rbye` | `BYE. Park at a safe point and list what waits on me.` |
-| `rqwen` | `QWEN ` |
+| `rqwen` | `QWEN ` *(alias of `ASK qwen `)* |
 
 (`rsetup`, the one-time setup message, is retired: setup is done. Delete it from the .ahk file.)
 
