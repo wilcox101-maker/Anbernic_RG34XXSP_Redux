@@ -1,7 +1,7 @@
 # Agent prompts: copy and paste
 
-Short openers Dale sends. The rules live in `AGENTS.md` and `CLAUDE.md`. Current setup: Claude solo,
-Grok suspended (see `GROK.md` to reinstate).
+Short openers Dale sends. The rules live in `AGENTS.md` and `CLAUDE.md`. Who does what:
+[`roles.md`](roles.md) (Claude is the lead; Grok suspended; helpers are added with `ADD`).
 
 ## Claude: new owning chat (after SWAP)
 Inside the Redux Project (instructions do the rest, see `docs/project-setup.md`):
@@ -25,7 +25,7 @@ Outside the Project:
 ## Claude: hardware results
 > Device test, build <sha>: <item> PASS / FAIL <what you saw>. Write the hw-result note.
 
-## Local Qwen (offline, no repo access; for when Claude usage runs low)
+## Local Qwen (offline, no repo access; for when Claude usage runs low; `ASK qwen <task>` writes this for you)
 > You are helping on a C99/SDL2 handheld frontend. No new dependencies, no file writes outside the
 > function I give you, no hardware claims. Task: <function or file excerpt>. Return only the changed code.
 Bring Qwen's output to the owning Claude chat, which reviews it and commits it on a `claude/` branch.

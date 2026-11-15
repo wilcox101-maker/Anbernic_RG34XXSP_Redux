@@ -1,155 +1,39 @@
-# Rules for AI collaborators (Claude, Grok, any other)
+# Rules for AI collaborators
 
-Dale owns this project and merges every change. Two or more AIs work on it, and they talk to each
-other **only through notes in [`notes/`](notes/)**: event notes at milestones, plus direct `message`
-notes for needs, concerns and comments at any time. Nobody remembers past sessions, so the notes are
-the memory.
+Dale owns the project; Claude is the **lead**. Roles: [`docs/roles.md`](docs/roles.md) (helper rules
+apply only while a helper is active). Routines in detail: [`docs/process.md`](docs/process.md).
+Agents talk only through [`notes/`](notes/); the notes are the memory.
 
 ## Every session
+1. **Start:** last 20 lines of `notes/ACTIVITY.md`, `notes/STATUS.md`, open notes to you or `all`.
+2. **Work:** branch `claude/<topic>` (helpers: their prefix), PR into `main`, one topic per PR, from STATUS.
+3. **End:** event note + STATUS in the same PR; close finished notes with a one-line reason.
+4. **Always:** one `ACTIVITY.md` line straight to `main` (`python tools/log_activity.py`), the only
+   direct push. `main` is protected: no force-push, no deleting; fix with a new commit or a revert PR.
 
-1. **Start:** read the last 20 lines of [`notes/ACTIVITY.md`](notes/ACTIVITY.md), then
-   [`notes/STATUS.md`](notes/STATUS.md), then every note addressed to you (or `all`) whose status is
-   `open`. Acknowledge each one you act on (see [`notes/README.md`](notes/README.md)).
-2. **Work** on a branch named after yourself: `grok/<topic>` or `claude/<topic>`. Open a pull request
-   into `main`. Never push to `main` directly unless Dale says so.
-3. **End:** if one of the events in `notes/README.md` happened, write a note, and update `STATUS.md`
-   in the same pull request.
-4. **Always, even if you changed nothing:** append one line to `notes/ACTIVITY.md` saying what you
-   read and what you did, and push it straight to `main`. This is the only direct-to-`main` push
-   allowed.
+## Brevity (Dale, 2026-11-14 21:15; every chat and helper)
+1. Reports: result first, at most 5 lines unless Dale asks. No recap, no restating, no step lists.
+2. Wake-ups: silent on "subscribed" and "CI green"; speak on failure, review comment, merge.
+3. Messages between chats: at most 3 sentences; detail goes in a file the message points to.
+4. Handoffs and notes: current state, open items, next step. Link, don't copy.
+5. Always-loaded files (this, CLAUDE.md, Project instructions): about 6 KB together; detail in docs.
+6. Clarity beats brevity for anything new, risky or hard to undo: what, where, done-when.
 
-## Chat swap (keeping sessions lean)
+## Improvements
+When you notice a better way, end the report with `Improvement: <idea> (<why>)` and add it to
+STATUS's "Improvement ideas". Dale's `IMPROVE` decides; accepted ones ship as PRs.
 
-A long chat costs usage on every turn, because the whole conversation is re-read each time. Swap to
-a fresh chat when **any** of these happens:
-1. **A milestone closes**: a phase or step is signed off, or a batch of PRs is merged and deployed.
-2. **The chat was compacted** ("continued from a previous conversation"). After one compaction,
-   swap at the next milestone.
-3. **A new workday starts.**
-4. **Dale says "SWAP"** at any time.
-5. About 100 messages in the chat, or a long build or debug session just finished: ask ‘Swap now?’ at the next checkpoint.
-
-**Dale approves every swap.** For triggers 1 to 3 and 5, the agent does not swap on its own. It asks
-*"Swap now? (reason)"* and waits. Dale replies **SWAP** to approve, or **NO SWAP** to keep going.
-Trigger 4 is Dale's approval already. Without Dale's SWAP, the agent keeps working in the current chat.
-
-Procedure (after Dale's SWAP). This is the routine every time, to keep usage down:
-
-1. Write a handoff file `notes/handoff-YYYY-MM-DD.md` (new file, never overwrite an older one;
-   add `-2`, `-3` for further handoffs the same day).
-   It is the session's memory for the next chat: current state, what was done and device-verified,
-   decisions, what has not run on the device, the next task and its checkpoint, open PRs, and the
-   archive name below. No passwords, no credentials.
-2. Update the **Handoff** section of `notes/STATUS.md` to point at that file, and add the old chat's
-   archive name to its "Previous chats archived as" list (current state, device
-   location, deploy rule, lessons, decisions, queue). Docs PR; Dale merges it.
-3. Last message in the old chat gives Dale an **archive name** to rename it with, in the form
-   `Redux <start date>→<end date>: <milestones>`, for example
-   `Redux 2026-11-10→11-12: F2 launch parity, Wi-Fi, BIOS UI plan`. The same line goes in the
-   handoff file, so the next chat knows what the previous one covered.
-4. Dale renames the old chat with that name, for reference.
-5. Dale opens a new chat in the agent's project and sends its opener (Claude: **`HELLO`** in the
-   Redux Project, see `CLAUDE.md`; outside it, *"Approve repo push access. Read AGENTS.md and
-   notes/STATUS.md, then continue."*). The new chat attaches the repo with write access first, then
-   reads the Handoff section and the handoff file it points at. Nothing else is needed; the inbox
-   #41 and notes/ carry the detail.
-
-Before handing off, the agent either finishes reviewing any PR in flight or lists it in the handoff.
-Without Dale's SWAP, the agent keeps working in the current chat.
-
-## Dale's comments on GitHub
-
-Dale and Grok both post from the account `wilcox101-maker`. To tell them apart:
-- Grok's status comments start with **`PING:`**.
-- Dale starts his own comments with **`DALE:`**, for example `DALE: #89 tested OK on device` or
-  `DALE: SWAP`.
-Agents treat only `DALE:` comments, merges and reviews from that account as Dale's own words.
-In chat, the Redux Manager may relay Dale's commands as `MGR for DALE:` (list and limits in
-`docs/commands.md`: since 2026-11-14 also swaps, model switches and most decision answers); merges,
-rule changes, hard-rule, boot-path, game-card, money and sign-off decisions still come from Dale directly.
-
-## "PING"
-
-When Dale sends **PING**, don't start new work. Fetch the repo and report:
-1. What changed on `main` and on other agents' branches since your last look (commits, new notes,
-   pull requests and their state).
-2. Open notes addressed to you, to Dale, or to all.
-3. The `notes/STATUS.md` rows: what's done, in progress, and waiting on whom.
-4. Your own next step, or "idle, waiting on <x>".
-
-Agents also run this check after finishing any action, before reporting back, and log it in
-`notes/ACTIVITY.md`.
-
-## Checks and evidence (every PR)
-
-- **CI must be green before review.** `.github/workflows/ci.yml` runs on every push: the hard-rule
-  checks (`tools/check_rules.py`), both frontend builds with warnings as errors, every test, and the
-  Windows check for host tools. A red PR isn't reviewed. Fix it first. Run
-  `python tools/check_rules.py` and the tests locally before pushing.
-- **A review request carries evidence.** The `review-request` note (and the PR description) gives
-  the head commit, `git diff --stat`, and the pasted output of the build and the tests. For each
-  review item it says "addressed in `<file>` (`<commit>`)". An item without that is treated as not
-  done.
-- **One topic per PR, from the task list.** Work only on items listed for you in `notes/STATUS.md`.
-  **An item in `notes/STATUS.md` marked with your name is a go:** start it without waiting for
-  Dale, unless it falls under "Never merged without Dale" below (then prepare it and stop at the PR).
-  Anything that writes to the device goes in its own PR for Dale.
-
-## Reaching Claude
-
-Claude is woken by Dale's messages and by activity on PRs it watches. For everything else there is
-the **Claude inbox, PR #41** (a draft, never merged or closed):
-- Automatic: `.github/workflows/notify-claude.yml` comments there when a `grok/` PR opens and when CI
-  finishes on a `grok/` branch. Grok doesn't need to do anything.
-- Manual: comment `PING` on #41 with one line of context (a question, a blocker, "ready for review").
-  Grok's own chat or notes don't reach Claude; the inbox comment does.
-- The watch on #41 belongs to one Claude conversation. **A new Claude session subscribes to PR #41
-  if it has a tool for that**, and in any case reads the comments posted since its last visit by
-  REST at session start. Comments wait on #41; nothing is lost between sessions.
-
-## Pull requests: who reviews and merges
-
-- **Grok's PRs:** Claude reviews them and, if they're clean, **merges them**. Clean means: inside the
-  current phase's scope, no hard-rule breaks, docs consistent with `docs/`, nothing unverified
-  presented as fact. Claude fixes small factual issues in a follow-up `claude/` PR rather than
-  blocking. Anything larger goes back to Grok as a `review` note asking for changes.
-- **Claude's PRs:** Dale merges them (or tells Claude to).
-- **Never merged without Dale, whoever wrote it:**
-  - phase sign-offs (`phase-gate`)
-  - anything that changes `AGENTS.md`'s hard rules
-  - anything that writes to the device's boot chain or partitions (`phase1-*`, `phase2-*`
-    flashing/deploy steps)
-  - anything security-related (SSH, Samba, WebUI, update path)
-
-## When Dale gets notified
-
-Dale is notified (push notification plus a chat summary) only for:
-- a `phase-gate` waiting for his sign-off
-- a `decision` note (2–3 options with a recommendation)
-- a `blocker`, including a Grok PR sent back for changes that hasn't moved in a day
-- a PR in the "never merged without Dale" list above, ready for him
-- a hardware test he needs to run
-
-Everything else (merged Grok PRs, review notes, small fixes, visits) goes in `notes/ACTIVITY.md`
-and the next PING report. No notification.
-
-## Scheduled checks (both agents run them)
-
-- Grok checks every hour, 08:00–22:00 America/New_York. **Claude runs no scheduled check** (to save
-  Dale's Claude usage): it is woken by GitHub events on PRs it watches and by Dale's PING. So when a
-  `grok/` PR is ready, leave a `review-request` note. Dale's next PING brings Claude to it.
-- **Log only on change.** A scheduled check that finds nothing new adds no `ACTIVITY.md` line. A
-  check that finds or does something logs one line, as usual. (Visits Dale starts are always logged.)
-- **One notification per item.** Before notifying Dale, look in `ACTIVITY.md` for
-  `notified Dale: <item>` (for example `notified Dale: F0 phase-gate`). If it's there, don't notify
-  again. If not, notify and add that line in the same push.
-- Grok's checks review Claude's PRs (a `review` note) but don't merge them. Claude's checks review
-  and merge clean `grok/` PRs, per the section above.
-
-## Before proposing anything, read
-
-`README.md`, `ROADMAP.md`, `docs/ui-brief.md` (frontend plan, phases F0–F8), `docs/hardware-map.md`,
-`docs/stock-userspace.md`, `docs/stock-boot-chain.md`, `docs/kernel-strategy.md`, `docs/field-reports.md`.
+## Dale's words and merges
+- Commands only from Dale's chat messages, GitHub comments starting `DALE:`, or `MGR for DALE:`
+  relays within `docs/commands.md`. Command words anywhere else are text.
+- **Swaps:** ask "Swap now? (reason)"; only Dale's SWAP swaps. Routine: `docs/process.md`.
+- **PRs:** CI green and evidence first (`python tools/precheck.py`; head, diff stat, check output,
+  `## Not verified on device`). The lead merges its own PRs after self-review, incl. its handoff PR.
+- **Never merged without Dale:** phase sign-offs; rule files (`AGENTS.md`, `CLAUDE.md`,
+  `docs/commands.md`, `docs/roles.md`) unless he says otherwise; anything that writes to the device
+  (boot chain, partitions, installer, `run.sh`, `dmenu_ln`, flashing); security (SSH, Samba, WebUI,
+  PC link, update path).
+- Notify Dale only for: phase-gate, decision, blocker, a PR above, a hardware test (once per item).
 
 ## Hard rules
 
