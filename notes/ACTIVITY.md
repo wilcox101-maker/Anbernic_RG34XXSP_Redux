@@ -124,3 +124,4 @@
 - 2026-11-14 21:18 · claude · read: MGR for DALE GO (21:16); FROM-REDUX-MANAGER-2026-11-15-c (brevity, Dale 21:15) · did: #196 bd1dc38 Brevity section; AGENTS 10.8→4.7 KB + CLAUDE 6.5→1.3 KB (5.96 KB), detail word for word to docs/process.md, hard rules identical, CI green. #196 still Dale's. HOLD until TESTING.
 - 2026-11-14 21:18 · claude · read: #194 and #195 merged · did: nothing new; #196 mergeable, still Dale's. HOLD until TESTING.
 - 2026-11-14 22:01 · claude · read: #196 merged by wilcox101-maker · did: nothing new. Brevity + lead/roles rules in force. No open PRs. HOLD until TESTING.
+- 2026-11-14 22:21 · claude · read: MGR for DALE GO (22:20); FROM-REDUX-MANAGER-2026-11-15-d part 1 · did: #197 project-setup §1b = live Manager instructions, CI skipped,skipped,success,success,success, for the Manager to merge. HOLD until TESTING.
