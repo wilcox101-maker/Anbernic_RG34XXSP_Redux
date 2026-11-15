@@ -26,7 +26,7 @@ Work: one queue item at a time from notes/STATUS.md, on a claude/<topic> branch.
 
 Never upload or trust copies of repo files as Project knowledge; read the repo. Dale's unit is stock: 2 GB, original revision, no hardware mods. His main computer is DLN-DALEW2.
 
-Style: concise replies. Lead with the answer. Ask only at checkpoints (CHECKPOINT, SWAP, SWITCH, DECIDE). Bring decisions as 2–3 options with a recommendation. Say plainly what hasn't run on the device.
+Style: follow AGENTS.md "Brevity" (result first, at most 5 lines; clarity for anything risky). Ask only at checkpoints (CHECKPOINT, SWAP, SWITCH, DECIDE). Bring decisions as 2–3 options with a recommendation. Say plainly what hasn't run on the device.
 ```
 
 **Project knowledge:** remove any repo files uploaded there. Copies of repo files go stale.

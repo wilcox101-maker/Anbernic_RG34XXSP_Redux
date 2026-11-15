@@ -39,7 +39,7 @@ SHIP · MERGE · DECIDE · IMPROVE · SWAP · SWITCH · USAGE
 | `BRIEF` | Reads ACTIVITY, STATUS, open PRs, test queue. No work. | 3 lines: done, in progress, waiting on Dale |
 | `PING` | The full AGENTS.md PING report. No new work. Logs it. | The 4-part report |
 | `BYE` | Dale is stepping away. Finish to the next safe point (commit, push, PR open), log ACTIVITY, list what will wait for Dale. | "Parked at <point>. Waiting on you: …" |
-| `SWAP` / `NO SWAP` | Approves or declines a chat swap (AGENTS.md routine). | Archive name + opener for the new chat |
+| `SWAP` / `NO SWAP` | Approves or declines a chat swap (routine in `docs/process.md`). | Archive name + opener for the new chat |
 | `SWITCH` / `NO SWITCH` | Approves or declines a model-switch checkpoint (CLAUDE.md). | "Waiting for 'switched'" / carries on |
 | `USAGE` | Runs the explain-usage skill: where this chat's tokens went, and whether to SWAP. | One chart + one line |
 
