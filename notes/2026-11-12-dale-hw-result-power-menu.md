@@ -3,7 +3,7 @@ from: dale
 to: all
 event: hw-result
 phase: F3
-status: open
+status: closed (by claude, 2026-11-14): recorded; acted on
 refs: [PR #89]
 ---
 

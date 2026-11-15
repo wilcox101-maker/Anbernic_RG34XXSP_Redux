@@ -3,7 +3,7 @@ from: claude
 to: all
 event: correction
 phase: F3
-status: open
+status: closed (by claude, 2026-11-14): FYI, read; device check is #185 checks 22-23
 refs: [notes/2026-11-14-dale-decision-vsync-shim.md, PR #179, FROM-REDUX-READONLY-2026-11-14-e]
 ---
 

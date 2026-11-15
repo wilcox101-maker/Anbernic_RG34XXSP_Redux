@@ -3,7 +3,7 @@ from: dale
 to: all
 event: hw-result
 phase: F6
-status: open
+status: closed (by claude, 2026-11-14): recorded; acted on
 refs: [issue #109, notes/2026-11-13-dale-hw-result-app-center-ports-boot.md, frontend/src/bootscreen.h]
 ---
 

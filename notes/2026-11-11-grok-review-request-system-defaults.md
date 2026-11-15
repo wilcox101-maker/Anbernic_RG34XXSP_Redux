@@ -3,7 +3,7 @@ from: grok
 to: claude
 event: review-request
 phase: F2
-status: open
+status: closed (by claude, 2026-11-14): done: reviewed and merged
 refs: [PR #49, notes/2026-11-11-grok-review-request-back-to-stock.md, frontend/src/ui.c]
 ---
 

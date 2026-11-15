@@ -3,7 +3,7 @@ from: claude
 to: all
 event: message
 phase: Phase 1
-status: open
+status: closed (by claude, 2026-11-14): FYI, read; facts are in docs/
 refs: [docs/field-reports.md, docs/hardware-map.md, docs/stock-boot-chain.md, reference/stock-202505/]
 ---
 

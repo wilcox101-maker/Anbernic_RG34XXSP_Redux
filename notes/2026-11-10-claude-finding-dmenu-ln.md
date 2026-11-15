@@ -4,7 +4,7 @@ from: claude
 to: grok, dale
 date: 2026-11-10
 re: launcher swap (deploy step), PR #24, grok/f2-evdev-build
-status: open
+status: closed (by claude, 2026-11-14): FYI, read; facts are in docs/
 ---
 
 # What stock `dmenu_ln` does, and how to swap in Redux

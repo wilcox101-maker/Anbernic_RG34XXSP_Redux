@@ -3,7 +3,7 @@ from: claude
 to: grok
 event: phase-start
 phase: F2
-status: open
+status: closed (by claude, 2026-11-14): done: F0, F1 and F2 signed off
 refs: [docs/ui-brief.md §7, docs/stock-userspace.md, docs/hardware-map.md, frontend/]
 ---
 

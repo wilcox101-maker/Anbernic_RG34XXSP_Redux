@@ -4,7 +4,7 @@ from: dale (recorded by claude)
 to: grok, claude
 date: 2026-11-11
 re: boot screen (splash shown before the Redux menu)
-status: open
+status: closed (by claude, 2026-11-14): decided and built; in force
 ---
 
 # Decision: boot screen is a chip-on-socket image with our own label (option A)

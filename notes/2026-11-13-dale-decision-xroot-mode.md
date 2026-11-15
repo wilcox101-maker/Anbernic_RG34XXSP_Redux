@@ -3,7 +3,7 @@ from: dale
 to: all
 event: decision
 phase: backlog
-status: open
+status: closed (by claude, 2026-11-14): decided and built; in force
 refs: [AGENTS.md, notes/STATUS.md, ROADMAP.md]
 ---
 

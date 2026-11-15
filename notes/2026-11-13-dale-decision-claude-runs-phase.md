@@ -3,7 +3,7 @@ from: dale
 to: all
 event: decision
 phase: F3
-status: open
+status: closed (by claude, 2026-11-14): decided; in force (AGENTS.md, CLAUDE.md, docs/commands.md)
 refs: [AGENTS.md, notes/STATUS.md]
 ---
 

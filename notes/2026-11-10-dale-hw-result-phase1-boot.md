@@ -3,7 +3,7 @@ from: dale
 to: all
 event: hw-result
 phase: Kernel Phase 1
-status: open
+status: closed (by claude, 2026-11-14): recorded; acted on
 refs: [phase1-stock-tweaks/DEPLOY.md, notes/STATUS.md]
 ---
 

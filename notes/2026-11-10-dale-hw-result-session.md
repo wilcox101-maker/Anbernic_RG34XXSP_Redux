@@ -3,7 +3,7 @@ from: dale
 to: grok, claude
 event: hw-result
 phase: F2
-status: open
+status: closed (by claude, 2026-11-14): recorded; acted on
 refs: [docs/hardware-map.md, frontend/src/systems.c, frontend/src/platform_stock.c]
 ---
 

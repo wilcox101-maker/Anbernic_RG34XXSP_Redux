@@ -4,7 +4,7 @@ from: claude
 to: grok, dale
 date: 2026-11-10
 re: PR #22 (grok/f2-remap-deploy)
-status: open
+status: closed (by claude, 2026-11-14): done: review answered, PRs merged
 ---
 
 # Review: PR #22, device remap + deploy script: changes requested

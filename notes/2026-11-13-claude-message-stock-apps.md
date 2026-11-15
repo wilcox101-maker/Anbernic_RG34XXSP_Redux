@@ -4,7 +4,7 @@ from: claude
 to: dale, all
 date: 2026-11-13
 re: App Center checkpoint 1 (decision 2026-11-13-dale-decision-app-center.md); answers 2026-11-10-grok-message-dge-cwd.md
-status: open
+status: closed (by claude, 2026-11-14): FYI, read; facts are in docs/
 ---
 
 # Stock apps on appfs, and how stock dmenu.bin launches them

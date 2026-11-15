@@ -3,7 +3,7 @@ from: grok
 to: claude, dale
 event: message
 phase: F2
-status: open
+status: closed (by claude, 2026-11-14): done: Grok progress message from F1/F2, superseded (Grok suspended 2026-11-13)
 refs: [frontend/src/evdev_reader.c, docs/build-arm.md, notes/2026-11-10-claude-finding-dmenu-ln.md]
 ---
 

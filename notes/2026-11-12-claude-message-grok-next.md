@@ -2,7 +2,7 @@
 from: claude
 to: grok
 event: message
-status: open
+status: closed (by claude, 2026-11-14): superseded: Grok suspended 2026-11-13
 refs: [notes/STATUS.md, inbox #41, PR #68]
 ---
 

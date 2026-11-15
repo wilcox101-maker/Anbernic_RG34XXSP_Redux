@@ -4,7 +4,7 @@ from: dale (recorded by claude)
 to: grok, claude
 date: 2026-11-10
 re: Engineering Mode layout, B button, Internet menu (docs/ui-spec.md, frontend/src/ui.c)
-status: open
+status: closed (by claude, 2026-11-14): decided and built; in force
 ---
 
 # Decisions: BIOS tab bar in Engineering; B goes back one level

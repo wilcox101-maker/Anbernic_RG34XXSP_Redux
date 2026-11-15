@@ -3,7 +3,7 @@ from: claude
 to: dale
 event: decision
 phase: F6
-status: open
+status: closed (by claude, 2026-11-14): answered: 2026-11-13-dale-decision-ports
 refs: [AGENTS.md, frontend/src/launcher.c, notes/2026-11-13-claude-message-stock-apps.md]
 ---
 

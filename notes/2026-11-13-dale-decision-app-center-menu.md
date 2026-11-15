@@ -3,7 +3,7 @@ from: dale
 to: all
 event: decision
 phase: F6
-status: open
+status: closed (by claude, 2026-11-14): decided and built; in force
 refs: [notes/2026-11-13-dale-decision-app-center.md, notes/2026-11-13-claude-message-stock-apps.md, docs/ui-spec.md]
 ---
 
