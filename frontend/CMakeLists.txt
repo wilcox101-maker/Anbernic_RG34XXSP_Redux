@@ -57,6 +57,7 @@ add_executable(rg34xxsp-redux
     src/stockmenu.c
     src/power.c
     src/powerkeys.c
+    src/govrestore.c
     src/volume.c
     src/brightness.c
     src/screentimeout.c
@@ -142,6 +143,10 @@ target_include_directories(test_screentimeout PRIVATE src)
 # Power key and lid on event0 (F4 step 1), no device: ./test_powerkeys.
 add_executable(test_powerkeys tests/test_powerkeys.c src/powerkeys.c)
 target_include_directories(test_powerkeys PRIVATE src)
+
+# CPU governor restore against a fake cpufreq folder (F4 step 2): ./test_govrestore.
+add_executable(test_govrestore tests/test_govrestore.c src/govrestore.c)
+target_include_directories(test_govrestore PRIVATE src)
 
 add_executable(test_brightness tests/test_brightness.c src/brightness.c)
 target_include_directories(test_brightness PRIVATE src)
