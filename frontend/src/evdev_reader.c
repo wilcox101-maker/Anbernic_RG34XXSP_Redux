@@ -1,8 +1,10 @@
 /* Read device buttons and the power key.
    event1 (ANBERNIC-keys): sticks and buttons with edge detection.
-   event0 (axp2202-pek): power key. On press, run stock pwr_new.sh. */
+   event0 (axp2202-pek): power key and lid. Power press runs stock pwr_new.sh; a closed lid runs
+   pwr_new.sh auto (the stock lid/timeout path). The rules are in powerkeys.c. */
 #include "evdev_reader.h"
 #include "remap_device.h"
+#include "powerkeys.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,7 +35,10 @@ static logical_button_t axis_to_btn(int axis, int dir) {
     return LB_NONE;
 }
 
+static long long now_ms(void);
+
 int evdev_open(void) {
+    powerkeys_init(now_ms());
     keys_fd = open(KEYS_PATH, O_RDONLY | O_NONBLOCK);
     power_fd = open(POWER_PATH, O_RDONLY | O_NONBLOCK);
     return (keys_fd >= 0) ? 0 : -1;
@@ -44,9 +49,6 @@ void evdev_close(void) {
     if (power_fd >= 0) close(power_fd);
     keys_fd = power_fd = -1;
 }
-
-/* On power key press, run stock pwr_new.sh. It decides sleep vs shutdown. */
-#define POWER_QUIET_MS 1500   /* ignore the power key this long after pwr_new.sh returns */
 
 static long long now_ms(void) {
     struct timespec t;
@@ -60,8 +62,6 @@ static void drain(int fd) {
     while (fd >= 0 && read(fd, &ev, sizeof ev) == sizeof ev) { }
 }
 
-static long long power_quiet_until;
-
 static void handle_power(void) {
     /* pwr_new.sh is a bash script (function, {0..2}); sh (dash) fails with a syntax error. */
     if (system("/bin/bash /mnt/mod/ctrl/pwr_new.sh") != 0)
@@ -71,7 +71,7 @@ static void handle_power(void) {
        while held (Dale's video, 2026-11-10). Drop the queued events and stay deaf briefly. */
     drain(power_fd);
     drain(keys_fd);
-    power_quiet_until = now_ms() + POWER_QUIET_MS;
+    powerkeys_resumed(now_ms());
 }
 
 void evdev_auto_sleep(void) {
@@ -79,10 +79,14 @@ void evdev_auto_sleep(void) {
         fprintf(stderr, "pwr_new.sh auto returned an error\n");
     drain(power_fd);
     drain(keys_fd);
-    power_quiet_until = now_ms() + POWER_QUIET_MS;
+    powerkeys_resumed(now_ms());
 }
 
+int evdev_lid_closed(void) { return powerkeys_due(now_ms()) == PK_LID_CLOSED; }
+
 int evdev_wait(int timeout_ms) {
+    int lid_ms = powerkeys_wait_ms(now_ms());   /* wake in time for a lid that is closing */
+    if (lid_ms >= 0 && lid_ms < timeout_ms) timeout_ms = lid_ms;
     struct pollfd p[2];
     int n = 0;
     if (keys_fd >= 0)  { p[n].fd = keys_fd;  p[n].events = POLLIN; n++; }
@@ -95,10 +99,11 @@ int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
     if (keys_fd < 0) return -1;
     struct input_event ev;
 
-    /* Power key (event0). */
+    /* Power key and lid (event0). Only a power press runs the power-key path; the lid is
+       acted on by the caller through evdev_lid_closed(). */
     if (power_fd >= 0) {
         while (read(power_fd, &ev, sizeof ev) == sizeof ev) {
-            if (ev.type == EV_KEY && ev.value == 1 && now_ms() >= power_quiet_until)
+            if (ev.type == EV_KEY && powerkeys_event(ev.code, ev.value, now_ms()) == PK_POWER)
                 handle_power();
         }
     }

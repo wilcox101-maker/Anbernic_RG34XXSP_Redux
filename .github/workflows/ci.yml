@@ -51,6 +51,8 @@ jobs:
         run: ./build/test_brightness
       - name: Screen timeout tests
         run: ./build/test_screentimeout
+      - name: Power key and lid tests
+        run: ./build/test_powerkeys
       - name: Ports tests
         run: ./build/test_ports
       - name: Boot Screen manager tests (temp folder, no device)
@@ -139,6 +141,7 @@ jobs:
           ./build-arm64/test_volume
           ./build-arm64/test_brightness
           ./build-arm64/test_screentimeout
+          ./build-arm64/test_powerkeys
           ./build-arm64/test_bootscreen
           ./build-arm64/test_vsync
       - name: Check it is an aarch64 ELF

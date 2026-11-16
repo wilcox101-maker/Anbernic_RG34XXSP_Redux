@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include "power.h"
+#include "powerkeys.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/wait.h>
@@ -30,5 +31,13 @@ static int run_cmd(const char *cmd) {
 #endif
 }
 
-int power_reboot(void)   { return run_cmd(POWER_REBOOT_CMD); }
-int power_poweroff(void) { return run_cmd(POWER_POWEROFF_CMD); }
+/* From here on the lid and power key are ignored (a lid closed during shutdown left the
+   device half-on on stock, docs/field-reports.md). */
+static int shut(const char *cmd) {
+    powerkeys_shutdown(1);
+    int r = run_cmd(cmd);
+    if (r != 0) powerkeys_shutdown(0);   /* it failed and Redux is still running: keys back */
+    return r;
+}
+int power_reboot(void)   { return shut(POWER_REBOOT_CMD); }
+int power_poweroff(void) { return shut(POWER_POWEROFF_CMD); }
