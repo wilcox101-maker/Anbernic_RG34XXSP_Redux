@@ -17,6 +17,7 @@
 #include "platform.h"
 #include "remap.h"
 #include "screentimeout.h"
+#include "govrestore.h"
 #include "ui.h"
 #ifdef REDUX_PLATFORM_STOCK
 #include "evdev_reader.h"
@@ -111,6 +112,11 @@ int main(int argc, char **argv) {
     }
 
     log_build_id();
+#ifdef REDUX_PLATFORM_STOCK
+    /* First thing back from a game or app: put the CPU governor back (F4 step 2). */
+    govrestore_at_start();
+    fflush(stdout);
+#endif
 
     /* At boot the Mali kernel driver can still be loading when we start: SDL then fails with
        "Could not initialize EGL" (device log, 2026-11-10, start at 10.7 s). Exiting costs a 30 s
