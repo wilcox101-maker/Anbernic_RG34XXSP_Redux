@@ -27,3 +27,6 @@ the rule change.
 
 Done when: your answer here, then the AGENTS.md change (A or C) in its own PR for you to merge, then
 step 4 code.
+
+## Answer
+**A**, Dale 2026-11-16 13:42 (chat). AGENTS.md change in its own PR for Dale to merge; step 4 code after it.

@@ -53,9 +53,11 @@ STATUS's "Improvement ideas". Dale's `IMPROVE` decides; accepted ones ship as PR
   (ROM copy) only in **[Xroot Mode]**, the state after the one-time ownership acknowledgement
   ([decision](notes/2026-11-13-dale-decision-xroot-mode.md)). **Second exception:** a stock engine
   Redux launches exactly as stock does may write its own saves, logs and config on the card; today that
-  is only OpenBOR (`openbor.sh` + `OpenBOR.dge`, data in `/mnt/mmc/openbor` or the pak's `Saves`;
-  [decision](notes/2026-11-14-dale-decision-openbor-launch.md)). Redux's own code still never writes
-  there. Nothing else in Redux writes to p1.
+  is OpenBOR (`openbor.sh` + `OpenBOR.dge`, data in `/mnt/mmc/openbor` or the pak's `Saves`;
+  [decision](notes/2026-11-14-dale-decision-openbor-launch.md)) and RetroArch (`RA_launch.sh`, its saves
+  in `saves_RA` or next to the ROM). Redux may send RetroArch `SAVE_FILES` before a lid sleep
+  ([decision](notes/2026-11-16-claude-decision-f4-save-flush.md), A). Redux's own code still never
+  writes there. Nothing else in Redux writes to p1.
 - Never write code that formats a partition automatically. Never run code from removable media
   without an explicit user opt-in. **Exception** (Dale, 2026-11-16,
   [decision](notes/2026-11-16-dale-decision-card-scripts-always.md)): `.sh` ports in `Roms/PORTS/` on
