@@ -56,6 +56,8 @@ int platform_cpu_online(int cpu) {
     snprintf(path, sizeof path, "/sys/devices/system/cpu/cpu%d/online", cpu);
     return read_int(path, 1);
 }
+int platform_cpu_info(eng_cpu_t *c) { return engread_cpu(c); }
+int platform_thermal_zones(eng_zone_t *z, int max) { return engread_thermal(z, max); }
 void platform_clock(char *buf, int buflen) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
