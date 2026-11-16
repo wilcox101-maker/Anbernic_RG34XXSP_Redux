@@ -9,7 +9,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 | Kernel | 2 RAM-resident / mainline | plan only; direction is Dale's call (below) |
 | Frontend | F0, F1, F2 | signed off (F2: 2026-11-12) |
 | Frontend | F3 settings parity | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f3-signed-off.md)) |
-| Frontend | **F4 power and lid** | next after the card picker (lid = event0 `axp2202-pek`) |
+| Frontend | **F4 power and lid** | next (lid = event0 `axp2202-pek`) |
 
 ## Handoff (2026-11-14 (3), Claude): start here in a new chat
 - **Read [handoff-2026-11-14-3.md](handoff-2026-11-14-3.md) next**, then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project, started from the desktop app on DLN-DALEW2.
@@ -23,7 +23,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 
 ## Queue (in order; all Claude unless marked)
 1. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons (folded into item 4, the Redux video front-end); Wolfenstein 3D Y and X (needs the RetroArch remap read). Done: `/tmp/.next` + amixer (#202), scan cache (#203). Game Room X = Favorites, not built yet (placeholder). Then a short device re-check.
-2. **Game Room card picker** (Dale 2026-11-16): TF1/TF2 choice like stock when both cards have games; each list holds one card's games (replaces the merged, doubled list).
+2. ~~Game Room card picker~~ built in #205 (TF1/TF2 like stock, per-card cache, resume keeps the card). **Not device-checked yet** (#185 queue).
 3. **F4 power and lid**, then **F5 Engineering Mode** (Dale A, 2026-11-14 13:37: phase order kept).
 4. **F6: Redux front-ends for the stock apps** in the BIOS/DOS style (Dale 2026-11-16): Video Player first (Redux file list + stock `ffplay`), then Music, Ebook, File Manager. Needs the FFplay.sh read from the device.
 5. **Installer B**: TF2 package with hold-A (after A is device-checked). Tagged Beta releases (`v0.5-beta.N`) once Beta is near.
