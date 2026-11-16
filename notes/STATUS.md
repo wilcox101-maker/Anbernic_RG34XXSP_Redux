@@ -18,7 +18,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - Owner: the Redux Project chat named in the newest handoff; every other chat is advisory. Grok is suspended; every queue item is Claude's.
 
 ## Waiting on Dale
-- **Device session**: [#185](https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux/issues/185), the one test list (dev `0b0f45a`). Starts on TESTING.
+- **Device session**: [#185](https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux/issues/185), the one test list (dev `f6ead4c`). Starts on TESTING.
 - **Phase 2 direction** (before Phase 2, not urgent for Beta): the H700 Kernel Research Ubuntu 24.04 image with update rollback, or `docs/ram-system-design.md`'s read-only squashfs in RAM.
 
 ## Queue (in order; all Claude unless marked)
@@ -31,6 +31,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 
 ## Improvement ideas (AGENTS.md "Improvements"; Dale's `IMPROVE` lists them)
 - `precheck.py` prints every C test's own lines; show only the summary and failures (shorter output).
+- `device-test-queue.yml` appends PRs whose not-verified list is just "none" (#194-#197 did); skip those to keep #185 short.
 
 ## Open notes
 - [2026-11-14-dale-decision-mainline-cpu-table.md](2026-11-14-dale-decision-mainline-cpu-table.md): dale → all (ROCKNIX H700 table on mainline, 1512 MHz only behind Expert Mode)
