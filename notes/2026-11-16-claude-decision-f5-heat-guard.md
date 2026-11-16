@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-16
 re: F5 step 4 heat guard limits (Q1 A in notes/2026-11-16-claude-decision-f5-plan.md); data from the 10 min heat run
-status: open
+status: open (answered A 16:12; closes when step 4 is device-checked)
 ---
 
 # Decision: heat-guard limits on the SoC temperature
@@ -29,4 +29,6 @@ so "stop charging" is not available without a risky PMIC write.
   placeholders; the guard stays log-only until you choose after the 30 min run.
 
 ## Answer
-(open)
+Dale, 16:12: **A.** Warn and cap CPU max at 1200 MHz at ≥ 75 °C for 30 s (back below 65 °C);
+save, sync and power off at ≥ 90 °C for 10 s; in the menu and beside games; charging untouched. Built in
+F5 step 4; limits revisited after the 30 min exit test.
