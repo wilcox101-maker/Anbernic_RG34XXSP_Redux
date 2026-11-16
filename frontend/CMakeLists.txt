@@ -64,7 +64,6 @@ add_executable(rg34xxsp-redux
     src/vsync.c
     ${REDUX_VSYNC_BLOB}
     src/ports.c
-    src/cardscripts.c
     src/bootscreen.c
 )
 target_include_directories(rg34xxsp-redux PRIVATE src)
@@ -116,7 +115,7 @@ add_executable(test_bootscreen tests/test_bootscreen.c src/bootscreen.c)
 target_include_directories(test_bootscreen PRIVATE src)
 
 # Ports known-ports table (no SDL needed): ./test_ports, exit code 0 = pass.
-add_executable(test_ports tests/test_ports.c src/romscan.c src/systems.c src/launcher.c src/ports.c src/cardscripts.c)
+add_executable(test_ports tests/test_ports.c src/romscan.c src/systems.c src/launcher.c src/ports.c)
 target_include_directories(test_ports PRIVATE src)
 
 # Desktop test for the F2 launcher (no SDL needed): run ./test_launcher, exit code 0 = pass.
@@ -146,7 +145,7 @@ add_executable(test_sysinfo tests/test_sysinfo.c src/sysinfo.c)
 target_include_directories(test_sysinfo PRIVATE src)
 
 # Navigation test (back stack, Engineering tabs). Links the UI with the desktop platform; no window.
-add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/cardscripts.c src/bootscreen.c)
+add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c)
 target_include_directories(test_ui_nav PRIVATE src)
 if(TARGET SDL2::SDL2)
     target_link_libraries(test_ui_nav PRIVATE SDL2::SDL2)

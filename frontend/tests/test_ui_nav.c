@@ -13,7 +13,6 @@
 #include "brightness.h"
 #include "sysinfo.h"
 #include "apps.h"
-#include "cardscripts.h"
 #include "bootscreen.h"
 #include "screentimeout.h"
 #include "font.h"
@@ -532,8 +531,8 @@ int main(void) {
     }
     /* cursor skips the blanks; Reset All is the last selectable row */
     expect(ui_list_selected() == 0, "cursor starts on System Tools");
-    press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN);
-    expect(ui_list_selected() == 7, "five downs land on Stock Menu (via Boot Screen and Card Scripts)");
+    press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN);
+    expect(ui_list_selected() == 7, "four downs land on Stock Menu (via Boot Screen)");
     press(LB_DOWN);
     expect(ui_list_selected() == 8, "down from Stock Menu lands on Reset All");
     press(LB_DOWN);
@@ -987,37 +986,15 @@ int main(void) {
     remove("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
     apps_set_root("");
 
-    /* Card Scripts switch (Ports option B): Off by default, 3 s hold to turn on, one press off. */
-    cardscripts_set_path("/tmp/redux-nav-cardscripts");
-    cardscripts_set(0);
+    /* Card Scripts switch removed (Dale A, 2026-11-16): no row for it any more. */
     ui_init();
     down(8); press(LB_A); down(4); press(LB_A);       /* Settings > System */
-    down(4);
-    expect(ui_list_selected() == 4, "Card Scripts is the row after Boot Screen");
     {
         char dump[8192];
         ui_draw();
         grid_dump(dump, sizeof dump);
-        expect(strstr(dump, "Card Scripts  Off") != NULL, "Card Scripts shows Off by default");
+        expect(strstr(dump, "Card Scripts") == NULL, "no Card Scripts row");
     }
-    press(LB_A);
-    expect(ui_screen() == SCREEN_SCRIPTS_CONFIRM, "A on Card Scripts (Off) opens the hold-to-confirm");
-    ui_button(LB_A, 1, 10000); ui_tick(11000); ui_button(LB_A, 0, 11000);
-    expect(!cardscripts_enabled(), "a short hold does not turn it on");
-    ui_button(LB_A, 1, 20000); ui_tick(23100);
-    expect(cardscripts_enabled(), "a 3 s hold turns Card Scripts on");
-    ui_button(LB_A, 0, 23200);
-    press(LB_B);
-    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B returns to System Defaults");
-    {
-        char dump[8192];
-        ui_draw();
-        grid_dump(dump, sizeof dump);
-        expect(strstr(dump, "Card Scripts  On") != NULL, "row shows On");
-    }
-    down(4); press(LB_A);
-    expect(!cardscripts_enabled() && ui_screen() == SCREEN_SYSTEM_DEFAULTS, "one press turns it off");
-    remove("/tmp/redux-nav-cardscripts");
 
     /* Boot Screen manager: 3 s hold installs, a second visit restores. Temp folder, no device. */
     {
@@ -1082,7 +1059,7 @@ int main(void) {
     expect(ui_screen() == SCREEN_MAIN && ui_list_selected() == 0, "M on Display goes to Main");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B on Main after M stays on Main (back stack cleared)");
-    down(8); press(LB_A); down(4); press(LB_A); down(5); press(LB_A);   /* Stock Menu confirm */
+    down(8); press(LB_A); down(4); press(LB_A); down(4); press(LB_A);   /* Stock Menu confirm */
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "Stock Menu confirm is open");
     press(LB_MENU);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "M on a confirm screen cancels back one level");

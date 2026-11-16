@@ -21,7 +21,7 @@ them.
 
 The bottom line of every screen lists that screen's buttons.
 
-Some screens change the device itself (Restart, Power Off, Boot Screen, Card Scripts, Stock Menu,
+Some screens change the device itself (Restart, Power Off, Boot Screen, Stock Menu,
 Reset All). These ask you to **hold A for 3 seconds**. Releasing early, or pressing any other
 button, cancels. **[device-checked]**
 
@@ -57,8 +57,9 @@ PortMaster where stock uses them.
   (shoulder buttons strafe and change weapon).
 - **OpenBOR:** fixed on main (stock's two steps, #170); **[not yet on device]**. OpenBOR keeps its own
   saves and logs in `/mnt/mmc/openbor` on the card, as on stock.
-- **Ports:** the stock ports always work. Third-party `.sh` ports from your card need
-  **Card Scripts** turned on (Settings > System).
+- **Ports:** the stock ports, plus every third-party `.sh` port in `Roms/PORTS` on either card
+  (PortMaster and others). Card scripts run with full access to the handheld: only put scripts
+  you trust on the card.
 - The game list's X (Favorites), Y (Info), Start (Search) and Select (Random) labels are
   **[placeholder]**.
 
@@ -97,9 +98,8 @@ way stock does; Power wakes it. Games and stock apps keep their own behaviour.
 | System Tools | Read-only: battery, CPU governor, speed and range, temperatures (CPU, GPU, VE, DDR), RAM **[device-checked]** |
 | Restart / Power Off | `sync`, then reboot / power off (hold A 3 s) **[device-checked]** |
 | Boot Screen (Stock/Redux) | Swaps the picture shown at power-on. The stock picture is saved first and can be put back here. Writes to the boot partition: keep the handheld on until it says Done. Install **[device-checked]**, restore **[not yet on device]** |
-| Card Scripts (Off/On) | Lets Game Room > Ports run `.sh` scripts from your card (PortMaster, third-party ports). They run with full access: only for scripts you trust |
 | Stock Menu | Puts the stock launcher back (from `dmenu_ln.bak`) and reboots. Refuses if the backup is missing |
-| Reset All | Redux's own settings back to defaults: colours, brightness, screen timeout, font, Card Scripts (Off), saved volume. Never touches games, saves, BIOS, Wi-Fi networks, the boot screen or stock settings **[not yet on device]** |
+| Reset All | Redux's own settings back to defaults: colours, brightness, screen timeout, font, saved volume. Never touches games, saves, BIOS, Wi-Fi networks, the boot screen or stock settings **[not yet on device]** |
 
 ## Network (Wi-Fi)
 Main > Network scans; **Y** rescans. Pick a network, type the password on the on-screen keyboard

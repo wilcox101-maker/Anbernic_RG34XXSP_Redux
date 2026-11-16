@@ -57,7 +57,10 @@ STATUS's "Improvement ideas". Dale's `IMPROVE` decides; accepted ones ship as PR
   [decision](notes/2026-11-14-dale-decision-openbor-launch.md)). Redux's own code still never writes
   there. Nothing else in Redux writes to p1.
 - Never write code that formats a partition automatically. Never run code from removable media
-  without an explicit user opt-in.
+  without an explicit user opt-in. **Exception** (Dale, 2026-11-16,
+  [decision](notes/2026-11-16-dale-decision-card-scripts-always.md)): `.sh` ports in `Roms/PORTS/` on
+  either card are listed in Game Room > Ports and run when the user picks one, as stock does;
+  picking it is the opt-in. Nothing else from a card runs on its own.
 - Host tools: Python 3 standard library only, must run on Windows.
 - Work one phase at a time. A phase ends at its exit test plus Dale's sign-off.
 - Say plainly what you have *not* verified on real hardware.
