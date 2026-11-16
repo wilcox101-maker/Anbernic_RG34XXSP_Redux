@@ -1,6 +1,8 @@
 #ifndef REDUX_PLATFORM_H
 #define REDUX_PLATFORM_H
 
+#include "engread.h"
+
 /* Platform layer: the only place that knows where values come from.
  * This desktop build returns fake values matching docs/ui-spec.md.
  * F2 (stock) and F7 (mainline) replace platform.c; UI code never touches /sys. */
@@ -15,6 +17,10 @@ int  platform_wifi_connected(void);
 int  platform_cpu_temp_c(void);
 int  platform_cpu_cur_mhz(int cpu);
 int  platform_cpu_online(int cpu);
+
+/* Engineering Mode read-outs (F5 step 1). Read-only. */
+int  platform_cpu_info(eng_cpu_t *c);                 /* 0 ok, -1 governor unreadable */
+int  platform_thermal_zones(eng_zone_t *z, int max);  /* count */
 
 /* Clock as "HH:MM". Real local time unless a fixed value was set (tests). */
 void platform_clock(char *buf, int buflen);

@@ -849,6 +849,7 @@ void ui_tick(uint32_t now_ms) {
         }
         dirty = 1;
     }
+    if (screen == SCREEN_ENG) dirty = 1;   /* live read-outs: redraw on every wake (about 1 s) */
     char c[8];
     platform_clock(c, sizeof c);
     if (strcmp(c, last_clock) != 0) dirty = 1;
@@ -948,6 +949,100 @@ static void draw_eng_tabs(void) {
     char rule[GRID_COLS * 3] = "";
     for (int c = 1; c < GRID_COLS - 1; c++) strcat(rule, "\u2500");
     grid_puts(1, ROW_BODY0 + 1, rule, 0);
+}
+
+/* F5 step 1: every value is read live from the platform layer; nothing here writes. */
+static int soc_max_c = -1;   /* highest SoC temperature seen while Engineering was open */
+
+static void fmt_x10(char *out, size_t n, int x10) {
+    if (x10 < 0) snprintf(out, n, "--");
+    else snprintf(out, n, "%d.%d C", x10 / 10, x10 % 10);
+}
+
+static void draw_eng_tab_body(void) {
+    char t[GRID_COLS * 2];
+    if (eng_tab == ENG_CPU) {
+        eng_cpu_t c;
+        platform_cpu_info(&c);
+        snprintf(t, sizeof t, "  Governor:     %s", c.governor[0] ? c.governor : "unknown"); body(2, t);
+        if (c.min_mhz >= 0) snprintf(t, sizeof t, "  Min freq:     %d MHz", c.min_mhz);
+        else snprintf(t, sizeof t, "  Min freq:     unknown");
+        body(3, t);
+        if (c.max_mhz >= 0) snprintf(t, sizeof t, "  Max freq:     %d MHz", c.max_mhz);
+        else snprintf(t, sizeof t, "  Max freq:     unknown");
+        body(4, t);
+        snprintf(t, sizeof t, "  Current:      %d MHz", platform_cpu_cur_mhz(0)); body(5, t);
+        body(7, "  Per-core:");
+        for (int k = 0; k < 4; k++) {
+            snprintf(t, sizeof t, "    cpu%d  %d MHz   %s", k, platform_cpu_cur_mhz(k),
+                     platform_cpu_online(k) ? "online" : "offline");
+            body(8 + k, t);
+        }
+        body(13, "  OPP table (read from the chip):");
+        if (c.n_opps == 0) {
+            body(14, "    unknown");
+        } else {
+            int len = snprintf(t, sizeof t, "    ");
+            for (int k = 0; k < c.n_opps && len < (int)sizeof t - 8; k++)
+                len += snprintf(t + len, sizeof t - (size_t)len, "%s%d", k ? " / " : "", c.opps_mhz[k]);
+            body(14, t);
+        }
+        body(16, "  Read-only for now. Controls arrive in a later F5 step.");
+    } else if (eng_tab == ENG_BATTERY) {
+        int ma = platform_battery_ma();
+        int soc = platform_cpu_temp_c();
+        if (soc > soc_max_c) soc_max_c = soc;
+        snprintf(t, sizeof t, "  Capacity:     %d %%", platform_battery_percent()); body(2, t);
+        snprintf(t, sizeof t, "  Voltage:      %d.%02d V", platform_battery_mv() / 1000,
+                 (platform_battery_mv() % 1000) / 10); body(3, t);
+        if (platform_battery_ma_known()) {
+            snprintf(t, sizeof t, "  Current:     %s%d mA", ma < 0 ? "-" : " ", ma < 0 ? -ma : ma); body(4, t);
+            snprintf(t, sizeof t, "  Status:       %s", ma < 0 ? "Discharging" : "Charging"); body(5, t);
+        } else {
+            /* Stock PMIC exposes no current: use the status file instead. */
+            body(4, "  Current:      unknown");
+            snprintf(t, sizeof t, "  Status:       %s",
+                     platform_battery_charging() ? "Charging" : "Discharging"); body(5, t);
+        }
+        body(7, "  Temperature:  unknown   (no sensor: the PMIC value is a fixed dummy)");
+        snprintf(t, sizeof t, "  SoC temp:     %d C", soc); body(9, t);
+        snprintf(t, sizeof t, "  Max seen:     %d C   (SoC, while this screen was open)", soc_max_c);
+        body(10, t);
+        body(12, "  Stock battery-temperature protection: off (pmu_bat_temp_enable = 0).");
+        body(13, "  Redux heat guard: not built yet (a later F5 step).");
+    } else if (eng_tab == ENG_THERMAL) {
+        eng_zone_t z[ENG_MAX_ZONES];
+        int n = platform_thermal_zones(z, ENG_MAX_ZONES);
+        if (n == 0) body(2, "  No thermal zones found.");
+        for (int k = 0; k < n && k < 16; k++) {
+            char temp[16];
+            fmt_x10(temp, sizeof temp, z[k].temp_x10);
+            int len = snprintf(t, sizeof t, "  %-20.20s %8s", z[k].type, temp);
+            for (int j = 0; j < z[k].n_trips && len < 80; j++) {
+                char tt[16];
+                fmt_x10(tt, sizeof tt, z[k].trips[j].temp_x10);
+                len += snprintf(t + len, sizeof t - (size_t)len, "%s%.10s %s",
+                                j ? ", " : "   trips: ", z[k].trips[j].type, tt);
+            }
+            if (len > GRID_COLS - 3) t[GRID_COLS - 3] = '\0';
+            body(2 + k, t);
+        }
+        body(19, "  Trip points are read-only. The critical trip is never changed.");
+    } else if (eng_tab == ENG_DISPLAY) {
+        int lvl = brightness_get();
+        body(2, "  Panel:        720 x 480, parallel RGB (device tree)");
+        body(3, "  Refresh:      59.16 Hz   (26 MHz / 820 x 536, device tree)");
+        snprintf(t, sizeof t, "  Brightness:   level %d of %d   (/dev/disp value %d)",
+                 lvl, BRIGHTNESS_MAX, brightness_disp_value(lvl));
+        body(4, t);
+    } else {
+        sysinfo_row_t rows[SYSINFO_MAX_ROWS];
+        int n = sysinfo_collect(rows, SYSINFO_MAX_ROWS);
+        for (int k = 0; k < n && k < 18; k++) {
+            snprintf(t, sizeof t, "  %-14.14s %.40s", rows[k].label, rows[k].value);
+            body(2 + k, t);
+        }
+    }
 }
 
 void ui_draw(void) {
@@ -1057,51 +1152,9 @@ void ui_draw(void) {
         break;
     }
     case SCREEN_ENG:
-        frame("[ENGINEERING]", "L1/R1:Tab  A:Edit  B:Exit  X:Save profile  Y:Reset", 0, 1);
+        frame("[ENGINEERING]", "L1/R1:Tab  B:Exit", 0, 1);
         draw_eng_tabs();
-        if (eng_tab == ENG_CPU) {
-            body(2, "  Governor:     schedutil");
-            body(3, "  Min freq:     480 MHz");
-            body(4, "  Max freq:     1512 MHz");
-            snprintf(t, sizeof t, "  Current:      %d MHz", platform_cpu_cur_mhz(0)); body(5, t);
-            body(7, "  Per-core:");
-            for (int c = 0; c < 4; c++) {
-                snprintf(t, sizeof t, "    cpu%d  %d MHz   %s", c, platform_cpu_cur_mhz(c),
-                         platform_cpu_online(c) ? "online" : "offline");
-                body(8 + c, t);
-            }
-            body(13, "  Stock OPP table:");
-            body(14, "    480 / 600 / 792 / 1008 / 1200 / 1296 / 1416 / 1512");
-            body(16, "  Live changes only. Persist with \"Save as profile\".");
-            body(17, "  Boot watchdog resets settings after two failed boots.");
-            body(18, "  Battery-heat guard remains active.");
-            body(19, "  Entry required deliberate confirm.");
-        } else if (eng_tab == ENG_BATTERY) {
-            int ma = platform_battery_ma();
-            snprintf(t, sizeof t, "  Capacity:     %d %%", platform_battery_percent()); body(2, t);
-            snprintf(t, sizeof t, "  Voltage:      %d.%02d V", platform_battery_mv() / 1000,
-                     (platform_battery_mv() % 1000) / 10); body(3, t);
-            if (platform_battery_ma_known()) {
-                snprintf(t, sizeof t, "  Current:     %s%d mA", ma < 0 ? "-" : " ", ma < 0 ? -ma : ma); body(4, t);
-                snprintf(t, sizeof t, "  Status:       %s", ma < 0 ? "Discharging" : "Charging"); body(5, t);
-            } else {
-                /* Stock PMIC exposes no current: use the status file instead. */
-                body(4, "  Current:      unknown");
-                snprintf(t, sizeof t, "  Status:       %s",
-                         platform_battery_charging() ? "Charging" : "Discharging"); body(5, t);
-            }
-            body(6, "  Time left:    ~4 h 12 m");
-            body(8, platform_battery_temp_known() ? "  Temperature:  -- C"
-                                                  : "  Temperature:  unknown   (thermistor unverified)");
-            body(9, "  Max seen:     --");
-            snprintf(t, sizeof t, "  SoC temp:     %d C", platform_cpu_temp_c()); body(11, t);
-            body(13, "  Stock PMIC protection: disabled. Redux guard limits:");
-            body(14, "    Charge stop:     45 C   (typical Li-ion, not stock)");
-            body(15, "    Discharge stop:  60 C   (typical Li-ion, not stock)");
-            body(17, "  Drain (last hour): -8 %");
-        } else {
-            body(3, "  Not yet. This tab arrives with its phase.");
-        }
+        draw_eng_tab_body();
         break;
     case SCREEN_WIFI: {
         frame("Wi-Fi", "A:Select  B:Back  Y:Scan", 1, 0);

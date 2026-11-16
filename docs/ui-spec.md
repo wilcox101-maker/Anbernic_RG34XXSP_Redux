@@ -5,7 +5,7 @@
 **Colours**: Background black, text white, one accent (default BIOS cyan).  
 Selected row = accent background bar with black text.  
 **Input**: Single remap table only. Stock event codes are never hard-coded.  
-**Unverified**: Battery thermistor. Display "unknown" until on-device confirmation that `/sys/class/power_supply/axp2202-battery/temp` changes under load.  
+**Battery temperature: no sensor.** `/sys/class/power_supply/axp2202-battery/temp` is a fixed dummy (stays 300 under load and charging; [hardware-map](hardware-map.md)). The UI shows "unknown".  
 **Phase 2 note**: Root filesystem is read-only. Frontend writes only to the data partition via the platform module.
 
 ---
@@ -229,13 +229,13 @@ yet say "Not yet".
 │    cpu2  1008 MHz   online                                                             │
 │    cpu3  1008 MHz   online                                                             │
 │                                                                                        │
-│  Stock OPP table:                                                                      │
+│  OPP table (read from the chip):                                                       │
 │    480 / 600 / 792 / 1008 / 1200 / 1296 / 1416 / 1512                                  │
 │                                                                                        │
-│  Live changes only. Persist with "Save as profile".                                    │
-│  Boot watchdog resets settings after two failed boots.                                 │
-│  Battery-heat guard remains active.                                                    │
-│  Entry required deliberate confirm.                                                    │
+│  Read-only for now. Controls arrive in a later F5 step.                                │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
@@ -243,7 +243,7 @@ yet say "Not yet".
 │                                                                                        │
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-L1/R1:Tab  A:Edit  B:Exit  X:Save profile  Y:Reset
+L1/R1:Tab  B:Exit
 ```
 
 ## 7. Mock-up 5 — Engineering Mode, Battery tab
@@ -257,18 +257,18 @@ L1/R1:Tab  A:Edit  B:Exit  X:Save profile  Y:Reset
 │  Voltage:      3.92 V                                                                  │
 │  Current:     -420 mA                                                                  │
 │  Status:       Discharging                                                             │
-│  Time left:    ~4 h 12 m                                                               │
 │                                                                                        │
-│  Temperature:  unknown   (thermistor unverified)                                       │
-│  Max seen:     --                                                                      │
+│  Temperature:  unknown   (no sensor: the PMIC value is a fixed dummy)                  │
 │                                                                                        │
 │  SoC temp:     54 C                                                                    │
+│  Max seen:     54 C   (SoC, while this screen was open)                                │
 │                                                                                        │
-│  Stock PMIC protection: disabled. Redux guard limits:                                  │
-│    Charge stop:     45 C   (typical Li-ion, not stock)                                 │
-│    Discharge stop:  60 C   (typical Li-ion, not stock)                                 │
+│  Stock battery-temperature protection: off (pmu_bat_temp_enable = 0).                  │
+│  Redux heat guard: not built yet (a later F5 step).                                    │
 │                                                                                        │
-│  Drain (last hour): -8 %                                                               │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
@@ -278,7 +278,7 @@ L1/R1:Tab  A:Edit  B:Exit  X:Save profile  Y:Reset
 │                                                                                        │
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-L1/R1:Tab  A:Edit  B:Exit  X:Save profile  Y:Reset
+L1/R1:Tab  B:Exit
 ```
 
 
@@ -434,7 +434,7 @@ discharge_temp_limit = 60 ; Redux default (typical Li-ion), not stock
 - `lid_action`: `suspend` or `shutdown`.
 - SSH / Samba / WebUI default Off. First enable requires password. No default credentials.
 - Performance profiles are applied at launch and restored on exit.
-- Battery-heat guard is always active (even in Engineering Mode). Unverified thermistor shows "unknown" and falls back to SoC temperature.
+- Battery-heat guard is always active (even in Engineering Mode). The battery temperature is a fixed dummy, so it shows "unknown" and any guard can only use the SoC temperature ([F5 plan](../notes/2026-11-16-claude-decision-f5-plan.md), Q1).
 - Remap table is external to this file.
 
 ---
@@ -467,7 +467,7 @@ Unifont lacks 16 CP437 glyphs, which come from VGA. **Not verified on the device
 ## 9. F0 exit criteria
 - Dale approves the five mock-ups and the settings schema.
 - No contradictions with `docs/ui-brief.md` or stock documentation.
-- Battery thermistor status remains explicitly unverified until the on-device check is complete.
+- Battery temperature: no sensor (fixed dummy, confirmed on the device 2026-11-10).
 - Deliberate removals and Claude review flags are recorded.
 
 

@@ -15,6 +15,37 @@ int platform_cpu_temp_c(void)         { return 54; }
 int platform_cpu_cur_mhz(int cpu)     { (void)cpu; return 1008; }
 int platform_cpu_online(int cpu)      { (void)cpu; return 1; }
 
+/* Engineering fakes: the CPU mock-up's values (docs/ui-spec.md mock-up 4). */
+int platform_cpu_info(eng_cpu_t *c) {
+    static const int opps[] = { 480, 600, 792, 1008, 1200, 1296, 1416, 1512 };
+    memset(c, 0, sizeof *c);
+    snprintf(c->governor, sizeof c->governor, "schedutil");
+    c->min_mhz = 480;
+    c->max_mhz = 1512;
+    c->n_opps = (int)(sizeof opps / sizeof opps[0]);
+    memcpy(c->opps_mhz, opps, sizeof opps);
+    return 0;
+}
+
+int platform_thermal_zones(eng_zone_t *z, int max) {
+    static const struct { const char *type; int x10; } fake[] = {
+        { "cpu_thermal_zone", 540 }, { "gpu_thermal_zone", 520 },
+        { "ve_thermal_zone", 510 }, { "ddr_thermal_zone", 500 },
+    };
+    int n = 0;
+    for (int i = 0; i < (int)(sizeof fake / sizeof fake[0]) && n < max; i++, n++) {
+        memset(&z[n], 0, sizeof z[n]);
+        snprintf(z[n].type, sizeof z[n].type, "%s", fake[i].type);
+        z[n].temp_x10 = fake[i].x10;
+        z[n].n_trips = 2;
+        snprintf(z[n].trips[0].type, sizeof z[n].trips[0].type, "passive");
+        z[n].trips[0].temp_x10 = 850;
+        snprintf(z[n].trips[1].type, sizeof z[n].trips[1].type, "critical");
+        z[n].trips[1].temp_x10 = 1100;
+    }
+    return n;
+}
+
 static char fixed_clock[6];
 
 void platform_set_fixed_clock(const char *hhmm) {
