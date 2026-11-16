@@ -17,6 +17,7 @@
 #include "platform.h"
 #include "remap.h"
 #include "screentimeout.h"
+#include "brightness.h"
 #include "govrestore.h"
 #include "ui.h"
 #ifdef REDUX_PLATFORM_STOCK
@@ -82,6 +83,7 @@ static uint32_t last_input_ms;   /* screen timeout: last button press or release
 
 static void on_device_button(logical_button_t btn, int pressed) {
     last_input_ms = SDL_GetTicks();
+    brightness_dim(0);               /* any button undims; the press still counts */
     ui_button(btn, pressed, SDL_GetTicks());
 }
 #endif
@@ -173,9 +175,12 @@ int main(int argc, char **argv) {
         evdev_wait((int)ui_wait_ms());
         evdev_poll(on_device_button);
         /* Lid closed or screen timeout: the stock lid/timeout path (pwr_new.sh auto). */
+        if (!brightness_dimmed() && SDL_GetTicks() - last_input_ms >= BRIGHTNESS_DIM_AFTER_MS)
+            brightness_dim(1);               /* idle in the menu: 30 % backlight */
         if (evdev_lid_closed() || screentimeout_due(SDL_GetTicks() - last_input_ms)) {
             evdev_auto_sleep();               /* returns after wake (or never, on shutdown) */
             last_input_ms = SDL_GetTicks();
+            brightness_dim(0);
             for (int i = 0; i < PRESENT_BUFFERS; i++) present_frame();   /* repaint after resume */
         }
         have_event = SDL_PollEvent(&e);

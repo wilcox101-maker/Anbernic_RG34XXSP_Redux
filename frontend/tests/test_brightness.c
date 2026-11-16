@@ -51,6 +51,21 @@ int main(void) {
     brightness_apply();
     check(brightness_last_written() == 2, "apply uses the loaded level");
 
+    /* idle dimming (F4 step 3) */
+    while (brightness_get() < 10) brightness_step(+1);
+    brightness_dim(1);
+    check(brightness_dimmed() && last_written == 3, "dim: level 10 shows as 3 (30 %)");
+    int before = calls;
+    brightness_dim(1);
+    check(calls == before, "dim twice writes once");
+    check(brightness_get() == 10, "dim does not change the saved level");
+    brightness_dim(0);
+    check(!brightness_dimmed() && last_written == 10, "undim restores level 10");
+    check(brightness_dim_level(1) == 1 && brightness_dim_level(2) == 1, "dim never below 1");
+    brightness_dim(1);
+    brightness_step(+1);
+    check(!brightness_dimmed() && last_written == 11, "a brightness step undims");
+
     unlink("/tmp/redux-brightness-test");
     printf("%d checks, %d failed\n", checks, fails);
     return fails ? 1 : 0;
