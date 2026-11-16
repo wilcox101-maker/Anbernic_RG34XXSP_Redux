@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "govrestore.h"
 
 #define DIR_ "test_govrestore.d"
@@ -62,6 +63,12 @@ int main(void) {
     f = fopen(STATE, "r"); expect(f == NULL, "no state saved"); if (f) fclose(f);
 
     remove(STATE);
+    const char *files[] = { "scaling_available_governors", "scaling_available_frequencies",
+                            "scaling_governor", "scaling_min_freq", "scaling_max_freq" };
+    for (unsigned i = 0; i < sizeof files / sizeof *files; i++) {
+        char p[128]; snprintf(p, sizeof p, DIR_ "/%s", files[i]); remove(p);
+    }
+    rmdir(DIR_);
     printf("%d failed\n", fails);
     return fails ? 1 : 0;
 }
