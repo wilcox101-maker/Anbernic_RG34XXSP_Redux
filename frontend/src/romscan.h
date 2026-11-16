@@ -30,6 +30,11 @@ int romscan_init_cached(void);
 int romscan_load_roots_cached(const char *const *roots, int nroots, int scan_if_stale);
 void romscan_set_cache_path(const char *path);
 
+/* Tests: free the ROM table, as in a fresh Redux process (every return from a game). */
+void romscan_free(void);
+/* Tests: how many ROM entries the table can hold now. */
+int romscan_rom_capacity(void);
+
 /* Card picker, like stock (Dale 2026-11-16). romscan_card_count: how many of TF1/TF2 hold at least
    one system folder (0 with REDUX_ROMS set). romscan_use_card(0 = TF1, 1 = TF2, scan_if_stale):
    load that card only, from its own cache when fresh; returns 1 = from cache, 0 = scanned (or not

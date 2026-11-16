@@ -37,9 +37,19 @@ static int g_nrom;
 static int g_cap;
 
 /* Room for one more ROM at index i. Returns 0 on success, -1 if out of memory. */
+void romscan_free(void) { free(g_rom); g_rom = NULL; g_cap = 0; g_nrom = 0; g_nsys = 0; }
+int romscan_rom_capacity(void) { return g_cap; }
+
+/* Make room for index i. Doubles until it fits: a cache load asks for all its ROMs at once
+   (device crash 2026-11-16: one doubling gave 1024 entries for 4000+ cached ROMs). */
 static int rom_reserve(int i) {
+    if (i < 0) return -1;
     if (i < g_cap) return 0;
-    int cap = g_cap ? g_cap * 2 : 1024;
+    int cap = g_cap ? g_cap : 1024;
+    while (cap <= i) {
+        if (cap > (1 << 24)) return -1;   /* 16M ROMs: something is wrong */
+        cap *= 2;
+    }
     rom_t *grown = realloc(g_rom, (size_t)cap * sizeof(rom_t));
     if (!grown) return -1;
     g_rom = grown;
