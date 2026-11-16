@@ -9,7 +9,8 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 | Kernel | 2 RAM-resident / mainline | plan only; direction is Dale's call (below) |
 | Frontend | F0, F1, F2 | signed off (F2: 2026-11-12) |
 | Frontend | F3 settings parity | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f3-signed-off.md)) |
-| Frontend | **F4 power and lid** | exit test PASS on `6d87953` ([hw-result](2026-11-16-dale-hw-result-f4.md)); waiting on Dale: sign-off |
+| Frontend | F4 power and lid | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)) |
+| Frontend | **F5 Engineering Mode** | next (phase-start plan to Dale) |
 
 ## Handoff (2026-11-16, Claude): start here in a new chat
 - **Read [handoff-2026-11-16.md](handoff-2026-11-16.md) next**, then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project, started from the desktop app on DLN-DALEW2.
@@ -19,14 +20,13 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - Owner: the Redux Project chat named in the newest handoff; every other chat is advisory. Grok is suspended; every queue item is Claude's.
 
 ## Waiting on Dale
-- **F4 sign-off** ([result](2026-11-16-dale-hw-result-f4.md)): SIGN F4 now (Wi-Fi off moves to F6) or after the Wi-Fi off PR.
 - **Phase 2 direction** (before Phase 2, not urgent for Beta): the H700 Kernel Research Ubuntu 24.04 image with update rollback, or `docs/ram-system-design.md`'s read-only squashfs in RAM.
 
 ## Queue (in order; all Claude unless marked)
 1. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons (folded into item 4, the Redux video front-end); Wolfenstein 3D Y and X: not a bug, it is a GBA ROM (no X/Y). Done: `/tmp/.next` + amixer (#202), scan cache (#203). Game Room X = Favorites, not built yet (placeholder). Then a short device re-check.
 2. ~~Game Room card picker~~ #205, device-checked 2026-11-16 (with the #216 crash fix).
-3. **F4 power and lid** ([plan](2026-11-16-dale-decision-f4-plan.md), [result](2026-11-16-dale-hw-result-f4.md)): steps 1-4 device-checked; Wi-Fi off not built (Dale decides: before sign-off or later). Then **F5 Engineering Mode** (Dale A, 2026-11-14 13:37: phase order kept).
-4. **F6: Redux front-ends for the stock apps** in the BIOS/DOS style (Dale 2026-11-16): Video Player first (Redux file list + stock `ffplay`), then Music, Ebook, File Manager. Needs the FFplay.sh read from the device.
+3. **F5 Engineering Mode** (next; phase-start plan to Dale). F4 signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)).
+4. **F6**: Wi-Fi off unless needed + Power & Lid settings page (moved from F4, Dale A 15:09); **Redux front-ends for the stock apps** in the BIOS/DOS style (Dale 2026-11-16): Video Player first (Redux file list + stock `ffplay`), then Music, Ebook, File Manager. Needs the FFplay.sh read from the device.
 5. **Installer B**: TF2 package with hold-A (after A is device-checked). Tagged Beta releases (`v0.5-beta.N`) once Beta is near.
 6. Extras installer (#149): REFUSED path and a fresh install still not run on the device.
 - Backlog: **Update option in Settings > System** (Dale 2026-11-16; security item, Dale merges), **DOS layout switch in Settings > UI** (Dale 2026-11-16), **custom boot image picked on the device** (Dale, 2026-11-16), **DOS Mode** (Dale defines the layout; request recorded in `docs/ui-brief.md` §3), ASCII art maker, PC link (Dale-gated security item; ROM copy only in [Xroot Mode]), Expert Mode and its shortcut, chiptune composer (after 1.0, separate GPL-3 program), Wi-Fi idle scanning, features.ini, ZRAM (v1.x), the Phase 2 mainline track. L3/R3 stay unmapped.
@@ -39,14 +39,12 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 
 ## Open notes
 - [2026-11-16-dale-hw-result-f4.md](2026-11-16-dale-hw-result-f4.md): dale → all (F4 session on 6d87953: exit test PASS; crash fixed by #216; Update + DOS switch requests)
-- [2026-11-16-claude-decision-f4-save-flush.md](2026-11-16-claude-decision-f4-save-flush.md): claude → dale (F4 save flush before lid sleep, A/B/C)
 - [2026-11-16-dale-hw-result-reads-f4-2.md](2026-11-16-dale-hw-result-reads-f4-2.md): dale → claude (RetroArch 1.20.0, SAVE_FILES works, saves on cards, Wolf3D is GBA)
 - [2026-11-16-dale-hw-result-reads-f4.md](2026-11-16-dale-hw-result-reads-f4.md): dale → claude (FFplay.sh, no ecwolf, RetroArch network/save settings)
-- [2026-11-16-dale-decision-f4-plan.md](2026-11-16-dale-decision-f4-plan.md): dale → claude (F4 plan; in-game lid option A)
 - [2026-11-16-dale-decision-app-screens-card-picker.md](2026-11-16-dale-decision-app-screens-card-picker.md): dale → all (card picker; Redux app screens in BIOS/DOS style; DOS layout on record)
 - [2026-11-16-dale-hw-result-185.md](2026-11-16-dale-hw-result-185.md): dale → all (device session #185 on `5d7dea6`: results and 8 findings)
 - [2026-11-14-dale-decision-mainline-cpu-table.md](2026-11-14-dale-decision-mainline-cpu-table.md): dale → all (ROCKNIX H700 table on mainline, 1512 MHz only behind Expert Mode)
 - [2026-11-13-dale-message-kernel-research.md](2026-11-13-dale-message-kernel-research.md): dale → all (kernel/Ubuntu research; never use the Knulli guide's `dd` offsets)
 - [2026-11-13-dale-decision-zram-v1x.md](2026-11-13-dale-decision-zram-v1x.md): dale → all (ZRAM in v1.x, after 1.0)
-- [2026-11-10-dale-decision-power-management.md](2026-11-10-dale-decision-power-management.md): dale → all (menu power management; for F4)
+- [2026-11-10-dale-decision-power-management.md](2026-11-10-dale-decision-power-management.md): dale → all (menu power management; dim done in F4, Wi-Fi off in F6)
 - [2026-11-10-claude-milestone-ram-system-design.md](2026-11-10-claude-milestone-ram-system-design.md): claude → all (RAM-resident design; Phase 2 direction)

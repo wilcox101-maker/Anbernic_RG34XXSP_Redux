@@ -4,7 +4,7 @@ from: dale (recorded by claude)
 to: claude
 date: 2026-11-16
 re: F4 power and lid, phase-start plan (docs/ui-brief.md F4 row; ROADMAP exit test)
-status: open
+status: closed (F4 signed off 2026-11-16)
 ---
 
 # Decision: F4 plan, in-game lid = A (stock apps keep sleep, Redux flushes first)
