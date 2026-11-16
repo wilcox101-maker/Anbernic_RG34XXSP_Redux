@@ -127,3 +127,4 @@
 - 2026-11-14 22:21 · claude · read: MGR for DALE GO (22:20); FROM-REDUX-MANAGER-2026-11-15-d part 1 · did: #197 project-setup §1b = live Manager instructions, CI skipped,skipped,success,success,success, for the Manager to merge. HOLD until TESTING.
 - 2026-11-14 22:27 · claude · read: #197 merged · did: nothing new. No open PRs. HOLD until TESTING.
 - 2026-11-16 09:26 · claude · read: Dale 'status review and update' (Mon 09:24) · did: no changes on main or PRs since 11-14 22:27; inbox empty. #185 repointed to dev f6ead4c (#197 merge, same binary), 'none' entries removed; #198 STATUS build line + improvement idea, merged. Asked: Swap now? (new workday). HOLD until TESTING.
+- 2026-11-16 10:43 · claude · read: MGR for DALE TESTING (10:42); FROM-REDUX-MANAGER-2026-11-16-b · did: device session started, Stage 0. Build is dev 5d7dea6 (#198 merge; newest), #185 repointed; device 172.16.3.176. notified Dale: #185 hardware test.
