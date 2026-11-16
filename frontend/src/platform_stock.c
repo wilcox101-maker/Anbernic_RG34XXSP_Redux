@@ -67,6 +67,11 @@ int platform_eng_profile_save(void) {
     return rc;
 }
 int platform_eng_profile_clear(void) { return engprofile_clear(); }
+int platform_eng_set_governor(const char *gov) { return eng_write_governor(gov); }
+int platform_eng_set_freq_mhz(int min_mhz, int max_mhz) {
+    return eng_write_freq_limits(min_mhz * 1000, max_mhz * 1000);
+}
+int platform_eng_set_core(int cpu, int on) { return eng_write_core_online(cpu, on); }
 void platform_clock(char *buf, int buflen) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);

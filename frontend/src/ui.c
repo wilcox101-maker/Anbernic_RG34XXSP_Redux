@@ -66,6 +66,9 @@ static const char *eng_tabs[] = { "CPU", "Battery", "Thermal", "Display", "Syste
 static screen_t screen;
 static eng_tab_t eng_tab;
 static char eng_msg[GRID_COLS];   /* result of the last X/Y on Engineering */
+/* CPU tab controls (F5 step 3): rows Governor, Min, Max, cpu1, cpu2, cpu3. */
+enum { ENG_ROW_GOV = 0, ENG_ROW_MIN, ENG_ROW_MAX, ENG_ROW_CPU1, ENG_ROW_CPU2, ENG_ROW_CPU3, ENG_ROW_COUNT };
+static int eng_row, eng_editing, eng_pick;   /* eng_pick: index into the governor or OPP list */
 static int selected;
 static int scroll;
 static int sys_index;
@@ -433,6 +436,7 @@ static int resume_load(void) {
 }
 
 static void switch_eng_tab(int delta) {
+    eng_editing = 0;
     eng_tab = (eng_tab_t)((eng_tab + delta + ENG_TAB_COUNT) % ENG_TAB_COUNT);
     dirty = 1;
 }
@@ -600,6 +604,74 @@ static void app_start(int app) {
     }
 }
 
+/* ---- Engineering CPU controls (F5 step 3). Values only from the chip's lists; the platform layer
+   validates again, writes, reads back and logs. Nothing here is kept after a restart unless saved. ---- */
+static int opp_index(const eng_cpu_t *c, int mhz) {
+    for (int i = 0; i < c->n_opps; i++) if (c->opps_mhz[i] == mhz) return i;
+    return 0;
+}
+
+static void eng_result(int rc, const char *what) {
+    if (rc == 0)       snprintf(eng_msg, sizeof eng_msg, "Applied: %.40s. Lost at restart unless saved (X).", what);
+    else if (rc == -1) snprintf(eng_msg, sizeof eng_msg, "Refused: %.40s is not in the chip's list.", what);
+    else               snprintf(eng_msg, sizeof eng_msg, "Failed: %.40s did not read back. See eng-writes.log.", what);
+}
+
+static void eng_cpu_button(logical_button_t btn) {
+    eng_cpu_t c;
+    platform_cpu_info(&c);
+    if (!eng_editing) {
+        if (btn == LB_UP)   eng_row = (eng_row + ENG_ROW_COUNT - 1) % ENG_ROW_COUNT;
+        if (btn == LB_DOWN) eng_row = (eng_row + 1) % ENG_ROW_COUNT;
+        if (btn == LB_A) {
+            if (eng_row >= ENG_ROW_CPU1) {
+                int cpu = eng_row - ENG_ROW_CPU1 + 1, on = !platform_cpu_online(cpu);
+                char what[32];
+                snprintf(what, sizeof what, "cpu%d %s", cpu, on ? "online" : "offline");
+                eng_result(platform_eng_set_core(cpu, on), what);
+            } else if (eng_row == ENG_ROW_GOV) {
+                eng_pick = 0;
+                for (int i = 0; i < c.n_govs; i++) if (strcmp(c.govs[i], c.governor) == 0) eng_pick = i;
+                eng_editing = c.n_govs > 0;
+            } else {
+                eng_pick = opp_index(&c, eng_row == ENG_ROW_MIN ? c.min_mhz : c.max_mhz);
+                eng_editing = c.n_opps > 0;
+            }
+        }
+        dirty = 1;
+        return;
+    }
+    if (btn == LB_B) { eng_editing = 0; dirty = 1; return; }
+    if (btn == LB_LEFT || btn == LB_RIGHT) {
+        int d = btn == LB_RIGHT ? 1 : -1;
+        if (eng_row == ENG_ROW_GOV) {
+            eng_pick = (eng_pick + d + c.n_govs) % c.n_govs;
+        } else {
+            int next = eng_pick + d;
+            /* min never above the current max, max never below the current min */
+            if (next >= 0 && next < c.n_opps &&
+                (eng_row == ENG_ROW_MIN ? c.opps_mhz[next] <= c.max_mhz : c.opps_mhz[next] >= c.min_mhz))
+                eng_pick = next;
+        }
+    }
+    if (btn == LB_A) {
+        char what[48];
+        int rc;
+        if (eng_row == ENG_ROW_GOV) {
+            snprintf(what, sizeof what, "governor %s", c.govs[eng_pick]);
+            rc = platform_eng_set_governor(c.govs[eng_pick]);
+        } else {
+            int v = c.opps_mhz[eng_pick];
+            int mn = eng_row == ENG_ROW_MIN ? v : c.min_mhz, mx = eng_row == ENG_ROW_MAX ? v : c.max_mhz;
+            snprintf(what, sizeof what, "%s %d MHz", eng_row == ENG_ROW_MIN ? "min" : "max", v);
+            rc = platform_eng_set_freq_mhz(mn, mx);
+        }
+        eng_result(rc, what);
+        eng_editing = 0;
+    }
+    dirty = 1;
+}
+
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if ((btn == LB_VOL_UP || btn == LB_VOL_DOWN) && pressed) {
         volume_step(btn == LB_VOL_UP ? +1 : -1);
@@ -648,6 +720,15 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
 
     if (screen == SCREEN_WIFI_KEY) { wifi_key_button(btn); return; }
 
+    /* While a CPU value is being edited, Left/Right/A/B belong to the editor. */
+    if (screen == SCREEN_ENG && eng_tab == ENG_CPU &&
+        (eng_editing ? (btn == LB_LEFT || btn == LB_RIGHT || btn == LB_A || btn == LB_B
+                        || btn == LB_UP || btn == LB_DOWN || btn == LB_L1 || btn == LB_R1)
+                     : (btn == LB_UP || btn == LB_DOWN || btn == LB_A))) {
+        if (!(eng_editing && (btn == LB_UP || btn == LB_DOWN || btn == LB_L1 || btn == LB_R1)))
+            eng_cpu_button(btn);
+        return;
+    }
     if (screen == SCREEN_ENG && (btn == LB_L1 || btn == LB_LEFT))  { switch_eng_tab(-1); return; }
     if (screen == SCREEN_ENG && (btn == LB_R1 || btn == LB_RIGHT)) { switch_eng_tab(+1); return; }
     if (screen == SCREEN_ENG && btn == LB_X) {
@@ -819,7 +900,7 @@ void ui_tick(uint32_t now_ms) {
     if (vol_until && now_ms >= vol_until) { vol_until = 0; dirty = 1; }
     if (screen == SCREEN_ENG_CONFIRM && a_down_at) {
         hold_ms = now_ms - a_down_at;
-        if (hold_ms >= HOLD_TO_ENTER_MS) { eng_msg[0] = '\0'; go_replace(SCREEN_ENG); }   /* B from Engineering -> Main */
+        if (hold_ms >= HOLD_TO_ENTER_MS) { eng_msg[0] = '\0'; eng_row = 0; eng_editing = 0; go_replace(SCREEN_ENG); }   /* B from Engineering -> Main */
         dirty = 1;
     }
     if ((screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
@@ -977,11 +1058,19 @@ static void draw_eng_tab_body(void) {
     if (eng_tab == ENG_CPU) {
         eng_cpu_t c;
         platform_cpu_info(&c);
-        snprintf(t, sizeof t, "  Governor:     %s", c.governor[0] ? c.governor : "unknown"); body(2, t);
-        if (c.min_mhz >= 0) snprintf(t, sizeof t, "  Min freq:     %d MHz", c.min_mhz);
+        int ed = eng_editing;
+        if (ed && eng_row == ENG_ROW_GOV && eng_pick < c.n_govs)
+            snprintf(t, sizeof t, "  Governor:     < %s >", c.govs[eng_pick]);
+        else snprintf(t, sizeof t, "  Governor:     %s", c.governor[0] ? c.governor : "unknown");
+        body(2, t);
+        if (ed && eng_row == ENG_ROW_MIN && eng_pick < c.n_opps)
+            snprintf(t, sizeof t, "  Min freq:     < %d MHz >", c.opps_mhz[eng_pick]);
+        else if (c.min_mhz >= 0) snprintf(t, sizeof t, "  Min freq:     %d MHz", c.min_mhz);
         else snprintf(t, sizeof t, "  Min freq:     unknown");
         body(3, t);
-        if (c.max_mhz >= 0) snprintf(t, sizeof t, "  Max freq:     %d MHz", c.max_mhz);
+        if (ed && eng_row == ENG_ROW_MAX && eng_pick < c.n_opps)
+            snprintf(t, sizeof t, "  Max freq:     < %d MHz >", c.opps_mhz[eng_pick]);
+        else if (c.max_mhz >= 0) snprintf(t, sizeof t, "  Max freq:     %d MHz", c.max_mhz);
         else snprintf(t, sizeof t, "  Max freq:     unknown");
         body(4, t);
         snprintf(t, sizeof t, "  Current:      %d MHz", platform_cpu_cur_mhz(0)); body(5, t);
@@ -1004,7 +1093,9 @@ static void draw_eng_tab_body(void) {
         body(16, ps == 1 ? "  Profile:      saved (applied at start; two failed starts set it aside)"
                : ps == 2 ? "  Profile:      set aside after two failed starts (stock settings)"
                          : "  Profile:      none (stock settings)");
-        body(17, "  Controls arrive in a later F5 step. Every change is logged.");
+        body(17, "  Changes apply now and are lost at restart unless saved. Every change is logged.");
+        static const int row_line[ENG_ROW_COUNT] = { 2, 3, 4, 9, 10, 11 };
+        grid_invert(ROW_BODY0 + row_line[eng_row], 1, GRID_COLS - 2);
     } else if (eng_tab == ENG_BATTERY) {
         int ma = platform_battery_ma();
         int soc = platform_cpu_temp_c();
@@ -1169,7 +1260,10 @@ void ui_draw(void) {
         break;
     }
     case SCREEN_ENG:
-        frame("[ENGINEERING]", "L1/R1:Tab  B:Exit  X:Save profile  Y:Remove profile", 0, 1);
+        frame("[ENGINEERING]",
+              eng_tab != ENG_CPU ? "L1/R1:Tab  B:Exit  X:Save profile  Y:Remove profile"
+              : eng_editing      ? "Left/Right:Value  A:Apply  B:Cancel"
+                                 : "Up/Down:Row  A:Edit  L1/R1:Tab  B:Exit  X:Save profile  Y:Remove", 0, 1);
         draw_eng_tabs();
         draw_eng_tab_body();
         if (eng_msg[0]) { snprintf(t, sizeof t, "  %.80s", eng_msg); body(24, t); }

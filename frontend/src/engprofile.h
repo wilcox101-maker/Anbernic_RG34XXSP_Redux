@@ -18,6 +18,8 @@
 
 /* Tests point these at temp folders. NULL keeps the default. */
 void engprofile_set_paths(const char *cpufreq_dir, const char *data_dir, const char *boot_flag);
+/* Tests: folder holding cpu1/online ... (default /sys/devices/system/cpu). */
+void engprofile_set_cpu_root(const char *cpu_root);
 
 typedef enum {
     ENG_PROFILE_NONE = 0,     /* no profile saved */
@@ -36,6 +38,8 @@ void engprofile_menu_reached(void);
 /* Live writes (no persistence). 0 ok; -1 refused (not in the chip's list); -2 write or read-back failed. */
 int eng_write_governor(const char *gov);
 int eng_write_freq_limits(int min_khz, int max_khz);
+/* cpu 1-3 only: cpu0 always stays online. */
+int eng_write_core_online(int cpu, int on);
 
 /* Save the current CPU policy as the profile. 0 ok. */
 int engprofile_save(void);

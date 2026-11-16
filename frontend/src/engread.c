@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 /* Engineering Mode read layer (F5 step 1). Read-only: nothing here opens a file for writing. */
 #include "engread.h"
 #include <stdio.h>
@@ -69,6 +70,11 @@ int engread_cpu(eng_cpu_t *c) {
     char list[512];
     if (read_text(CPUFREQ "scaling_available_frequencies", list, sizeof list) == 0)
         c->n_opps = engread_parse_khz_list(list, c->opps_mhz, ENG_MAX_OPPS);
+    if (read_text(CPUFREQ "scaling_available_governors", list, sizeof list) == 0) {
+        char *save = NULL;
+        for (char *t = strtok_r(list, " \t", &save); t && c->n_govs < 8; t = strtok_r(NULL, " \t", &save))
+            if (strlen(t) < ENG_NAME) snprintf(c->govs[c->n_govs++], ENG_NAME, "%s", t);
+    }
     return rc == 0 ? 0 : -1;
 }
 

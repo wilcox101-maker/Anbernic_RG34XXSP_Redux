@@ -14,6 +14,8 @@ typedef struct {
     int  min_mhz, max_mhz;       /* current scaling limits; -1 if unreadable */
     int  opps_mhz[ENG_MAX_OPPS]; /* the chip's own list, ascending */
     int  n_opps;                 /* 0 if the list is unreadable */
+    char govs[8][ENG_NAME];      /* scaling_available_governors, in the kernel's order */
+    int  n_govs;
 } eng_cpu_t;
 
 typedef struct {
