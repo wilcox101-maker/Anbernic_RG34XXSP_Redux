@@ -21,6 +21,15 @@ void romscan_load_roots(const char *const *roots, int nroots);
    device, else the desktop fixture. Safe to call again. */
 void romscan_init(void);
 
+/* Scan cache in /tmp (RAM): reuse the last scan when no card folder changed (#185).
+   romscan_init_cached loads it for the device roots and returns 1, or returns 0 when it is
+   missing or stale (call romscan_init then; it scans and saves a fresh cache).
+   romscan_load_roots_cached does the same for given roots; scan_if_stale 1 = scan on a miss.
+   The cache path is NULL (off) on desktop unless set. */
+int romscan_init_cached(void);
+int romscan_load_roots_cached(const char *const *roots, int nroots, int scan_if_stale);
+void romscan_set_cache_path(const char *path);
+
 int romscan_systems(void);
 /* Folder key for systems_lookup (may differ from the directory name via an alias). */
 const char *romscan_key(int sys);

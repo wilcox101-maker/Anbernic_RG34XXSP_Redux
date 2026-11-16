@@ -294,8 +294,10 @@ void ui_init(void) {
     brightness_load();   /* no saved file: leave the hardware level as stock set it */
     screentimeout_load();
     font_load();
-    ui_busy("Scanning for ROMs", NULL);
-    romscan_init();
+    if (!romscan_init_cached()) {   /* cache hit (no card changed): no scan, no wait screen */
+        ui_busy("Scanning for ROMs", NULL);
+        romscan_init();
+    }
     go_replace(SCREEN_MAIN);
     resume_load();   /* valid resume replaces Main; the file is removed either way */
 }

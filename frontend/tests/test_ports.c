@@ -1,6 +1,7 @@
 /* Ports, option B part 1: only known ports whose data file exists are listed, each with its
    own core; scripts and other files in PORTS are not. Run ./test_ports, exit 0 = pass. */
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
 #include "romscan.h"
@@ -73,6 +74,42 @@ int main(void) {
     expect(strcmp(line, "cd '/tmp/redux-ports-fixture/PORTS' && AUDIODEV=hw:2,0 /bin/bash ./'Unknown Port.sh'\n") == 0,
            "a card script runs with bash from its own folder");
     remove(next);
+    /* #185: scan cache. First call scans and saves; the same cards load from the cache; a new
+       ROM (folder changed) forces a scan; a damaged cache is ignored. */
+    {
+        const char *cache = "/tmp/redux-ports-cache";
+        remove(cache);
+        romscan_set_cache_path(cache);
+        const char *roots[1] = { R };
+        expect(romscan_load_roots_cached(roots, 1, 1) == 0, "no cache yet: scanned");
+        int nsys = romscan_systems(), np = romscan_roms(romscan_index_of("PORTS"));
+        romscan_load("/nonexistent");   /* empty the lists */
+        expect(romscan_systems() == 0, "lists emptied");
+        expect(romscan_load_roots_cached(roots, 1, 0) == 1, "same cards: loaded from cache");
+        int pp = romscan_index_of("PORTS");
+        expect(romscan_systems() == nsys && romscan_roms(pp) == np, "cache has the same systems and ports");
+        int q = -1;
+        for (int i = 0; i < romscan_roms(pp); i++)
+            if (strcmp(romscan_rom_name(pp, i), "Quake") == 0) q = i;
+        expect(q >= 0 && romscan_rom_core(pp, q) && strcmp(romscan_rom_core(pp, q), "tyrquake_libretro.so") == 0,
+               "a port's own core survives the cache");
+        int u = -1;
+        for (int i = 0; i < romscan_roms(pp); i++)
+            if (strcmp(romscan_rom_name(pp, i), "Unknown Port") == 0) u = i;
+        expect(u >= 0 && romscan_rom_is_script(pp, u), "script flag survives the cache");
+        sleep(1);   /* coarse mtime on some filesystems */
+        touch("/tmp/redux-ports-fixture/GBA/New Game.gba");
+        expect(romscan_load_roots_cached(roots, 1, 0) == 0, "a new ROM makes the cache stale");
+        expect(romscan_load_roots_cached(roots, 1, 1) == 0, "stale: scanned again");
+        expect(romscan_roms(romscan_index_of("GBA")) >= 1, "new ROM listed after the rescan");
+        expect(romscan_load_roots_cached(roots, 1, 0) == 1, "fresh cache loads");
+        FILE *f = fopen(cache, "r+b");
+        if (f) { fputs("JUNK", f); fclose(f); }
+        expect(romscan_load_roots_cached(roots, 1, 0) == 0, "damaged cache is ignored");
+        remove(cache);
+        remove("/tmp/redux-ports-fixture/GBA/New Game.gba");
+        romscan_set_cache_path(NULL);
+    }
     printf("%d failed\n", fails);
     return fails ? 1 : 0;
 }
