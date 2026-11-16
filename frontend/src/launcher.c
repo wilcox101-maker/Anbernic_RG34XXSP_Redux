@@ -14,6 +14,12 @@ void launcher_set_preload(const char *env) {
 }
 
 
+/* F4 step 4: redux-lidwatch path, run beside every RetroArch game (empty = none). */
+static char lidwatch[200];
+void launcher_set_lidwatch(const char *path) {
+    snprintf(lidwatch, sizeof lidwatch, "%s", path ? path : "");
+}
+
 void launcher_set_next_path(const char *path) {
     next_path = path;
 }
@@ -156,6 +162,14 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
         const char *script = script_for(target);
         if (!script) { fclose(f); return -1; }
 
+        /* Lid watcher beside a RetroArch game: on lid close it asks RetroArch to write its saves
+           before stock suspends; stopped when RetroArch exits (F4 step 4). Written before the
+           AUDIODEV prefix, which must stay right in front of RA_launch.sh. */
+        int watch = target == LAUNCH_RETROARCH && core && lidwatch[0];
+        if (watch) {
+            quote(f, lidwatch);
+            fprintf(f, " 2>>" REDUX_LOG " & W=$!; ");
+        }
         if (!elf_dir_for(target)) fputs(audiodev, f);
 
         /* The stock launch scripts are bash (RA_launch.sh uses [[ ]] and declare -A);
@@ -168,6 +182,7 @@ int launcher_start(launch_target_t target, const char *core, const char *rom_pat
             /* RA_launch.sh: $1 core, $2 ROM, $3 "auto".
                Without a ROM, "auto" would land in $2 and be taken as the ROM. */
             if (rom_path) { quote(f, rom_path); fprintf(f, " auto"); }
+            if (watch) fprintf(f, "; kill $W 2>/dev/null");
             fputc('\n', f);
         } else if (target == LAUNCH_PPSSPP || target == LAUNCH_PCSX) {
             const char *dir = elf_dir_for(target);

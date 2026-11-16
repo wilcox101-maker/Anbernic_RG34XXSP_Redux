@@ -27,6 +27,13 @@ int main(void) {
     expect("retroarch needs a core", LAUNCH_RETROARCH, NULL, "/x.gba", NULL);
     expect("rom name with ' $ ` is literal", LAUNCH_RETROARCH, "gpsp_libretro.so", "/r/It's $HOME `id`.gba",
            "AUDIODEV=hw:2,0 /bin/bash /mnt/mod/ctrl/RA_launch.sh 'gpsp_libretro.so' '/r/It'\\''s $HOME `id`.gba' auto\n");
+    launcher_set_lidwatch("/tmp/redux-lidwatch");
+    expect("retroarch + lid watcher", LAUNCH_RETROARCH, "gpsp_libretro.so", "/mnt/mmc/Roms/GBA/a.gba",
+           "'/tmp/redux-lidwatch' 2>>/mnt/vendor/redux/redux.log & W=$!; AUDIODEV=hw:2,0 /bin/bash /mnt/mod/ctrl/RA_launch.sh 'gpsp_libretro.so' '/mnt/mmc/Roms/GBA/a.gba' auto; kill $W 2>/dev/null\n");
+    expect("watcher only for retroarch", LAUNCH_DRASTIC, NULL, "/mnt/mmc/Roms/NDS/d.nds",
+           "AUDIODEV=hw:2,0 /bin/bash /mnt/vendor/deep/drastic-modify/launch.sh '/mnt/mmc/Roms/NDS/d.nds'\n");
+    expect("no core: no watcher, refused", LAUNCH_RETROARCH, NULL, "/x.gba", NULL);
+    launcher_set_lidwatch(NULL);
     expect("ppsspp runs from its folder", LAUNCH_PPSSPP, NULL, "/mnt/mmc/Roms/PSP/a b.iso",
            "cd '/mnt/vendor/deep/ppsspp' && AUDIODEV=hw:2,0 ./PPSSPPSDL '/mnt/mmc/Roms/PSP/a b.iso'\n");
     expect("pcsx runs from its folder", LAUNCH_PCSX, NULL, "/mnt/mmc/Roms/PS/c.chd",
