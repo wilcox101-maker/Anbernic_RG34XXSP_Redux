@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-16
 re: F4 step 4, flushing RetroArch saves before a lid sleep (AGENTS.md hard rule "never write to p1")
-status: open
+status: closed (F4 signed off 2026-11-16)
 ---
 
 # Decision: may Redux ask RetroArch to write its saves before a lid sleep?

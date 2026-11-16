@@ -42,7 +42,7 @@ Runs alongside the kernel phases. The full plan, UI rules and exit tests are in 
 - [x] F1: desktop prototype (C + SDL2, `frontend/`), signed off 2026-11-10. Exit test: `frontend/tests/check_mockups.py`
 - [x] F2: launch parity on a copy of the stock card, signed off 2026-11-12
 - [x] F3 includes the UI font picker: vga / spleen / unifont / thin / chunky ([docs/ui-spec.md §8a](docs/ui-spec.md))
-- [x] F3 settings parity, signed off 2026-11-16 · [ ] F4 power and lid · F5 Engineering Mode · F6 features stock left out · F7 mainline port · F8 release
+- [x] F3 settings parity, signed off 2026-11-16 · [x] F4 power and lid, signed off 2026-11-16 · F5 Engineering Mode · F6 features stock left out · F7 mainline port · F8 release
 
 ## Release milestones
 Two targets. The phases above say *how* the work is done; these say *when it ships*. Each box is ticked
@@ -55,7 +55,7 @@ Dale. No mainline kernel is needed.
 - [x] MAME launches through a stock RetroArch core (stock's `xmame.dge` path can't be used: stock .dge launches fail). Device-verified by Dale 2026-11-13 ([result](notes/2026-11-13-dale-hw-result-mame.md); build SHA not stated)
 - [x] F3 settings parity (signed off 2026-11-16), including from the queue: Wi-Fi Connecting/result screens, BIOS-style UI with
       colour presets, TF2 scan/hot-plug, Restart/Power Off with a 3 s hold
-- [ ] F4 power and lid: its exit test (50 lid cycles mid-game, no lost save, governor restored)
+- [x] F4 power and lid (signed off 2026-11-16): exit test 50 lid cycles mid-game, governor restored
 - [ ] F5 Engineering Mode inside the stock OPP tables (Expert Mode is **not** part of Beta)
 - [ ] F6 features stock left out, including from the queue: System Tools (read-only), App Center,
       Ports/PortMaster, Terminal/htop
