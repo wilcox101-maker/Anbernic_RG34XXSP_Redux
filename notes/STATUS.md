@@ -19,13 +19,13 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - Owner: the Redux Project chat named in the newest handoff; every other chat is advisory. Grok is suspended; every queue item is Claude's.
 
 ## Waiting on Dale
-- **F4 save flush** ([decision](2026-11-16-claude-decision-f4-save-flush.md)): may Redux send RetroArch `SAVE_FILES` before a lid sleep (writes saves on p1)? A/B/C.
+- **F4 save flush A**: merge the AGENTS.md rule PR (p1 exception for RetroArch saves + `SAVE_FILES`).
 - **Phase 2 direction** (before Phase 2, not urgent for Beta): the H700 Kernel Research Ubuntu 24.04 image with update rollback, or `docs/ram-system-design.md`'s read-only squashfs in RAM.
 
 ## Queue (in order; all Claude unless marked)
 1. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons (folded into item 4, the Redux video front-end); Wolfenstein 3D Y and X: not a bug, it is a GBA ROM (no X/Y). Done: `/tmp/.next` + amixer (#202), scan cache (#203). Game Room X = Favorites, not built yet (placeholder). Then a short device re-check.
 2. ~~Game Room card picker~~ built in #205 (TF1/TF2 like stock, per-card cache, resume keeps the card). **Not device-checked yet** (#185 queue).
-3. **F4 power and lid** ([plan, Dale A](2026-11-16-dale-decision-f4-plan.md)): 1 lid in menu (built, not device-checked) · 2 governor restore (built, not device-checked) · 3 dim (built, not device-checked) + Wi-Fi off (next) · 4 in-game lid watcher: `SAVE_FILES` works ([reads](2026-11-16-dale-hw-result-reads-f4-2.md)); **waiting on Dale: [save-flush decision](2026-11-16-claude-decision-f4-save-flush.md)** (p1 hard rule). Then **F5 Engineering Mode** (Dale A, 2026-11-14 13:37: phase order kept).
+3. **F4 power and lid** ([plan, Dale A](2026-11-16-dale-decision-f4-plan.md)): 1 lid in menu (built, not device-checked) · 2 governor restore (built, not device-checked) · 3 dim (built, not device-checked) + Wi-Fi off (next) · 4 in-game lid watcher: `SAVE_FILES` works ([reads](2026-11-16-dale-hw-result-reads-f4-2.md)); save flush **A** ([decision](2026-11-16-claude-decision-f4-save-flush.md)); waiting on Dale to merge the AGENTS.md rule PR. Then **F5 Engineering Mode** (Dale A, 2026-11-14 13:37: phase order kept).
 4. **F6: Redux front-ends for the stock apps** in the BIOS/DOS style (Dale 2026-11-16): Video Player first (Redux file list + stock `ffplay`), then Music, Ebook, File Manager. Needs the FFplay.sh read from the device.
 5. **Installer B**: TF2 package with hold-A (after A is device-checked). Tagged Beta releases (`v0.5-beta.N`) once Beta is near.
 6. Extras installer (#149): REFUSED path and a fresh install still not run on the device.
