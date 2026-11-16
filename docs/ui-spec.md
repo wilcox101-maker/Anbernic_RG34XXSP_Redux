@@ -208,15 +208,16 @@ A:Enter  B:Back  M:Menu
 
 ## 6. Mock-up 4 — Engineering Mode, CPU tab
 
-Engineering Mode is one screen with an AMI/Phoenix-style tab bar (decision 2026-11-10): CPU,
-Battery, Thermal, Display, System. L1/R1 or Left/Right switch tabs and wrap; the active tab is
-inverted in the accent colour (shown here as `▓CPU▓`). B exits to the main menu. Tabs without content
-yet say "Not yet".
+Engineering Mode is one screen with an AMI/Phoenix-style tab bar (decision 2026-11-10): CPU, GPU,
+Battery, Thermal, Display, Storage, Logs, System (F5). L1/R1 or Left/Right switch tabs and wrap; the
+active tab is inverted in the accent colour (shown here as `▓CPU▓`). B exits to the main menu. On the
+CPU tab, Up/Down pick a row and A edits it (F5 step 3); on Logs, A switches between redux.log,
+eng-writes.log and dmesg.
 
 ```
 [ENGINEERING]                                                    BAT 87% CHG CPU 54C 12:34
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ ▓CPU▓ Battery  Thermal  Display  System                                                │
+│ ▓CPU▓ GPU  Battery  Thermal  Display  Storage  Logs  System                            │
 │────────────────────────────────────────────────────────────────────────────────────────│
 │▓▓Governor:     schedutil                                                               │
 │  Min freq:     480 MHz                                                                 │
@@ -251,13 +252,13 @@ Up/Down:Row  A:Edit  L1/R1:Tab  B:Exit  X:Save profile  Y:Remove
 ```
 [ENGINEERING]                                                    BAT 87% CHG CPU 54C 12:34
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  CPU ▓Battery▓ Thermal  Display  System                                                │
+│  CPU  GPU ▓Battery▓ Thermal  Display  Storage  Logs  System                            │
 │────────────────────────────────────────────────────────────────────────────────────────│
 │  Capacity:     87 %                                                                    │
 │  Voltage:      3.92 V                                                                  │
 │  Current:     -420 mA                                                                  │
 │  Status:       Discharging                                                             │
-│                                                                                        │
+│  Time left:    ~4 h 12 m   (PMIC estimate)                                             │
 │  Temperature:  unknown   (no sensor: the PMIC value is a fixed dummy)                  │
 │                                                                                        │
 │  SoC temp:     54 C                                                                    │

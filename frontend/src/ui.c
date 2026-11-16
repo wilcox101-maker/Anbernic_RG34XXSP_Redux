@@ -60,7 +60,7 @@ static int system_selectable(int i) {
 static const char *internet_items[] = {
     "YouTube (if feasible)", "Web browser (text)"
 };
-static const char *eng_tabs[] = { "CPU", "Battery", "Thermal", "Display", "System" };
+static const char *eng_tabs[] = { "CPU", "GPU", "Battery", "Thermal", "Display", "Storage", "Logs", "System" };
 #define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
 
 static screen_t screen;
@@ -69,6 +69,7 @@ static char eng_msg[GRID_COLS];   /* result of the last X/Y on Engineering */
 /* CPU tab controls (F5 step 3): rows Governor, Min, Max, cpu1, cpu2, cpu3. */
 enum { ENG_ROW_GOV = 0, ENG_ROW_MIN, ENG_ROW_MAX, ENG_ROW_CPU1, ENG_ROW_CPU2, ENG_ROW_CPU3, ENG_ROW_COUNT };
 static int eng_row, eng_editing, eng_pick;   /* eng_pick: index into the governor or OPP list */
+static int eng_log_src;                      /* Logs tab: 0 redux.log, 1 eng-writes.log, 2 dmesg */
 static int selected;
 static int scroll;
 static int sys_index;
@@ -729,6 +730,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             eng_cpu_button(btn);
         return;
     }
+    if (screen == SCREEN_ENG && eng_tab == ENG_LOGS && btn == LB_A) { eng_log_src = (eng_log_src + 1) % 3; dirty = 1; return; }
     if (screen == SCREEN_ENG && (btn == LB_L1 || btn == LB_LEFT))  { switch_eng_tab(-1); return; }
     if (screen == SCREEN_ENG && (btn == LB_R1 || btn == LB_RIGHT)) { switch_eng_tab(+1); return; }
     if (screen == SCREEN_ENG && btn == LB_X) {
@@ -1113,6 +1115,15 @@ static void draw_eng_tab_body(void) {
             snprintf(t, sizeof t, "  Status:       %s",
                      platform_battery_charging() ? "Charging" : "Discharging"); body(5, t);
         }
+        eng_batt_t bx;
+        platform_battery_extra(&bx);
+        /* same rule as the Status line above */
+        int chg = platform_battery_ma_known() ? ma >= 0 : platform_battery_charging();
+        int secs = chg ? bx.time_to_full_s : bx.time_to_empty_s;
+        if (secs > 0) snprintf(t, sizeof t, "  %-14s~%d h %02d m   (PMIC estimate)", chg ? "To full:" : "Time left:",
+                               secs / 3600, (secs / 60) % 60);
+        else snprintf(t, sizeof t, "  %-14sunknown", chg ? "To full:" : "Time left:");
+        body(6, t);
         body(7, "  Temperature:  unknown   (no sensor: the PMIC value is a fixed dummy)");
         snprintf(t, sizeof t, "  SoC temp:     %d C", soc); body(9, t);
         snprintf(t, sizeof t, "  Max seen:     %d C   (SoC, while this screen was open)", soc_max_c);
@@ -1121,6 +1132,39 @@ static void draw_eng_tab_body(void) {
         body(13, "  Redux heat guard: CPU >= 75 C for 30 s caps it at 1200 MHz until below 65 C;");
         body(14, "                    >= 90 C for 10 s saves and powers off. Charging is not touched.");
         body(15, platform_hot() ? "  Guard state:  CAPPED (HOT)" : "  Guard state:  normal");
+    } else if (eng_tab == ENG_GPU) {
+        eng_gpu_t g;
+        if (platform_gpu_info(&g) != 0) { body(2, "  No GPU frequency control found (/sys/class/devfreq/gpu)."); return; }
+        snprintf(t, sizeof t, "  Governor:     %s", g.governor); body(2, t);
+        snprintf(t, sizeof t, "  Current:      %d MHz", g.cur_mhz); body(3, t);
+        snprintf(t, sizeof t, "  Min / max:    %d / %d MHz   (the stock driver reads 0 here)", g.min_mhz, g.max_mhz); body(4, t);
+        body(6, "  Speeds (read from the driver):");
+        int len = snprintf(t, sizeof t, "    ");
+        for (int k = 0; k < g.n_freqs && len < (int)sizeof t - 8; k++)
+            len += snprintf(t + len, sizeof t - (size_t)len, "%s%d", k ? " / " : "", g.freqs_mhz[k]);
+        body(7, g.n_freqs ? t : "    unknown");
+        body(9, "  Read-only. Pinning the GPU speed waits for a test on the device.");
+    } else if (eng_tab == ENG_STORAGE) {
+        eng_mount_t m[ENG_MAX_MOUNTS];
+        platform_mounts(m);
+        snprintf(t, sizeof t, "  %-13s %-17s %-6s %-4s %9s  %9s", "Mount", "Device", "Type", "Mode", "Size MB", "Free MB");
+        body(2, t);
+        for (int k = 0; k < ENG_MAX_MOUNTS; k++) {
+            if (!m[k].found) snprintf(t, sizeof t, "  %-13.13s not mounted", m[k].mount);
+            else snprintf(t, sizeof t, "  %-13.13s %-17.17s %-6.6s %-4s %9lld  %9lld", m[k].mount, m[k].dev,
+                          m[k].fstype, m[k].ro ? "ro" : "rw", m[k].size_mb, m[k].free_mb);
+            body(3 + k, t);
+        }
+        body(10, "  Read-only. A filesystem check (fsck -n, never repairs) comes in a later step.");
+    } else if (eng_tab == ENG_LOGS) {
+        static const char *src[3] = { "redux.log", "eng-writes.log", "dmesg" };
+        char lines[18][ENG_LOG_COLS];
+        int n = platform_log_tail(eng_log_src, lines, 18);
+        snprintf(t, sizeof t, "  %s (last %d lines)   A: next log", src[eng_log_src], n); body(2, t);
+        for (int k = 0; k < n; k++) {
+            snprintf(t, sizeof t, "  %.84s", lines[k]);
+            body(4 + k, t);
+        }
     } else if (eng_tab == ENG_THERMAL) {
         eng_zone_t z[ENG_MAX_ZONES];
         int n = platform_thermal_zones(z, ENG_MAX_ZONES);

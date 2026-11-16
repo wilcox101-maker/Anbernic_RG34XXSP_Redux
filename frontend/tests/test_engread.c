@@ -80,11 +80,53 @@ int main(void) {
            "unreadable temp is -1, no trips");
     expect(engread_thermal(z, 1) == 1, "zone count capped at max");
 
+    /* GPU devfreq in Hz, as on Dale's unit (min/max read 0). */
+    put(base, "/sys/class/devfreq/gpu/governor", "simple_ondemand\n");
+    put(base, "/sys/class/devfreq/gpu/available_frequencies", "420000000 456000000 504000000 552000000 600000000 648000000\n");
+    put(base, "/sys/class/devfreq/gpu/cur_freq", "420000000\n");
+    put(base, "/sys/class/devfreq/gpu/min_freq", "0\n");
+    put(base, "/sys/class/devfreq/gpu/max_freq", "0\n");
+    eng_gpu_t g;
+    expect(engread_gpu(&g) == 0 && g.present && strcmp(g.governor, "simple_ondemand") == 0, "gpu present");
+    expect(g.n_freqs == 6 && g.freqs_mhz[0] == 420 && g.freqs_mhz[5] == 648 && g.cur_mhz == 420, "gpu speeds in MHz");
+    expect(g.min_mhz == 0 && g.max_mhz == 0, "gpu min/max 0 as read");
+
+    /* Battery extras. */
+    put(base, "/sys/class/power_supply/axp2202-battery/time_to_empty_now", "15120\n");
+    put(base, "/sys/class/power_supply/axp2202-battery/health", "Good\n");
+    eng_batt_t b;
+    engread_battery(&b);
+    expect(b.time_to_empty_s == 15120 && b.time_to_full_s == -1 && strcmp(b.health, "Good") == 0, "battery extras");
+
+    /* Mounts: two entries for /mnt/mmc, the last wins; ro detected; a missing one stays not found. */
+    put(base, "/proc/mounts", "/dev/mmcblk0p5 / ext4 rw,relatime 0 0\n/dev/mmcblk0p7 /mnt/data ext4 rw 0 0\n"
+                              "/dev/mmcblk0p1 /mnt/mmc vfat rw 0 0\n/dev/mmcblk0p1 /mnt/mmc vfat ro,noatime 0 0\n");
+    eng_mount_t m[ENG_MAX_MOUNTS];
+    engread_mounts(m);
+    expect(m[0].found && strcmp(m[0].fstype, "ext4") == 0 && !m[0].ro, "/ found rw");
+    expect(m[3].found && m[3].ro && strcmp(m[3].dev, "/dev/mmcblk0p1") == 0, "/mnt/mmc ro from the last line");
+    expect(!m[1].found && !m[4].found && m[1].size_mb == -1, "unlisted mounts not found");
+    expect(m[0].size_mb >= 0, "statvfs of the fixture root gives a size");
+
+    /* Tail: last 3 of 5 lines, oldest first; control characters blanked; long lines cut. */
+    put(base, "/log.txt", "one\ntwo\nthree\nfo\tur\nfive\n");
+    char lines[3][ENG_LOG_COLS];
+    n = engread_tail("/log.txt", lines, 3);
+    expect(n == 3 && strcmp(lines[0], "three") == 0 && strcmp(lines[1], "fo ur") == 0 && strcmp(lines[2], "five") == 0,
+           "tail keeps the last 3 in order");
+    char longl[400];
+    memset(longl, 'x', sizeof longl - 2); longl[sizeof longl - 2] = '\n'; longl[sizeof longl - 1] = '\0';
+    put(base, "/long.txt", longl);
+    n = engread_tail("/long.txt", lines, 3);
+    expect(n == 1 && strlen(lines[0]) == ENG_LOG_COLS - 1, "long line cut to the column limit");
+    expect(engread_tail("/nope.txt", lines, 3) == 0, "missing log gives 0 lines");
+
     /* Missing everything: no crash, -1s and empty strings. */
     engread_set_root("/tmp/redux-engread-missing");
     expect(engread_cpu(&c) == -1 && c.governor[0] == '\0' && c.min_mhz == -1 && c.n_opps == 0,
            "missing cpufreq gives -1 and empty values");
     expect(engread_thermal(z, ENG_MAX_ZONES) == 0, "missing thermal gives 0 zones");
+    expect(engread_gpu(&g) == -1 && !g.present, "missing gpu not present");
 
     printf("%s\n", fails ? "FAILED" : "all passed");
     return fails ? 1 : 0;
