@@ -19,6 +19,7 @@
 #include "screentimeout.h"
 #include "brightness.h"
 #include "govrestore.h"
+#include "engprofile.h"
 #include "lidwatch.h"
 #include "ui.h"
 #ifdef REDUX_PLATFORM_STOCK
@@ -116,6 +117,9 @@ int main(int argc, char **argv) {
 
     log_build_id();
 #ifdef REDUX_PLATFORM_STOCK
+    /* First start of a boot: apply the saved Engineering profile, unless two starts in a row
+       never reached the menu (F5 step 2). Before govrestore, so its baseline is the profile. */
+    engprofile_at_start();
     /* First thing back from a game or app: put the CPU governor back (F4 step 2). */
     govrestore_at_start();
     fflush(stdout);
@@ -169,6 +173,10 @@ int main(int argc, char **argv) {
                device (Anbernic SDL 2.0.12, page-flipped framebuffer) presenting once left the
                previous frame in the other buffer, so two highlights showed (Dale, 2026-11-10). */
             for (int i = 0; i < PRESENT_BUFFERS; i++) present_frame();
+#ifdef REDUX_PLATFORM_STOCK
+            static int menu_seen;
+            if (!menu_seen && ui_screen() == SCREEN_MAIN) { engprofile_menu_reached(); menu_seen = 1; }
+#endif
         }
         SDL_Event e;
         int have_event;

@@ -115,3 +115,9 @@ gov_result_t govrestore_at_start(void) {
            (same && !err) ? "ok" : "FAILED");
     return (same && !err) ? GOV_RESTORED : GOV_ERROR;
 }
+
+int govrestore_rebaseline(void) {
+    policy_t now;
+    if (read_policy(&now) != 0) return -1;
+    return save_state(&now);
+}

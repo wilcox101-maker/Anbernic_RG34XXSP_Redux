@@ -9,7 +9,7 @@ find_package(SDL2 REQUIRED)
 # Platform layer: "desktop" (fake values, default) or "stock" (real sysfs on the RG34XXSP).
 set(REDUX_PLATFORM desktop CACHE STRING "desktop or stock")
 if(REDUX_PLATFORM STREQUAL "stock")
-    set(REDUX_PLATFORM_SRC src/platform_stock.c src/engread.c src/remap_device.c src/evdev_reader.c)
+    set(REDUX_PLATFORM_SRC src/platform_stock.c src/engread.c src/engprofile.c src/remap_device.c src/evdev_reader.c)
 else()
     set(REDUX_PLATFORM_SRC src/platform.c)
 endif()
@@ -168,6 +168,10 @@ target_include_directories(test_lidwatch PRIVATE src)
 
 add_executable(test_brightness tests/test_brightness.c src/brightness.c)
 target_include_directories(test_brightness PRIVATE src)
+
+# Engineering safety net against temp folders (no SDL, no device): ./test_engprofile.
+add_executable(test_engprofile tests/test_engprofile.c src/engprofile.c)
+target_include_directories(test_engprofile PRIVATE src)
 
 # Engineering Mode read layer against fixtures (no SDL, no device): ./test_engread.
 add_executable(test_engread tests/test_engread.c src/engread.c)

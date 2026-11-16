@@ -20,4 +20,8 @@ typedef enum { GOV_SAVED = 0, GOV_SAME, GOV_RESTORED, GOV_ERROR } gov_result_t;
 /* Run once at Redux start. Prints one line for redux.log when it restores or fails. */
 gov_result_t govrestore_at_start(void);
 
+/* Make the current policy the one restored after every app (F5: after "Save as profile").
+   0 ok. */
+int govrestore_rebaseline(void);
+
 #endif

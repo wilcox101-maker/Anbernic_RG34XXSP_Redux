@@ -232,8 +232,8 @@ yet say "Not yet".
 │  OPP table (read from the chip):                                                       │
 │    480 / 600 / 792 / 1008 / 1200 / 1296 / 1416 / 1512                                  │
 │                                                                                        │
-│  Read-only for now. Controls arrive in a later F5 step.                                │
-│                                                                                        │
+│  Profile:      none (stock settings)                                                   │
+│  Controls arrive in a later F5 step. Every change is logged.                           │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
@@ -243,7 +243,7 @@ yet say "Not yet".
 │                                                                                        │
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-L1/R1:Tab  B:Exit
+L1/R1:Tab  B:Exit  X:Save profile  Y:Remove profile
 ```
 
 ## 7. Mock-up 5 — Engineering Mode, Battery tab
@@ -278,7 +278,7 @@ L1/R1:Tab  B:Exit
 │                                                                                        │
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-L1/R1:Tab  B:Exit
+L1/R1:Tab  B:Exit  X:Save profile  Y:Remove profile
 ```
 
 

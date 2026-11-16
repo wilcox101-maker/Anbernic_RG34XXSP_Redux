@@ -65,6 +65,7 @@ static const char *eng_tabs[] = { "CPU", "Battery", "Thermal", "Display", "Syste
 
 static screen_t screen;
 static eng_tab_t eng_tab;
+static char eng_msg[GRID_COLS];   /* result of the last X/Y on Engineering */
 static int selected;
 static int scroll;
 static int sys_index;
@@ -649,6 +650,18 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
 
     if (screen == SCREEN_ENG && (btn == LB_L1 || btn == LB_LEFT))  { switch_eng_tab(-1); return; }
     if (screen == SCREEN_ENG && (btn == LB_R1 || btn == LB_RIGHT)) { switch_eng_tab(+1); return; }
+    if (screen == SCREEN_ENG && btn == LB_X) {
+        snprintf(eng_msg, sizeof eng_msg, "%s", platform_eng_profile_save() == 0
+                 ? "Profile saved: applied at every start." : "Saving the profile failed.");
+        dirty = 1;
+        return;
+    }
+    if (screen == SCREEN_ENG && btn == LB_Y) {
+        snprintf(eng_msg, sizeof eng_msg, "%s", platform_eng_profile_clear() == 0
+                 ? "Profile removed: stock settings from the next start." : "Removing the profile failed.");
+        dirty = 1;
+        return;
+    }
 
     if (screen == SCREEN_WIFI && btn == LB_Y) { wifi_rescan(); return; }
 
@@ -806,7 +819,7 @@ void ui_tick(uint32_t now_ms) {
     if (vol_until && now_ms >= vol_until) { vol_until = 0; dirty = 1; }
     if (screen == SCREEN_ENG_CONFIRM && a_down_at) {
         hold_ms = now_ms - a_down_at;
-        if (hold_ms >= HOLD_TO_ENTER_MS) go_replace(SCREEN_ENG);   /* B from Engineering -> Main */
+        if (hold_ms >= HOLD_TO_ENTER_MS) { eng_msg[0] = '\0'; go_replace(SCREEN_ENG); }   /* B from Engineering -> Main */
         dirty = 1;
     }
     if ((screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
@@ -987,7 +1000,11 @@ static void draw_eng_tab_body(void) {
                 len += snprintf(t + len, sizeof t - (size_t)len, "%s%d", k ? " / " : "", c.opps_mhz[k]);
             body(14, t);
         }
-        body(16, "  Read-only for now. Controls arrive in a later F5 step.");
+        int ps = platform_eng_profile_state();
+        body(16, ps == 1 ? "  Profile:      saved (applied at start; two failed starts set it aside)"
+               : ps == 2 ? "  Profile:      set aside after two failed starts (stock settings)"
+                         : "  Profile:      none (stock settings)");
+        body(17, "  Controls arrive in a later F5 step. Every change is logged.");
     } else if (eng_tab == ENG_BATTERY) {
         int ma = platform_battery_ma();
         int soc = platform_cpu_temp_c();
@@ -1152,9 +1169,10 @@ void ui_draw(void) {
         break;
     }
     case SCREEN_ENG:
-        frame("[ENGINEERING]", "L1/R1:Tab  B:Exit", 0, 1);
+        frame("[ENGINEERING]", "L1/R1:Tab  B:Exit  X:Save profile  Y:Remove profile", 0, 1);
         draw_eng_tabs();
         draw_eng_tab_body();
+        if (eng_msg[0]) { snprintf(t, sizeof t, "  %.80s", eng_msg); body(24, t); }
         break;
     case SCREEN_WIFI: {
         frame("Wi-Fi", "A:Select  B:Back  Y:Scan", 1, 0);

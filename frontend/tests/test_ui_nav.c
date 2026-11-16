@@ -3,6 +3,7 @@
    Exit code 0 = pass. Uses the desktop platform layer (no window is opened). */
 #define _POSIX_C_SOURCE 200809L
 #include "ui.h"
+#include "platform.h"
 #include "launcher.h"
 #include "romscan.h"
 #include "systems.h"
@@ -157,6 +158,11 @@ int main(void) {
     expect(ui_eng_tab() == ENG_BATTERY, "R1 moves to Battery");
     press(LB_LEFT); press(LB_LEFT);
     expect(ui_eng_tab() == ENG_SYSTEM, "Left wraps from CPU to System");
+    press(LB_X);
+    expect(platform_eng_profile_state() == 1, "X on Engineering saves the profile");
+    press(LB_Y);
+    expect(platform_eng_profile_state() == 0, "Y on Engineering removes the profile");
+    expect(ui_screen() == SCREEN_ENG, "X and Y stay on Engineering");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Engineering exits to Main, not the confirm screen");
 

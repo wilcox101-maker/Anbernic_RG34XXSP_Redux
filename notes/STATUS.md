@@ -10,7 +10,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 | Frontend | F0, F1, F2 | signed off (F2: 2026-11-12) |
 | Frontend | F3 settings parity | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f3-signed-off.md)) |
 | Frontend | F4 power and lid | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)) |
-| Frontend | **F5 Engineering Mode** | step 1 read-outs done (not device-checked); step 2 safety net next (Q1-Q3 A A A, [note](2026-11-16-claude-decision-f5-plan.md)) |
+| Frontend | **F5 Engineering Mode** | steps 1-2 done (read-outs, safety net; not device-checked); step 3 CPU/GPU controls next, needs a device read (Q1-Q3 A A A, [note](2026-11-16-claude-decision-f5-plan.md)) |
 
 ## Handoff (2026-11-16-2, Claude): start here in a new chat
 - **Read [handoff-2026-11-16-2.md](handoff-2026-11-16-2.md) next**, then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project, started from the desktop app on DLN-DALEW2.
@@ -26,7 +26,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 ## Queue (in order; all Claude unless marked)
 1. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons (folded into item 4, the Redux video front-end); Wolfenstein 3D Y and X: not a bug, it is a GBA ROM (no X/Y). Done: `/tmp/.next` + amixer (#202), scan cache (#203). Game Room X = Favorites, not built yet (placeholder). Then a short device re-check.
 2. ~~Game Room card picker~~ #205, device-checked 2026-11-16 (with the #216 crash fix).
-3. **F5 Engineering Mode** (in progress: [plan](2026-11-16-claude-decision-f5-plan.md), step 1 read-outs done, step 2 safety net next; Q1-Q3 A A A; device read before step 3). F4 signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)).
+3. **F5 Engineering Mode** (in progress: [plan](2026-11-16-claude-decision-f5-plan.md), steps 1-2 done (read-outs, safety net), step 3 controls next; Q1-Q3 A A A; device read before step 3). F4 signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)).
 4. **F6**: Wi-Fi off unless needed + Power & Lid settings page (moved from F4, Dale A 15:09); **Redux front-ends for the stock apps** in the BIOS/DOS style (Dale 2026-11-16): Video Player first (Redux file list + stock `ffplay`), then Music, Ebook, File Manager. Needs the FFplay.sh read from the device.
 5. **Installer B**: TF2 package with hold-A (after A is device-checked). Tagged Beta releases (`v0.5-beta.N`) once Beta is near.
 6. Extras installer (#149): REFUSED path and a fresh install still not run on the device.
@@ -36,7 +36,6 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - Run the C tests once under AddressSanitizer in CI (it caught the 2026-11-16 cache overflow at once; plain builds passed).
 - AGENTS.md + CLAUDE.md are 6.3 KB (target about 6 KB): move the p1 exceptions' detail into a doc and link it.
 - `precheck.py` prints every C test's own lines; show only the summary and failures (shorter output).
-- Governor restore (F4) and the F5 saved profile share one stored "normal" state, so they never undo each other.
 - `device-test-queue.yml` appends PRs whose not-verified list is just "none" (#194-#197 did); skip those to keep #185 short.
 
 ## Open notes
