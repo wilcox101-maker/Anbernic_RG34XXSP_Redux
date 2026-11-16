@@ -20,4 +20,8 @@ int evdev_poll(void (*cb)(logical_button_t btn, int pressed));
    nothing on HDMI), then drop the queued wake events like a power-key press. */
 void evdev_auto_sleep(void);
 
+/* 1 once the lid has stayed closed past its debounce (once per close; see powerkeys.h).
+   The caller then runs evdev_auto_sleep(), as for the screen timeout. */
+int evdev_lid_closed(void);
+
 #endif

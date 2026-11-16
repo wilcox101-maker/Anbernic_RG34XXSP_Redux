@@ -166,7 +166,8 @@ int main(int argc, char **argv) {
            SDL_WaitEventTimeout would delay every button press by up to ui_wait_ms() (1 s idle). */
         evdev_wait((int)ui_wait_ms());
         evdev_poll(on_device_button);
-        if (screentimeout_due(SDL_GetTicks() - last_input_ms)) {
+        /* Lid closed or screen timeout: the stock lid/timeout path (pwr_new.sh auto). */
+        if (evdev_lid_closed() || screentimeout_due(SDL_GetTicks() - last_input_ms)) {
             evdev_auto_sleep();               /* returns after wake (or never, on shutdown) */
             last_input_ms = SDL_GetTicks();
             for (int i = 0; i < PRESENT_BUFFERS; i++) present_frame();   /* repaint after resume */

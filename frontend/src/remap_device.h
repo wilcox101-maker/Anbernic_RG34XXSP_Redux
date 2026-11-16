@@ -14,6 +14,12 @@
 #define DEV_ABS_HAT0X   16
 #define DEV_ABS_HAT0Y   17
 
+/* event0 (axp2202-pek) codes. The lid (Hall sensor) arrives as keys on the power-key device
+   (Dale's evtest, #185 row 28): close = KEY_INSERT down + auto-repeat, open = KEY_INSERT up plus a
+   short KEY_DELETE tap. Any other event0 key is treated as the power key (stock: KEY_POWER). */
+#define DEV_KEY_LID      110   /* KEY_INSERT */
+#define DEV_KEY_LID_TAP  111   /* KEY_DELETE */
+
 /* Stick range is -4096..+4096. Threshold for digital conversion. */
 #define DEV_STICK_THRESHOLD 1500
 
