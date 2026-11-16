@@ -17,7 +17,7 @@ int platform_cpu_online(int cpu)      { (void)cpu; return 1; }
 
 /* Engineering fakes: the CPU mock-up's values (docs/ui-spec.md mock-up 4). */
 int platform_cpu_info(eng_cpu_t *c) {
-    static const int opps[] = { 480, 600, 792, 1008, 1200, 1296, 1416, 1512 };
+    static const int opps[] = { 480, 720, 936, 1008, 1104, 1200, 1320, 1416, 1512 };   /* Dale's unit */
     memset(c, 0, sizeof *c);
     snprintf(c->governor, sizeof c->governor, "schedutil");
     c->min_mhz = 480;

@@ -35,7 +35,7 @@ kernel, boot chain and system image are handled separately. Don't redesign them.
 
 | Item | Fact |
 |---|---|
-| SoC | Allwinner H700, 4× Cortex-A53, one cluster, up to 1512 MHz (bin-dependent OPPs: 480/600/792/1008/1200/1296/1416/1512) |
+| SoC | Allwinner H700, 4× Cortex-A53, one cluster, up to 1512 MHz (bin-dependent OPPs; Dale's unit: 480/720/936/1008/1104/1200/1320/1416/1512) |
 | GPU | Mali-G31. Stock DVFS tops out at 648 MHz @ 960 mV |
 | RAM | 2 GB on Dale's unit (512 MB / 1 GB variants exist: treat RAM as unknown and adapt) |
 | Display | **720 × 480**, ≈ 59.16 Hz, PWM backlight 0–255 |
