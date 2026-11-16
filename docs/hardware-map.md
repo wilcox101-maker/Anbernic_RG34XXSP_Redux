@@ -12,7 +12,8 @@ decompiled to [`reference/stock-202505/board.dts`](../reference/stock-202505/boa
 - **Allwinner H700**, which the tree identifies as `allwinner,h616` / `sun50iw9p1`
 - 4× Cortex-A53. The CPU operating points are **bin-aware** (`opp-supported-hw`): each chip's
   fuses select the voltage set Allwinner validated for that silicon.
-  - Ceiling: **1512 MHz** (best bin). Common steps: 480 / 600 / 792 / 1008 / 1200 / 1296 / 1416 / 1512 MHz.
+  - Ceiling: **1512 MHz** (best bin). On Dale's unit `scaling_available_frequencies` lists **480 / 720 / 936 / 1008 / 1104 / 1200 / 1320 / 1416 / 1512 MHz** (9 steps; [hw-result](../notes/2026-11-16-dale-hw-result-f5-steps-1-2.md)). Other bins may differ; Redux reads the list from the chip.
+- **GPU** devfreq: `simple_ondemand` only, 420 / 456 / 504 / 552 / 600 / 648 MHz; `min_freq`/`max_freq` read 0 (same hw-result).
 - **Mali-G31** GPU, driven by Arm's closed kernel driver (the tree says `arm,mali-midgard`)
 - **2 GB RAM.** The memory node reads `0x20000000` (512 MB) and the DRAM settings say
   `dram_type = 3`. Both are template values: boot0 trains the real DRAM and u-boot rewrites the node.

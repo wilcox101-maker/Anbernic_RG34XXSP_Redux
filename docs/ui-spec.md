@@ -230,7 +230,7 @@ yet say "Not yet".
 │    cpu3  1008 MHz   online                                                             │
 │                                                                                        │
 │  OPP table (read from the chip):                                                       │
-│    480 / 600 / 792 / 1008 / 1200 / 1296 / 1416 / 1512                                  │
+│    480 / 720 / 936 / 1008 / 1104 / 1200 / 1320 / 1416 / 1512                           │
 │                                                                                        │
 │  Profile:      none (stock settings)                                                   │
 │  Controls arrive in a later F5 step. Every change is logged.                           │
