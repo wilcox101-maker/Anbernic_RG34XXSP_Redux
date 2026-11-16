@@ -136,7 +136,7 @@ A:Select  B:Back  M:Menu  Start:Search
 
 ## 4. Mock-up 2 — System / ROM list
 
-ROMs come from both cards, read only: TF1 `/mnt/mmc/Roms` and TF2 `/mnt/sdcard/Roms` (skipped if no card is in). The same system on both cards is one list, sorted by name; the Loading screen shows which card a game is on. `REDUX_ROMS` overrides the roots (one path, or several joined with `:`).
+ROMs come from both cards, read only: TF1 `/mnt/mmc/Roms` and TF2 `/mnt/sdcard/Roms` (skipped if no card is in). When both cards hold systems, Game Room opens a **card picker** first (`Game Room > Card`: TF1, TF2; Dale 2026-11-16, like stock) and `Game Room > TF1 > Systems` / `> TF2 > Systems` list that card only; each card's scan is cached in `/tmp` separately. With one card (or `REDUX_ROMS`) there is no picker and the same system from several roots is one merged list, sorted by name. The Loading screen shows which card a game is on. `REDUX_ROMS` overrides the roots (one path, or several joined with `:`).
 
 ```
 Game Room > Systems > Game Boy Advance                              BAT 87% CHG WIFI 12:34

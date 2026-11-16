@@ -306,6 +306,52 @@ int main(void) {
         expect(n64 >= 0 && romscan_roms(n64) == 1, "TF2-only system is listed");
         expect(p >= 0 && romscan_roms(p) == 2, "PS (TF1) and PSX (TF2) merge into PS1");
         unsetenv("REDUX_ROMS");
+
+        /* Card picker (Dale 2026-11-16): with both cards, Game Room asks TF1 or TF2 first and each
+           list holds one card's games; a resume comes back to the same card. */
+        romscan_set_card_roots("/tmp/redux-tf1", "/tmp/redux-tf2");
+        expect(romscan_card_count() == 2, "both fixture cards hold systems");
+        ui_init();
+        press(LB_A);                                         /* Main > Game Room */
+        expect(ui_screen() == SCREEN_CARDS, "Game Room opens the card picker");
+        {
+            char dump[8192];
+            ui_draw();
+            grid_dump(dump, sizeof dump);
+            expect(strstr(dump, "TF1") && strstr(dump, "TF2"), "picker lists TF1 and TF2");
+        }
+        down(1); press(LB_A);                                /* TF2 */
+        expect(ui_screen() == SCREEN_SYSTEMS && romscan_card() == 1, "TF2 opens its systems");
+        g = romscan_index_of("GBA");
+        expect(romscan_systems() == 3 && romscan_roms(g) == 1
+               && !strcmp(romscan_rom_name(g, 0), "Golden Sun"), "TF2 only: GBA has its one game");
+        {
+            char dump[8192];
+            ui_draw();
+            grid_dump(dump, sizeof dump);
+            expect(strstr(dump, "Game Room > TF2 > Systems") != NULL, "title names the card");
+        }
+        press(LB_B);
+        expect(ui_screen() == SCREEN_CARDS, "B from Systems goes back to the picker");
+        press(LB_A);                                         /* TF1 (cursor back on row 0) */
+        expect(romscan_card() == 0 && romscan_roms(romscan_index_of("GBA")) == 2,
+               "TF1: Advance Wars + Metroid Fusion");
+        {   /* resume into TF1's GBA list */
+            int gi = romscan_index_of("GBA");
+            int rows_down = 0;
+            for (int s2 = 0; s2 < romscan_systems(); s2++) if (s2 == gi) rows_down = s2;
+            down(rows_down); press(LB_A);
+            expect(ui_screen() == SCREEN_ROMS, "TF1 GBA list open");
+            down(1); press(LB_A);                            /* launch Metroid Fusion: saves resume */
+            ui_init();
+            expect(ui_screen() == SCREEN_ROMS && romscan_card() == 0 && ui_list_selected() == 1,
+                   "resume returns to TF1's GBA list on the same row");
+            press(LB_B); press(LB_B);
+            expect(ui_screen() == SCREEN_CARDS, "B, B from the resumed list reaches the picker");
+        }
+        romscan_set_card_roots(NULL, NULL);
+        expect(romscan_card_count() == 0, "no card roots: no picker");
+        remove(UI_RESUME_PATH);
     }
 
     /* Stock folders added 2026-11-12: each key has a RetroArch core, and real folders are listed by name. */
