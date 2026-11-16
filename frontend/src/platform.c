@@ -46,6 +46,11 @@ int platform_thermal_zones(eng_zone_t *z, int max) {
     return n;
 }
 
+static int fake_profile;
+int platform_eng_profile_state(void) { return fake_profile; }
+int platform_eng_profile_save(void)  { fake_profile = 1; return 0; }
+int platform_eng_profile_clear(void) { fake_profile = 0; return 0; }
+
 static char fixed_clock[6];
 
 void platform_set_fixed_clock(const char *hhmm) {

@@ -1,5 +1,7 @@
 /* Stock platform: reads real sysfs on the RG34XXSP. UI never touches /sys. */
 #include "platform.h"
+#include "engprofile.h"
+#include "govrestore.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,6 +60,13 @@ int platform_cpu_online(int cpu) {
 }
 int platform_cpu_info(eng_cpu_t *c) { return engread_cpu(c); }
 int platform_thermal_zones(eng_zone_t *z, int max) { return engread_thermal(z, max); }
+int platform_eng_profile_state(void) { return (int)engprofile_state(); }
+int platform_eng_profile_save(void) {
+    int rc = engprofile_save();
+    if (rc == 0) govrestore_rebaseline();   /* games then return to the saved policy */
+    return rc;
+}
+int platform_eng_profile_clear(void) { return engprofile_clear(); }
 void platform_clock(char *buf, int buflen) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);

@@ -22,6 +22,11 @@ int  platform_cpu_online(int cpu);
 int  platform_cpu_info(eng_cpu_t *c);                 /* 0 ok, -1 governor unreadable */
 int  platform_thermal_zones(eng_zone_t *z, int max);  /* count */
 
+/* Engineering profile (F5 step 2). State: 0 none, 1 saved, 2 set aside after failed starts. */
+int  platform_eng_profile_state(void);
+int  platform_eng_profile_save(void);    /* 0 ok */
+int  platform_eng_profile_clear(void);   /* 0 ok */
+
 /* Clock as "HH:MM". Real local time unless a fixed value was set (tests). */
 void platform_clock(char *buf, int buflen);
 void platform_set_fixed_clock(const char *hhmm);
