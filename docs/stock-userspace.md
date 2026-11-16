@@ -144,6 +144,9 @@ pauses audio first, beyond each app's own handling.
 
 - **The stock launcher can format the ROM card.** If `mount -t vfat /dev/mmcblk0p1` fails (a dirty or
   unsupported FS), `loadapp.sh` runs `mkfs.vfat` on it. The same applies to UDISK with `mkfs.ext4`.
+  Deep Research (2026-11-15, [note](../notes/2026-11-16-claude-message-research-kq-deepb.md)): it formats the
+  Roms partition as **p8 if it exists**, else p1, and also when the mount doesn't show in `/proc/mounts`. Redux
+  must never leave p1, p7 or p8 unmountable on a card stock may boot.
   Since it only ever mounts p1 as `vfat`, the stock `Roms` partition is probably FAT32, not the exFAT
   listed in [stock-boot-chain.md](stock-boot-chain.md). Not verified, because p1 was not read. Phase 2 must never do this. Mount failures should fall back to read-only plus a warning.
 - **`resize2fs` on appfs every boot** (flag-file creation is commented out in `launcher.sh`). It slows

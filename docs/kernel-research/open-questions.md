@@ -27,10 +27,10 @@
     16400 KiB (read-only, on Dale's `RG34XXSP.img`).
 12. Which DTB does the stock 4.9 kernel actually use: the one in `boot.img` (stock-boot-chain.md) or the one in
     the U-Boot package (mporrato)? Compare both with `/sys/firmware/fdt` on a running device.
-13. Backlight clamp: read `disp_lcd_set_bright`, `disp_lcd_bright_get_adjust_value` and the curve init in
-    the V1.0.6 kernel (stock-kernel-ghidra.md) to find why values above ~20 are capped and what the true maximum is.
-14. Extract the kernel's kallsyms table (base-relative, 4.9) to name all functions; either `vmlinux-to-elf` (needs
-    Dale's OK to install) or a stdlib reader (first attempt didn't locate the table).
+13. ~~Backlight clamp~~ **Answered 2026-11-14** (stock-kernel-ghidra.md, "Brightness"): `axp2202-battery/brightness`
+    is a 0–100 storage slot that drives nothing; the backlight is `/dev/disp` ioctl `0x102`, 0–255, no curve.
+14. ~~kallsyms~~ **Answered 2026-11-15** (stock-kernel-ghidra.md, "Kallsyms"): stdlib reader, 90,760 symbols,
+    all 36,849 Ghidra functions named; `vmlinux-to-elf` 1.4.0 (Dale, 2026-11-15) gives the identical list.
 15. `docs/kernel-strategy.md`: its risk line "DRAM type for mainline u-boot" can now point at
    ROCKNIX's two defconfigs.
 
