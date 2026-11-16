@@ -8,7 +8,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 | Kernel | 0 dissect stock · 1 stock-kernel tweaks | done · boots on device |
 | Kernel | 2 RAM-resident / mainline | plan only; direction is Dale's call (below) |
 | Frontend | F0, F1, F2 | signed off (F2: 2026-11-12) |
-| Frontend | **F3 settings parity** | built (font picker, Reset All); **sign-off waits on the device session** |
+| Frontend | **F3 settings parity** | device-checked 2026-11-16 (#185 10-12 PASS); **waiting on Dale's SIGN F3** |
 
 ## Handoff (2026-11-14 (3), Claude): start here in a new chat
 - **Read [handoff-2026-11-14-3.md](handoff-2026-11-14-3.md) next**, then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project, started from the desktop app on DLN-DALEW2.
@@ -18,22 +18,24 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - Owner: the Redux Project chat named in the newest handoff; every other chat is advisory. Grok is suspended; every queue item is Claude's.
 
 ## Waiting on Dale
-- **Device session**: [#185](https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux/issues/185), the one test list (dev `f6ead4c`). Starts on TESTING.
+- **SIGN F3**: #185 checks 10-12 passed on `5d7dea6`, Stage 1 had no failure ([hw-result](2026-11-16-dale-hw-result-185.md)).
+- **Card Scripts decision A** PR (hard-rule rewording): Dale merges.
 - **Phase 2 direction** (before Phase 2, not urgent for Beta): the H700 Kernel Research Ubuntu 24.04 image with update rollback, or `docs/ram-system-design.md`'s read-only squashfs in RAM.
 
 ## Queue (in order; all Claude unless marked)
-1. **Device session #185** (Dale): closes F3 and checks everything merged since 11-13: installer + guard, OpenBOR, Video Player log (12a), Apps resume, vsync (15), and the older open items: brightness backlight + M on Display (9a), port buttons (9c, likely not a bug), Ebook M (9e), TF2, Card Scripts, Boot Screen restore, Wi-Fi, buttons, Screen Timeout, the kernel-research reads (13).
-2. **Fix what #185 fails**, then F3 sign-off (Dale: SIGN F3).
+1. **Card Scripts A** (Dale 2026-11-16 11:51): remove the switch; card `Roms/PORTS/*.sh` always listed and run; hard rule reworded. PR for Dale.
+2. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons during playback; Game Room X / Favorites; Wolfenstein 3D Y and X; one entry per game on both cards (or show the card); no ROM-scan screen after an app returns; clear `/tmp/.next` at start; `amixer` output out of `redux.log`. Then a short device re-check.
 3. **F4 power and lid**, then **F5 Engineering Mode** (Dale A, 2026-11-14 13:37: phase order kept).
 4. **Installer B**: TF2 package with hold-A (after A is device-checked). Tagged Beta releases (`v0.5-beta.N`) once Beta is near.
 5. Extras installer (#149): REFUSED path and a fresh install still not run on the device.
-- Backlog: **DOS Mode** (Dale defines the layout), ASCII art maker, PC link (Dale-gated security item; ROM copy only in [Xroot Mode]), Expert Mode and its shortcut, chiptune composer (after 1.0, separate GPL-3 program), Wi-Fi idle scanning, features.ini, ZRAM (v1.x), the Phase 2 mainline track. L3/R3 stay unmapped.
+- Backlog: **custom boot image picked on the device** (Dale, 2026-11-16), **DOS Mode** (Dale defines the layout), ASCII art maker, PC link (Dale-gated security item; ROM copy only in [Xroot Mode]), Expert Mode and its shortcut, chiptune composer (after 1.0, separate GPL-3 program), Wi-Fi idle scanning, features.ini, ZRAM (v1.x), the Phase 2 mainline track. L3/R3 stay unmapped.
 
 ## Improvement ideas (AGENTS.md "Improvements"; Dale's `IMPROVE` lists them)
 - `precheck.py` prints every C test's own lines; show only the summary and failures (shorter output).
 - `device-test-queue.yml` appends PRs whose not-verified list is just "none" (#194-#197 did); skip those to keep #185 short.
 
 ## Open notes
+- [2026-11-16-dale-hw-result-185.md](2026-11-16-dale-hw-result-185.md): dale → all (device session #185 on `5d7dea6`: results and 8 findings)
 - [2026-11-14-dale-decision-mainline-cpu-table.md](2026-11-14-dale-decision-mainline-cpu-table.md): dale → all (ROCKNIX H700 table on mainline, 1512 MHz only behind Expert Mode)
 - [2026-11-13-dale-message-kernel-research.md](2026-11-13-dale-message-kernel-research.md): dale → all (kernel/Ubuntu research; never use the Knulli guide's `dd` offsets)
 - [2026-11-13-dale-decision-zram-v1x.md](2026-11-13-dale-decision-zram-v1x.md): dale → all (ZRAM in v1.x, after 1.0)
