@@ -264,9 +264,9 @@ Up/Down:Row  A:Edit  L1/R1:Tab  B:Exit  X:Save profile  Y:Remove
 │  Max seen:     54 C   (SoC, while this screen was open)                                │
 │                                                                                        │
 │  Stock battery-temperature protection: off (pmu_bat_temp_enable = 0).                  │
-│  Redux heat guard: not built yet (a later F5 step).                                    │
-│                                                                                        │
-│                                                                                        │
+│  Redux heat guard: CPU >= 75 C for 30 s caps it at 1200 MHz until below 65 C;          │
+│                    >= 90 C for 10 s saves and powers off. Charging is not touched.     │
+│  Guard state:  normal                                                                  │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
@@ -434,7 +434,7 @@ discharge_temp_limit = 60 ; Redux default (typical Li-ion), not stock
 - `lid_action`: `suspend` or `shutdown`.
 - SSH / Samba / WebUI default Off. First enable requires password. No default credentials.
 - Performance profiles are applied at launch and restored on exit.
-- Battery-heat guard is always active (even in Engineering Mode). The battery temperature is a fixed dummy, so it shows "unknown" and any guard can only use the SoC temperature ([F5 plan](../notes/2026-11-16-claude-decision-f5-plan.md), Q1).
+- Battery-heat guard is always active (even in Engineering Mode). The battery temperature is a fixed dummy, so it shows "unknown"; the guard (`redux-heatguard`, F5 step 4, [decision](../notes/2026-11-16-claude-decision-f5-heat-guard.md)) watches the CPU zone: ≥ 75 °C for 30 s caps the CPU at 1200 MHz until below 65 °C, ≥ 90 °C for 10 s saves and powers off. The status bar shows `HOT` while capped.
 - Remap table is external to this file.
 
 ---

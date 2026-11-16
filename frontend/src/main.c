@@ -21,6 +21,7 @@
 #include "govrestore.h"
 #include "engprofile.h"
 #include "lidwatch.h"
+#include "heatguard.h"
 #include "ui.h"
 #ifdef REDUX_PLATFORM_STOCK
 #include "evdev_reader.h"
@@ -155,6 +156,9 @@ int main(int argc, char **argv) {
     launcher_clear_next();
     if (lidwatch_install() == 0) launcher_set_lidwatch(lidwatch_path());   /* F4 step 4 */
     else fprintf(stderr, "warning: could not write %s; no save flush on lid close\n", lidwatch_path());
+    /* F5 step 4: the heat guard. A copy already running (started earlier this boot) keeps going. */
+    if (heatguard_install() != 0 || heatguard_start() != 0)
+        fprintf(stderr, "warning: heat guard not started (%s)\n", heatguard_path());
     if (evdev_open() != 0)
         fprintf(stderr, "warning: could not open /dev/input/event1\n");
 #endif

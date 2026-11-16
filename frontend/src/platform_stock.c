@@ -72,6 +72,12 @@ int platform_eng_set_freq_mhz(int min_mhz, int max_mhz) {
     return eng_write_freq_limits(min_mhz * 1000, max_mhz * 1000);
 }
 int platform_eng_set_core(int cpu, int on) { return eng_write_core_online(cpu, on); }
+int platform_hot(void) {
+    FILE *f = fopen("/tmp/redux-hot", "r");   /* HG_FLAG */
+    if (!f) return 0;
+    fclose(f);
+    return 1;
+}
 void platform_clock(char *buf, int buflen) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
