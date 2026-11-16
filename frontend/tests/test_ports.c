@@ -108,6 +108,30 @@ int main(void) {
         expect(romscan_load_roots_cached(roots, 1, 0) == 0, "damaged cache is ignored");
         remove(cache);
         remove("/tmp/redux-ports-fixture/GBA/New Game.gba");
+    }
+    /* Device crash 2026-11-16 (exit 139 on every return from a game): a fresh process loading a
+       cache of more than 1024 ROMs got a 1024-entry table and wrote past its end. */
+    {
+        const char *big = "/tmp/redux-big-fixture";
+        const char *cache = "/tmp/redux-big-cache";
+        char dir[256], path[300];
+        snprintf(dir, sizeof dir, "%s/GBA", big);
+        mkdir(big, 0755); mkdir(dir, 0755);
+        for (int i = 0; i < 3000; i++) { snprintf(path, sizeof path, "%s/Game %04d.gba", dir, i); touch(path); }
+        remove(cache);
+        romscan_set_cache_path(cache);
+        const char *roots[1] = { big };
+        romscan_load_roots_cached(roots, 1, 1);
+        int n = romscan_roms(romscan_index_of("GBA"));
+        expect(n == 3000, "3000 ROMs scanned");
+        romscan_free();                                     /* a new Redux process */
+        expect(romscan_load_roots_cached(roots, 1, 0) == 1, "3000 ROMs load from the cache");
+        expect(romscan_rom_capacity() >= 3000, "table holds every cached ROM (no overflow)");
+        int g = romscan_index_of("GBA");
+        expect(g >= 0 && romscan_roms(g) == 3000 && strcmp(romscan_rom_name(g, 2999), "Game 2999") == 0,
+               "last cached ROM intact");
+        for (int i = 0; i < 3000; i++) { snprintf(path, sizeof path, "%s/Game %04d.gba", dir, i); remove(path); }
+        rmdir(dir); rmdir(big); remove(cache);
         romscan_set_cache_path(NULL);
     }
     printf("%d failed\n", fails);

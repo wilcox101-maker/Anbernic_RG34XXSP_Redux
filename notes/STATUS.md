@@ -31,6 +31,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - Backlog: **custom boot image picked on the device** (Dale, 2026-11-16), **DOS Mode** (Dale defines the layout; request recorded in `docs/ui-brief.md` §3), ASCII art maker, PC link (Dale-gated security item; ROM copy only in [Xroot Mode]), Expert Mode and its shortcut, chiptune composer (after 1.0, separate GPL-3 program), Wi-Fi idle scanning, features.ini, ZRAM (v1.x), the Phase 2 mainline track. L3/R3 stay unmapped.
 
 ## Improvement ideas (AGENTS.md "Improvements"; Dale's `IMPROVE` lists them)
+- Run the C tests once under AddressSanitizer in CI (it caught the 2026-11-16 cache overflow at once; plain builds passed).
 - AGENTS.md + CLAUDE.md are 6.3 KB (target about 6 KB): move the p1 exceptions' detail into a doc and link it.
 - `precheck.py` prints every C test's own lines; show only the summary and failures (shorter output).
 - `device-test-queue.yml` appends PRs whose not-verified list is just "none" (#194-#197 did); skip those to keep #185 short.
