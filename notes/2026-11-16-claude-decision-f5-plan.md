@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-16
 re: F5 Engineering Mode, phase-start plan (docs/ui-brief.md §6 and F5 row; ROADMAP Beta)
-status: open (plan GO by Dale 15:20; Q1-Q3 open)
+status: open (plan GO by Dale 15:20; Q1-Q3 answered A A A 15:30; closes at F5 sign-off)
 ---
 
 # Decision: F5 plan, and three questions
@@ -42,6 +42,11 @@ battery limits in the brief can't be applied to it. Q1 is reworded for that.
 - **Q2 Thermal trip points.** **A (recommended):** read-only in F5 (raising them is Expert, after
   1.0; the critical trip is never changed). **B:** allow lowering only, behind a second confirm.
 - **Q3 Storage check.** **A (recommended):** check only (`fsck -n`, never repairs). **B:** offer repair.
+
+## Answer
+Dale, 15:30: **A A A.** Q1 A: the heat guard uses the SoC temperature; its limits and the
+top-limit action are chosen by Dale after a measurement on the device (batched with the step 3
+device read). Q2 A: trip points read-only. Q3 A: storage check only (`fsck -n`).
 
 ## Done when
 F5 exit test (ui-brief F5 row): every control reads back the real sysfs value; a deliberately bad
