@@ -33,6 +33,13 @@ int  platform_eng_set_governor(const char *gov);
 int  platform_eng_set_freq_mhz(int min_mhz, int max_mhz);
 int  platform_eng_set_core(int cpu, int on);
 
+/* Engineering read-outs, F5 step 5. Read-only. */
+int  platform_gpu_info(eng_gpu_t *g);                  /* 0 if the GPU devfreq node exists */
+void platform_battery_extra(eng_batt_t *b);
+void platform_mounts(eng_mount_t *m);                  /* ENG_MAX_MOUNTS entries */
+/* which: 0 redux.log, 1 eng-writes.log, 2 dmesg. Last up to max lines, oldest first. */
+int  platform_log_tail(int which, char lines[][ENG_LOG_COLS], int max);
+
 /* 1 while the heat guard has the CPU capped (F5 step 4). */
 int  platform_hot(void);
 

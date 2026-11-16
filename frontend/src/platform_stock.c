@@ -72,6 +72,16 @@ int platform_eng_set_freq_mhz(int min_mhz, int max_mhz) {
     return eng_write_freq_limits(min_mhz * 1000, max_mhz * 1000);
 }
 int platform_eng_set_core(int cpu, int on) { return eng_write_core_online(cpu, on); }
+int platform_gpu_info(eng_gpu_t *g) { return engread_gpu(g); }
+void platform_battery_extra(eng_batt_t *b) { engread_battery(b); }
+void platform_mounts(eng_mount_t *m) { engread_mounts(m); }
+int platform_log_tail(int which, char lines[][ENG_LOG_COLS], int max) {
+    if (which == 0) return engread_tail("/mnt/vendor/redux/redux.log", lines, max);
+    if (which == 1) return engread_tail("/mnt/data/redux/eng-writes.log", lines, max);
+    /* dmesg: the kernel ring buffer, read only. Its output goes to /tmp (RAM), never the cards. */
+    if (system("dmesg > /tmp/redux-dmesg.txt 2>&1") == -1) return 0;
+    return engread_tail("/tmp/redux-dmesg.txt", lines, max);
+}
 int platform_hot(void) {
     FILE *f = fopen("/tmp/redux-hot", "r");   /* HG_FLAG */
     if (!f) return 0;

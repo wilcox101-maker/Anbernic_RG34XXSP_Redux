@@ -81,6 +81,43 @@ int platform_eng_profile_clear(void) { fake_profile = 0; return 0; }
 
 int platform_hot(void) { return 0; }
 
+/* F5 step 5 fakes: Dale's unit (hw-result 2026-11-16). */
+int platform_gpu_info(eng_gpu_t *g) {
+    static const int f[] = { 420, 456, 504, 552, 600, 648 };
+    memset(g, 0, sizeof *g);
+    g->present = 1;
+    snprintf(g->governor, sizeof g->governor, "simple_ondemand");
+    g->cur_mhz = 420; g->min_mhz = 0; g->max_mhz = 0;
+    g->n_freqs = (int)(sizeof f / sizeof f[0]);
+    memcpy(g->freqs_mhz, f, sizeof f);
+    return 0;
+}
+void platform_battery_extra(eng_batt_t *b) {
+    b->time_to_empty_s = 15120; b->time_to_full_s = 3600;
+    snprintf(b->health, sizeof b->health, "Good");
+}
+void platform_mounts(eng_mount_t *m) {
+    static const struct { const char *mnt, *dev, *fs; int ro; long long size, free; } f[ENG_MAX_MOUNTS] = {
+        { "/", "/dev/mmcblk0p5", "ext4", 0, 6900, 3100 }, { "/mnt/vendor", "/dev/mmcblk0p6", "ext4", 0, 3900, 3600 },
+        { "/mnt/data", "/dev/mmcblk0p7", "ext4", 0, 2400, 2300 }, { "/mnt/mmc", "/dev/mmcblk0p1", "vfat", 0, 45000, 12000 },
+        { "/mnt/sdcard", "/dev/mmcblk1p1", "vfat", 0, 119000, 40000 },
+    };
+    for (int i = 0; i < ENG_MAX_MOUNTS; i++) {
+        memset(&m[i], 0, sizeof m[i]);
+        snprintf(m[i].mount, sizeof m[i].mount, "%s", f[i].mnt);
+        snprintf(m[i].dev, sizeof m[i].dev, "%s", f[i].dev);
+        snprintf(m[i].fstype, sizeof m[i].fstype, "%s", f[i].fs);
+        m[i].found = 1; m[i].ro = f[i].ro; m[i].size_mb = f[i].size; m[i].free_mb = f[i].free;
+    }
+}
+int platform_log_tail(int which, char lines[][ENG_LOG_COLS], int max) {
+    static const char *fake[3] = { "redux: started (desktop build)", "2026-11-16 15:47:40 profile.save - -> schedutil 480000-1512000 ok",
+                                   "[    0.000000] Booting Linux (desktop fake)" };
+    if (max < 1 || which < 0 || which > 2) return 0;
+    snprintf(lines[0], ENG_LOG_COLS, "%s", fake[which]);
+    return 1;
+}
+
 static char fixed_clock[6];
 
 void platform_set_fixed_clock(const char *hhmm) {

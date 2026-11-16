@@ -155,7 +155,7 @@ int main(void) {
     ui_button(LB_A, 0, 4200);
     expect(ui_eng_tab() == ENG_CPU, "Engineering opens on the CPU tab");
     press(LB_R1);
-    expect(ui_eng_tab() == ENG_BATTERY, "R1 moves to Battery");
+    expect(ui_eng_tab() == ENG_GPU, "R1 moves to GPU");
     press(LB_LEFT); press(LB_LEFT);
     expect(ui_eng_tab() == ENG_SYSTEM, "Left wraps from CPU to System");
     press(LB_X);
