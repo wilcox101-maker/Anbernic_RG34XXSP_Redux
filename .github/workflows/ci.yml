@@ -55,6 +55,8 @@ jobs:
         run: ./build/test_powerkeys
       - name: Governor restore tests
         run: ./build/test_govrestore
+      - name: Lid watcher tests
+        run: cd build && ./test_lidwatch
       - name: Ports tests
         run: ./build/test_ports
       - name: Boot Screen manager tests (temp folder, no device)
@@ -145,6 +147,7 @@ jobs:
           ./build-arm64/test_screentimeout
           ./build-arm64/test_powerkeys
           ./build-arm64/test_govrestore
+          (cd build-arm64 && ./test_lidwatch)
           ./build-arm64/test_bootscreen
           ./build-arm64/test_vsync
       - name: Check it is an aarch64 ELF

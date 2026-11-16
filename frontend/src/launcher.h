@@ -46,4 +46,7 @@ int launcher_start_video(const char *bin);
    Used once, then cleared. NULL or "" clears it. */
 void launcher_set_preload(const char *env);
 
+/* Path of redux-lidwatch, run beside every RetroArch launch; NULL or "" = none (F4 step 4). */
+void launcher_set_lidwatch(const char *path);
+
 #endif

@@ -42,6 +42,18 @@ add_custom_command(
     DEPENDS ${REDUX_VSYNC_DEP} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
     COMMENT "Embedding the vsync library")
 
+# Lid watcher (F4 step 4): a small program run beside RetroArch games. Built for the same machine
+# as dmenu.bin and embedded in it; Redux writes it to /tmp at start.
+add_executable(redux_lidwatch lidwatch/redux_lidwatch.c)
+target_compile_options(redux_lidwatch PRIVATE -Wall -Wextra)
+set(REDUX_LIDWATCH_BLOB ${CMAKE_CURRENT_BINARY_DIR}/lidwatch_blob.c)
+add_custom_command(
+    OUTPUT ${REDUX_LIDWATCH_BLOB}
+    COMMAND ${CMAKE_COMMAND} -DIN=$<TARGET_FILE:redux_lidwatch> -DOUT=${REDUX_LIDWATCH_BLOB}
+            -DNAME=redux_lidwatch_bin -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    DEPENDS redux_lidwatch ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    COMMENT "Embedding the lid watcher")
+
 add_executable(rg34xxsp-redux
     src/main.c
     src/grid.c
@@ -58,6 +70,8 @@ add_executable(rg34xxsp-redux
     src/power.c
     src/powerkeys.c
     src/govrestore.c
+    src/lidwatch.c
+    ${REDUX_LIDWATCH_BLOB}
     src/volume.c
     src/brightness.c
     src/screentimeout.c
@@ -147,6 +161,10 @@ target_include_directories(test_powerkeys PRIVATE src)
 # CPU governor restore against a fake cpufreq folder (F4 step 2): ./test_govrestore.
 add_executable(test_govrestore tests/test_govrestore.c src/govrestore.c)
 target_include_directories(test_govrestore PRIVATE src)
+
+# Lid watcher against a file of events and a local UDP socket (F4 step 4): ./test_lidwatch.
+add_executable(test_lidwatch tests/test_lidwatch.c src/lidwatch.c ${REDUX_LIDWATCH_BLOB})
+target_include_directories(test_lidwatch PRIVATE src)
 
 add_executable(test_brightness tests/test_brightness.c src/brightness.c)
 target_include_directories(test_brightness PRIVATE src)

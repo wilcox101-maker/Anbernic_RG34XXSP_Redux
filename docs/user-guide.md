@@ -96,7 +96,8 @@ way stock does; Power wakes it. Games and stock apps keep their own behaviour.
 
 After 1 minute with no button press in the Redux menu, the screen dims to about a third of your
 brightness; any button brings it back (the press still counts). Closing the lid in the menu sleeps the
-way stock does; open it and press Power to wake. **[not yet on device]**
+way stock does; open it and press Power to wake. In a RetroArch game, closing the lid first makes
+RetroArch write the game's in-game save to the card, then the handheld sleeps as stock does. **[not yet on device]**
 
 ### Settings > System
 | Row | Does |
