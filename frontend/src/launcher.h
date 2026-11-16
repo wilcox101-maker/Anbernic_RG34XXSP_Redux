@@ -11,7 +11,7 @@ typedef enum {
     LAUNCH_DGE,      /* standalone .dge: core = binary path, rom optional */
     LAUNCH_PCSX,
     LAUNCH_PORTMASTER,
-    LAUNCH_SCRIPT,   /* a .sh from the card, only with the Card Scripts switch On: core = script path */
+    LAUNCH_SCRIPT,   /* a .sh from the card's Roms/PORTS: core = script path */
     LAUNCH_OPENBOR,  /* as stock dmenu.bin: openbor.sh "<pak>" (seeds cfg/controls), then
                         cd deep/openBOR && ./OpenBOR.dge "<pak>" (decision 2026-11-14, option A) */
     LAUNCH_COUNT

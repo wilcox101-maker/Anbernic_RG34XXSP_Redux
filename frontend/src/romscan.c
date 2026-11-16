@@ -1,7 +1,6 @@
 #include "romscan.h"
 #include "systems.h"
 #include "ports.h"
-#include "cardscripts.h"
 #include <ctype.h>
 #include <dirent.h>
 #include <stdio.h>
@@ -19,7 +18,7 @@ typedef struct {
     char name[ROM_NAME_MAX];
     char path[PATH_MAX_R];
     const char *core;   /* per-entry RetroArch core (Ports); NULL = the system's own */
-    int script;         /* 1 = a card .sh, listed only with the Card Scripts switch On */
+    int script;         /* 1 = a card .sh from Roms/PORTS (always listed, Dale A 2026-11-16) */
 } rom_t;
 
 typedef struct {
@@ -178,8 +177,8 @@ static int scan_dir(const char *dirpath, int begin) {
     return n;
 }
 
-/* PORTS: only rows from the known-ports table whose data file exists. Nothing in the
-   folder is executed or listed by itself (card scripts need the opt-in switch, part 2). */
+/* PORTS: rows from the known-ports table whose data file exists, plus every other top-level
+   .sh in the folder (below; always, Dale A 2026-11-16). */
 static int scan_ports(const char *dirpath, int begin) {
     int n = 0;
     for (int i = 0; i < ports_count(); i++) {
@@ -196,9 +195,9 @@ static int scan_ports(const char *dirpath, int begin) {
         r->script = 0;
         n++;
     }
-    /* Card Scripts On (explicit opt-in): also every other top-level .sh. A script named like a
-       known port is skipped, the table already starts that port without running the script. */
-    if (cardscripts_enabled()) {
+    /* Every other top-level .sh (third-party ports, PortMaster), always (Dale A, 2026-11-16). A
+       script named like a known port is skipped: the table already starts that port. */
+    {
         DIR *d = opendir(dirpath);
         struct dirent *de;
         while (d && (de = readdir(d)) != NULL) {

@@ -6,7 +6,6 @@
 #include "romscan.h"
 #include "launcher.h"
 #include "ports.h"
-#include "cardscripts.h"
 
 static int fails;
 static void expect(int ok, const char *what) {
@@ -28,9 +27,6 @@ int main(void) {
     touch("/tmp/redux-ports-fixture/PORTS/Quake.sh");
     touch("/tmp/redux-ports-fixture/PORTS/Unknown Port.sh");
 
-    cardscripts_set_path("/tmp/redux-ports-cardscripts");
-    cardscripts_set(0);
-    expect(!cardscripts_enabled(), "Card Scripts default Off");
     expect(ports_count() == 11, "table has the 11 stock ports");
     romscan_load(R);
     int p = -1;
@@ -38,7 +34,7 @@ int main(void) {
         if (strcmp(romscan_key(i), "PORTS") == 0) p = i;
     expect(p >= 0, "PORTS folder becomes a system");
     expect(p >= 0 && strcmp(romscan_title(p), "Ports") == 0, "titled Ports");
-    expect(p >= 0 && romscan_roms(p) == 2, "only the two known ports with data are listed");
+    expect(p >= 0 && romscan_roms(p) == 3, "the two known ports with data + one unknown script");
     expect(p >= 0 && strcmp(romscan_rom_name(p, 0), "Cannonball") == 0
                   && strcmp(romscan_rom_name(p, 1), "Quake") == 0, "sorted by name");
     expect(p >= 0 && strcmp(romscan_rom_core(p, 1), "tyrquake_libretro.so") == 0, "Quake carries its own core");
@@ -59,14 +55,8 @@ int main(void) {
            "launches through RA_launch.sh with the port's core and data file");
     remove(next);
 
-    /* Part 2: Card Scripts On adds other .sh files; a script named like a known port is not added. */
-    cardscripts_set(1);
-    expect(cardscripts_enabled(), "Card Scripts can be turned on");
-    romscan_load(R);
-    p = -1;
-    for (int i = 0; i < romscan_systems(); i++)
-        if (strcmp(romscan_key(i), "PORTS") == 0) p = i;
-    expect(p >= 0 && romscan_roms(p) == 3, "On: two known ports + one unknown script");
+    /* Other .sh files are always listed (Dale A, 2026-11-16); a script named like a known port
+       is not added. */
     int u = -1;
     for (int i = 0; p >= 0 && i < romscan_roms(p); i++)
         if (strcmp(romscan_rom_name(p, i), "Unknown Port") == 0) u = i;
@@ -83,15 +73,6 @@ int main(void) {
     expect(strcmp(line, "cd '/tmp/redux-ports-fixture/PORTS' && AUDIODEV=hw:2,0 /bin/bash ./'Unknown Port.sh'\n") == 0,
            "a card script runs with bash from its own folder");
     remove(next);
-    cardscripts_set(0);
-    romscan_load(R);
-    expect(romscan_roms(romscan_index_of("PORTS")) == 2, "Off again: scripts hidden");
-    {
-        FILE *f = fopen("/tmp/redux-ports-cardscripts", "w");
-        if (f) { fputs("yes\n", f); fclose(f); }
-        expect(!cardscripts_enabled(), "a damaged setting file means Off");
-        remove("/tmp/redux-ports-cardscripts");
-    }
     printf("%d failed\n", fails);
     return fails ? 1 : 0;
 }

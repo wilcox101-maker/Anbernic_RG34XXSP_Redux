@@ -117,7 +117,7 @@ Dale's device yet.**
 ### In progress (merged, waiting for a device check or a fix)
 - **Video Player** and **OpenBOR**: both crash back to the menu; logging added to find the cause
 - **Brightness** (Settings > Display): reworked after the first device test, re-check due
-- Screen Timeout (Off, 1–30 min), TF2 ROM scan, Ports Card Scripts switch (default Off),
+- Screen Timeout (Off, 1–30 min), TF2 ROM scan, third-party Ports scripts (always listed),
   returning to the Apps list after an app, File Manager on Main only, Ebook Reader quit button,
   in-game buttons in Ports (Y, X, Start, Select)
 - Boot Screen **restore** (install is checked; restore not yet)
