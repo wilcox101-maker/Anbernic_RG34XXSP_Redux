@@ -30,6 +30,16 @@ int romscan_init_cached(void);
 int romscan_load_roots_cached(const char *const *roots, int nroots, int scan_if_stale);
 void romscan_set_cache_path(const char *path);
 
+/* Card picker, like stock (Dale 2026-11-16). romscan_card_count: how many of TF1/TF2 hold at least
+   one system folder (0 with REDUX_ROMS set). romscan_use_card(0 = TF1, 1 = TF2, scan_if_stale):
+   load that card only, from its own cache when fresh; returns 1 = from cache, 0 = scanned (or not
+   loaded when scan_if_stale is 0), -1 = no such card. romscan_card: -1 = merged/all, else 0 or 1.
+   Desktop has no card roots unless a test sets them. */
+int romscan_card_count(void);
+int romscan_use_card(int card, int scan_if_stale);
+int romscan_card(void);
+void romscan_set_card_roots(const char *tf1, const char *tf2);
+
 int romscan_systems(void);
 /* Folder key for systems_lookup (may differ from the directory name via an alias). */
 const char *romscan_key(int sys);

@@ -294,7 +294,8 @@ void ui_init(void) {
     brightness_load();   /* no saved file: leave the hardware level as stock set it */
     screentimeout_load();
     font_load();
-    if (!romscan_init_cached()) {   /* cache hit (no card changed): no scan, no wait screen */
+    /* Two cards: nothing to scan yet, Game Room asks which card first (a resume loads its card). */
+    if (romscan_card_count() < 2 && !romscan_init_cached()) {   /* cache hit: no wait screen */
         ui_busy("Scanning for ROMs", NULL);
         romscan_init();
     }
@@ -317,6 +318,7 @@ static int list_count(void) {
     switch (screen) {
     case SCREEN_MAIN:     return COUNT(main_items);
     case SCREEN_SYSTEMS:  return romscan_systems();
+    case SCREEN_CARDS:    return 2;
     case SCREEN_ROMS:     return romscan_roms(sys_index);
     case SCREEN_SETTINGS: return COUNT(settings_items);
     case SCREEN_UI_COLORS: return N_PRESETS;
@@ -365,7 +367,7 @@ static void resume_save(void) {
     if (screen == SCREEN_APPS)
         fprintf(f, "apps\n-\n%d\n%d\n", selected, scroll);
     else
-        fprintf(f, "roms\n%s\n%d\n%d\n", romscan_key(sys_index), selected, scroll);
+        fprintf(f, "roms\n%s\n%d\n%d\n%d\n", romscan_key(sys_index), selected, scroll, romscan_card());
     fclose(f);
 }
 
@@ -374,11 +376,12 @@ static void resume_clear(void) { remove(UI_RESUME_PATH); }
 static int resume_load(void) {
     FILE *f = fopen(UI_RESUME_PATH, "r");
     if (!f) return 0;
-    char screen_tok[32], key[64], rowb[32], scrb[32];
+    char screen_tok[32], key[64], rowb[32], scrb[32], cardb[32] = "-1";
     int got = fgets(screen_tok, sizeof screen_tok, f)
            && fgets(key, sizeof key, f)
            && fgets(rowb, sizeof rowb, f)
            && fgets(scrb, sizeof scrb, f);
+    if (got && !fgets(cardb, sizeof cardb, f)) snprintf(cardb, sizeof cardb, "-1");   /* older file */
     fclose(f);
     remove(UI_RESUME_PATH);
     if (!got) return 0;
@@ -397,6 +400,17 @@ static int resume_load(void) {
         return 1;
     }
     if (strcmp(screen_tok, "roms") != 0 || !key[0]) return 0;
+    int card = -1;
+    sscanf(cardb, "%d", &card);
+    if (card >= 0 && romscan_card_count() == 2) {
+        if (romscan_use_card(card, 0) != 1) {
+            ui_busy("Scanning for ROMs", card ? "TF2" : "TF1");
+            romscan_use_card(card, 1);
+        }
+    } else {
+        card = -1;
+        if (romscan_card() >= 0 || romscan_systems() == 0) romscan_init();
+    }
     int sys = -1;
     for (int i = 0; i < romscan_systems(); i++)
         if (strcmp(romscan_key(i), key) == 0) { sys = i; break; }
@@ -406,6 +420,7 @@ static int resume_load(void) {
     sscanf(scrb, "%d", &scr);
     /* Same path as Game Room → Systems → ROM list, so B walks back through both. */
     push_back(SCREEN_MAIN);
+    if (card >= 0) push_back(SCREEN_CARDS);
     push_back(SCREEN_SYSTEMS);
     screen = SCREEN_ROMS;
     sys_index = sys;
@@ -665,7 +680,16 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     }
 
     if (btn == LB_A && screen == SCREEN_MAIN) {
-        if (selected == MAIN_GAME_ROOM)   go(SCREEN_SYSTEMS);
+        if (selected == MAIN_GAME_ROOM) {
+            if (romscan_card_count() == 2) go(SCREEN_CARDS);   /* like stock: pick the card */
+            else {
+                if (romscan_card() >= 0 || romscan_systems() == 0) {   /* a card went away */
+                    ui_busy("Scanning for ROMs", NULL);
+                    romscan_init();
+                }
+                go(SCREEN_SYSTEMS);
+            }
+        }
         if (selected == MAIN_INTERNET)    go(SCREEN_INTERNET);
         if (selected == MAIN_SETTINGS)    go(SCREEN_SETTINGS);
         if (selected == MAIN_ENGINEERING) go(SCREEN_ENG_CONFIRM);
@@ -691,6 +715,14 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         theme_apply(selected);
         theme_save();
         dirty = 1;
+        return;
+    }
+    if (btn == LB_A && screen == SCREEN_CARDS) {
+        if (romscan_use_card(selected, 0) != 1) {   /* cache miss: scan this card only */
+            ui_busy("Scanning for ROMs", selected ? "TF2" : "TF1");
+            romscan_use_card(selected, 1);
+        }
+        go(SCREEN_SYSTEMS);
         return;
     }
     if (btn == LB_A && screen == SCREEN_SYSTEMS) {
@@ -941,8 +973,18 @@ void ui_draw(void) {
             body(2 + window, "   ...");
         }
         break;
+    case SCREEN_CARDS: {
+        static const char *const cards[2] = {
+            "TF1   Roms card      (" ROMSCAN_TF1 ")",
+            "TF2   Second card    (" ROMSCAN_TF2 ")" };
+        frame("Game Room > Card", "A:Enter  B:Back", 1, 0);
+        list(0, cards, 2);
+        break;
+    }
     case SCREEN_SYSTEMS:
-        frame("Game Room > Systems", "A:Enter  B:Back  Left/Right:Page", 1, 0);
+        frame(romscan_card() == 0 ? "Game Room > TF1 > Systems"
+              : romscan_card() == 1 ? "Game Room > TF2 > Systems" : "Game Room > Systems",
+              "A:Enter  B:Back  Left/Right:Page", 1, 0);
         if (romscan_systems() == 0) body(0, "   (no ROMs)");
         else list_scanned(0, 1);
         break;

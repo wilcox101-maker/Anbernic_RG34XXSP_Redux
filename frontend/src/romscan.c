@@ -299,6 +299,49 @@ static const char *g_cache;   /* desktop: off unless a test sets it */
 #endif
 void romscan_set_cache_path(const char *path) { g_cache = path; }
 
+/* Card picker (Dale, 2026-11-16: "Card selection is preferred like stock OS offers").
+   g_card -1 = all roots merged (one card, REDUX_ROMS, desktop); 0 = TF1; 1 = TF2.
+   Each card has its own cache file (<cache>.tf1 / .tf2). */
+#ifdef REDUX_PLATFORM_STOCK
+static const char *g_card_root[2] = { ROMSCAN_TF1, ROMSCAN_TF2 };
+#else
+static const char *g_card_root[2];   /* desktop: no cards unless a test sets them */
+#endif
+static int g_card = -1;
+void romscan_set_card_roots(const char *tf1, const char *tf2) { g_card_root[0] = tf1; g_card_root[1] = tf2; }
+
+static char g_cache_file[PATH_MAX_R];
+static const char *cache_file(void) {
+    if (!g_cache) return NULL;
+    if (g_card < 0) return g_cache;
+    snprintf(g_cache_file, sizeof g_cache_file, "%s.tf%d", g_cache, g_card + 1);
+    return g_cache_file;
+}
+
+/* 1 if this root holds at least one system folder (a cheap readdir, no ROM scan). */
+static int root_has_systems(const char *root) {
+    if (!root || !root[0]) return 0;
+    DIR *d = opendir(root);
+    if (!d) return 0;
+    struct dirent *de;
+    int found = 0;
+    while (!found && (de = readdir(d)) != NULL) {
+        if (de->d_name[0] == '.' || !key_for_folder(de->d_name)) continue;
+        char path[PATH_MAX_R];
+        if (join2(path, sizeof path, root, de->d_name) == 0 && is_dir(path)) found = 1;
+    }
+    closedir(d);
+    return found;
+}
+
+int romscan_card_count(void) {
+    const char *env = getenv("REDUX_ROMS");
+    if (env && env[0]) return 0;
+    return root_has_systems(g_card_root[0]) + root_has_systems(g_card_root[1]);
+}
+
+int romscan_card(void) { return g_card; }
+
 static int sig_add(char *sig, size_t n, size_t *len, const char *path) {
     struct stat st;
     if (stat(path, &st) != 0) return 0;
@@ -337,9 +380,10 @@ static int port_index(const char *core) {
 }
 
 static void cache_write(const char *sig, long siglen) {
-    if (!g_cache || siglen < 0) return;
+    const char *file = cache_file();
+    if (!file || siglen < 0) return;
     char tmp[PATH_MAX_R];
-    if (snprintf(tmp, sizeof tmp, "%s.tmp", g_cache) >= (int)sizeof tmp) return;
+    if (snprintf(tmp, sizeof tmp, "%s.tmp", file) >= (int)sizeof tmp) return;
     FILE *f = fopen(tmp, "wb");
     if (!f) return;
     int ok = fputs(CACHE_MAGIC, f) >= 0
@@ -356,13 +400,14 @@ static void cache_write(const char *sig, long siglen) {
           && fwrite(&g_rom[i].script, sizeof g_rom[i].script, 1, f) == 1;
     }
     if (fclose(f) != 0) ok = 0;
-    if (ok) rename(tmp, g_cache); else remove(tmp);
+    if (ok) rename(tmp, file); else remove(tmp);
 }
 
 /* Loads the cache if its signature matches the cards as they are now. 1 = loaded. */
 static int cache_read(const char *sig, long siglen) {
-    if (!g_cache || siglen < 0) return 0;
-    FILE *f = fopen(g_cache, "rb");
+    const char *file = cache_file();
+    if (!file || siglen < 0) return 0;
+    FILE *f = fopen(file, "rb");
     if (!f) return 0;
     char magic[sizeof CACHE_MAGIC];
     long len = -1;
@@ -429,10 +474,18 @@ static void ensure_fixture(char *out, size_t n) {
 }
 #endif
 
+int romscan_use_card(int card, int scan_if_stale) {
+    if (card < 0 || card > 1 || !g_card_root[card]) return -1;
+    g_card = card;
+    const char *roots[1] = { g_card_root[card] };
+    return romscan_load_roots_cached(roots, 1, scan_if_stale);
+}
+
 int romscan_init_cached(void) {
     const char *env = getenv("REDUX_ROMS");
     if (env && env[0]) return 0;   /* an override root: always scan */
 #ifdef REDUX_PLATFORM_STOCK
+    g_card = -1;
     static const char *const stock_roots[] = { ROMSCAN_TF1, ROMSCAN_TF2 };
     return romscan_load_roots_cached(stock_roots, 2, 0);
 #else
@@ -441,6 +494,7 @@ int romscan_init_cached(void) {
 }
 
 void romscan_init(void) {
+    g_card = -1;
     const char *env = getenv("REDUX_ROMS");
     if (env && env[0]) {
         /* One root, or several separated by ':' (TF1 first). */

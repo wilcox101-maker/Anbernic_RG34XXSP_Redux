@@ -45,8 +45,10 @@ After an app closes you come back to Redux. After an app started from **Apps** y
 Apps list on the same row **[not yet on device]**.
 
 ## Game Room
-`Game Room > Systems` lists every system that has games, from **TF1 and TF2 together** (TF2 merging
-**[not yet on device]**). Left/Right pages through long lists.
+With games on **both cards**, Game Room first asks which card, **TF1** or **TF2**, like stock; each
+card then has its own `Systems` list, so a game on both cards never shows twice **[not yet on
+device]**. With one card, Game Room opens its `Systems` straight away. Left/Right pages through long
+lists.
 
 Pick a system, then a game, then A. A "Loading ROM" screen shows while it starts. Each system uses
 the stock emulator stock uses for it: RetroArch with the stock core for most, and PPSSPP (PSP),
