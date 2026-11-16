@@ -285,6 +285,127 @@ void romscan_load(const char *root) {
     romscan_load_roots(&root, 1);
 }
 
+/* ---- Scan cache (#185 finding 5) ----------------------------------------------------------
+   Redux is a new process after every game or app, so it used to rescan both cards each time.
+   The result is kept in RAM (/tmp, gone at reboot) with a signature: every root and every
+   system folder in it, with its modification time. Adding, removing or renaming a ROM in a
+   system folder, adding a folder, or swapping TF2 changes the signature and forces a scan.
+   (Files added inside a PORTS subfolder alone don't change it; the next reboot rescans.) */
+#define CACHE_MAGIC "RDXRS1\n"
+#ifdef REDUX_PLATFORM_STOCK
+static const char *g_cache = "/tmp/redux-romscan.cache";
+#else
+static const char *g_cache;   /* desktop: off unless a test sets it */
+#endif
+void romscan_set_cache_path(const char *path) { g_cache = path; }
+
+static int sig_add(char *sig, size_t n, size_t *len, const char *path) {
+    struct stat st;
+    if (stat(path, &st) != 0) return 0;
+    int w = snprintf(sig + *len, n - *len, "%s:%ld.%ld;", path, (long)st.st_mtim.tv_sec,
+                     (long)st.st_mtim.tv_nsec);
+    if (w < 0 || (size_t)w >= n - *len) return -1;
+    *len += (size_t)w;
+    return 0;
+}
+
+/* Returns the signature length, or -1 if it didn't fit (then no cache is used). */
+static long signature(const char *const *roots, int nroots, char *sig, size_t n) {
+    size_t len = 0;
+    sig[0] = '\0';
+    for (int r = 0; r < nroots; r++) {
+        if (!roots[r] || !roots[r][0]) continue;
+        if (sig_add(sig, n, &len, roots[r]) != 0) return -1;
+        DIR *d = opendir(roots[r]);
+        if (!d) continue;
+        struct dirent *de;
+        while ((de = readdir(d)) != NULL) {
+            if (de->d_name[0] == '.' || !key_for_folder(de->d_name)) continue;
+            char path[PATH_MAX_R];
+            if (join2(path, sizeof path, roots[r], de->d_name) != 0) continue;
+            if (sig_add(sig, n, &len, path) != 0) { closedir(d); return -1; }
+        }
+        closedir(d);
+    }
+    return (long)len;
+}
+
+static int port_index(const char *core) {
+    for (int i = 0; core && i < ports_count(); i++)
+        if (ports_get(i)->core == core) return i;
+    return -1;
+}
+
+static void cache_write(const char *sig, long siglen) {
+    if (!g_cache || siglen < 0) return;
+    char tmp[PATH_MAX_R];
+    if (snprintf(tmp, sizeof tmp, "%s.tmp", g_cache) >= (int)sizeof tmp) return;
+    FILE *f = fopen(tmp, "wb");
+    if (!f) return;
+    int ok = fputs(CACHE_MAGIC, f) >= 0
+          && fwrite(&siglen, sizeof siglen, 1, f) == 1
+          && fwrite(sig, 1, (size_t)siglen, f) == (size_t)siglen
+          && fwrite(&g_nsys, sizeof g_nsys, 1, f) == 1
+          && fwrite(g_sys, sizeof(sys_t), (size_t)g_nsys, f) == (size_t)g_nsys
+          && fwrite(&g_nrom, sizeof g_nrom, 1, f) == 1;
+    for (int i = 0; ok && i < g_nrom; i++) {
+        int pi = port_index(g_rom[i].core);
+        ok = fwrite(g_rom[i].name, sizeof g_rom[i].name, 1, f) == 1
+          && fwrite(g_rom[i].path, sizeof g_rom[i].path, 1, f) == 1
+          && fwrite(&pi, sizeof pi, 1, f) == 1
+          && fwrite(&g_rom[i].script, sizeof g_rom[i].script, 1, f) == 1;
+    }
+    if (fclose(f) != 0) ok = 0;
+    if (ok) rename(tmp, g_cache); else remove(tmp);
+}
+
+/* Loads the cache if its signature matches the cards as they are now. 1 = loaded. */
+static int cache_read(const char *sig, long siglen) {
+    if (!g_cache || siglen < 0) return 0;
+    FILE *f = fopen(g_cache, "rb");
+    if (!f) return 0;
+    char magic[sizeof CACHE_MAGIC];
+    long len = -1;
+    int ok = fread(magic, 1, sizeof CACHE_MAGIC - 1, f) == sizeof CACHE_MAGIC - 1
+          && memcmp(magic, CACHE_MAGIC, sizeof CACHE_MAGIC - 1) == 0
+          && fread(&len, sizeof len, 1, f) == 1 && len == siglen;
+    char *old = ok ? malloc((size_t)len + 1) : NULL;
+    ok = ok && old && fread(old, 1, (size_t)len, f) == (size_t)len && memcmp(old, sig, (size_t)len) == 0;
+    free(old);
+    int nsys = 0, nrom = 0;
+    ok = ok && fread(&nsys, sizeof nsys, 1, f) == 1 && nsys >= 0 && nsys <= SYS_MAX
+            && fread(g_sys, sizeof(sys_t), (size_t)nsys, f) == (size_t)nsys
+            && fread(&nrom, sizeof nrom, 1, f) == 1 && nrom >= 0
+            && (nrom == 0 || rom_reserve(nrom - 1) == 0);
+    for (int i = 0; ok && i < nrom; i++) {
+        int pi = -1;
+        ok = fread(g_rom[i].name, sizeof g_rom[i].name, 1, f) == 1
+          && fread(g_rom[i].path, sizeof g_rom[i].path, 1, f) == 1
+          && fread(&pi, sizeof pi, 1, f) == 1
+          && fread(&g_rom[i].script, sizeof g_rom[i].script, 1, f) == 1;
+        g_rom[i].name[sizeof g_rom[i].name - 1] = '\0';
+        g_rom[i].path[sizeof g_rom[i].path - 1] = '\0';
+        g_rom[i].core = (ok && pi >= 0 && pi < ports_count()) ? ports_get(pi)->core : NULL;
+    }
+    for (int s = 0; ok && s < nsys; s++)
+        ok = g_sys[s].begin >= 0 && g_sys[s].count >= 0 && g_sys[s].begin + g_sys[s].count <= nrom;
+    fclose(f);
+    if (!ok) { g_nsys = 0; g_nrom = 0; return 0; }
+    g_nsys = nsys;
+    g_nrom = nrom;
+    return 1;
+}
+
+int romscan_load_roots_cached(const char *const *roots, int nroots, int scan_if_stale) {
+    static char sig[65536];
+    long len = signature(roots, nroots, sig, sizeof sig);
+    if (cache_read(sig, len)) return 1;
+    if (!scan_if_stale) return 0;
+    romscan_load_roots(roots, nroots);
+    cache_write(sig, len);
+    return 0;
+}
+
 #ifndef REDUX_PLATFORM_STOCK
 /* Zero-byte names, not games. Lives in /tmp so nothing ROM-like is committed.
    The five names are the F0 ROM mock-up, in alphabetical order. */
@@ -308,6 +429,17 @@ static void ensure_fixture(char *out, size_t n) {
 }
 #endif
 
+int romscan_init_cached(void) {
+    const char *env = getenv("REDUX_ROMS");
+    if (env && env[0]) return 0;   /* an override root: always scan */
+#ifdef REDUX_PLATFORM_STOCK
+    static const char *const stock_roots[] = { ROMSCAN_TF1, ROMSCAN_TF2 };
+    return romscan_load_roots_cached(stock_roots, 2, 0);
+#else
+    return 0;
+#endif
+}
+
 void romscan_init(void) {
     const char *env = getenv("REDUX_ROMS");
     if (env && env[0]) {
@@ -326,7 +458,7 @@ void romscan_init(void) {
     }
 #ifdef REDUX_PLATFORM_STOCK
     static const char *const stock_roots[] = { ROMSCAN_TF1, ROMSCAN_TF2 };
-    romscan_load_roots(stock_roots, 2);
+    romscan_load_roots_cached(stock_roots, 2, 1);   /* scans (cards changed) and saves the cache */
 #else
     char root[PATH_MAX_R];
     ensure_fixture(root, sizeof root);
