@@ -8,7 +8,8 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 | Kernel | 0 dissect stock · 1 stock-kernel tweaks | done · boots on device |
 | Kernel | 2 RAM-resident / mainline | plan only; direction is Dale's call (below) |
 | Frontend | F0, F1, F2 | signed off (F2: 2026-11-12) |
-| Frontend | **F3 settings parity** | device-checked 2026-11-16 (#185 10-12 PASS); **waiting on Dale's SIGN F3** |
+| Frontend | F3 settings parity | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f3-signed-off.md)) |
+| Frontend | **F4 power and lid** | next (lid = event0 `axp2202-pek`) |
 
 ## Handoff (2026-11-14 (3), Claude): start here in a new chat
 - **Read [handoff-2026-11-14-3.md](handoff-2026-11-14-3.md) next**, then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project, started from the desktop app on DLN-DALEW2.
@@ -18,7 +19,6 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - Owner: the Redux Project chat named in the newest handoff; every other chat is advisory. Grok is suspended; every queue item is Claude's.
 
 ## Waiting on Dale
-- **SIGN F3**: #185 checks 10-12 passed on `5d7dea6`, Stage 1 had no failure ([hw-result](2026-11-16-dale-hw-result-185.md)).
 - **Card Scripts decision A** PR (hard-rule rewording): Dale merges.
 - **Phase 2 direction** (before Phase 2, not urgent for Beta): the H700 Kernel Research Ubuntu 24.04 image with update rollback, or `docs/ram-system-design.md`'s read-only squashfs in RAM.
 
