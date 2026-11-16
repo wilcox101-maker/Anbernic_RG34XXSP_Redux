@@ -13,17 +13,45 @@ int platform_battery_temp_known(void) { return 0; }
 int platform_wifi_connected(void)     { return 1; }
 int platform_cpu_temp_c(void)         { return 54; }
 int platform_cpu_cur_mhz(int cpu)     { (void)cpu; return 1008; }
-int platform_cpu_online(int cpu)      { (void)cpu; return 1; }
+static int fake_online[4] = { 1, 1, 1, 1 };
+int platform_cpu_online(int cpu)      { return cpu >= 0 && cpu < 4 ? fake_online[cpu] : 0; }
 
 /* Engineering fakes: the CPU mock-up's values (docs/ui-spec.md mock-up 4). */
+static const int fake_opps[] = { 480, 720, 936, 1008, 1104, 1200, 1320, 1416, 1512 };   /* Dale's unit */
+static const char *fake_govs[] = { "interactive", "conservative", "ondemand", "userspace",
+                                   "powersave", "performance", "schedutil" };
+static char fake_gov[ENG_NAME] = "schedutil";
+static int fake_min = 480, fake_max = 1512;
+
 int platform_cpu_info(eng_cpu_t *c) {
-    static const int opps[] = { 480, 720, 936, 1008, 1104, 1200, 1320, 1416, 1512 };   /* Dale's unit */
     memset(c, 0, sizeof *c);
-    snprintf(c->governor, sizeof c->governor, "schedutil");
-    c->min_mhz = 480;
-    c->max_mhz = 1512;
-    c->n_opps = (int)(sizeof opps / sizeof opps[0]);
-    memcpy(c->opps_mhz, opps, sizeof opps);
+    snprintf(c->governor, sizeof c->governor, "%s", fake_gov);
+    c->min_mhz = fake_min;
+    c->max_mhz = fake_max;
+    c->n_opps = (int)(sizeof fake_opps / sizeof fake_opps[0]);
+    memcpy(c->opps_mhz, fake_opps, sizeof fake_opps);
+    c->n_govs = (int)(sizeof fake_govs / sizeof fake_govs[0]);
+    for (int i = 0; i < c->n_govs; i++) snprintf(c->govs[i], ENG_NAME, "%s", fake_govs[i]);
+    return 0;
+}
+
+static int fake_listed(int mhz) {
+    for (size_t i = 0; i < sizeof fake_opps / sizeof fake_opps[0]; i++) if (fake_opps[i] == mhz) return 1;
+    return 0;
+}
+int platform_eng_set_governor(const char *gov) {
+    for (size_t i = 0; i < sizeof fake_govs / sizeof fake_govs[0]; i++)
+        if (gov && strcmp(gov, fake_govs[i]) == 0) { snprintf(fake_gov, sizeof fake_gov, "%s", gov); return 0; }
+    return -1;
+}
+int platform_eng_set_freq_mhz(int min_mhz, int max_mhz) {
+    if (min_mhz > max_mhz || !fake_listed(min_mhz) || !fake_listed(max_mhz)) return -1;
+    fake_min = min_mhz; fake_max = max_mhz;
+    return 0;
+}
+int platform_eng_set_core(int cpu, int on) {
+    if (cpu < 1 || cpu > 3) return -1;
+    fake_online[cpu] = on ? 1 : 0;
     return 0;
 }
 

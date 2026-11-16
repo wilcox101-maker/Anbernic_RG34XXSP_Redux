@@ -51,12 +51,15 @@ int main(void) {
     snprintf(rel, sizeof rel, "%sscaling_max_freq", cf);            put(base, rel, "1512000\n");
     snprintf(rel, sizeof rel, "%sscaling_available_frequencies", cf);
     put(base, rel, "480000 600000 792000 1008000 1200000 1296000 1416000 1512000 \n");
+    snprintf(rel, sizeof rel, "%sscaling_available_governors", cf);
+    put(base, rel, "interactive conservative ondemand userspace powersave performance schedutil \n");
     engread_set_root(base);
     eng_cpu_t c;
     expect(engread_cpu(&c) == 0, "cpu read ok");
     expect(strcmp(c.governor, "schedutil") == 0, "governor trimmed");
     expect(c.min_mhz == 480 && c.max_mhz == 1512, "min/max in MHz");
-    expect(c.n_opps == 8 && c.opps_mhz[0] == 480 && c.opps_mhz[7] == 1512, "8 stock OPPs");
+    expect(c.n_opps == 8 && c.opps_mhz[0] == 480 && c.opps_mhz[7] == 1512, "8 OPPs from the fixture");
+    expect(c.n_govs == 7 && strcmp(c.govs[6], "schedutil") == 0, "7 governors in the kernel's order");
 
     /* Thermal: two zones, the second without trips; a gap in numbering is skipped. */
     put(base, "/sys/class/thermal/thermal_zone0/type", "cpu_thermal_zone\n");

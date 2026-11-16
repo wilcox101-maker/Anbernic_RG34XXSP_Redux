@@ -218,7 +218,7 @@ yet say "Not yet".
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │ ▓CPU▓ Battery  Thermal  Display  System                                                │
 │────────────────────────────────────────────────────────────────────────────────────────│
-│  Governor:     schedutil                                                               │
+│▓▓Governor:     schedutil                                                               │
 │  Min freq:     480 MHz                                                                 │
 │  Max freq:     1512 MHz                                                                │
 │  Current:      1008 MHz                                                                │
@@ -233,7 +233,7 @@ yet say "Not yet".
 │    480 / 720 / 936 / 1008 / 1104 / 1200 / 1320 / 1416 / 1512                           │
 │                                                                                        │
 │  Profile:      none (stock settings)                                                   │
-│  Controls arrive in a later F5 step. Every change is logged.                           │
+│  Changes apply now and are lost at restart unless saved. Every change is logged.       │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
@@ -243,7 +243,7 @@ yet say "Not yet".
 │                                                                                        │
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-L1/R1:Tab  B:Exit  X:Save profile  Y:Remove profile
+Up/Down:Row  A:Edit  L1/R1:Tab  B:Exit  X:Save profile  Y:Remove
 ```
 
 ## 7. Mock-up 5 — Engineering Mode, Battery tab

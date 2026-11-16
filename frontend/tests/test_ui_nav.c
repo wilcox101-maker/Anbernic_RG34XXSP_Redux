@@ -163,6 +163,40 @@ int main(void) {
     press(LB_Y);
     expect(platform_eng_profile_state() == 0, "Y on Engineering removes the profile");
     expect(ui_screen() == SCREEN_ENG, "X and Y stay on Engineering");
+
+    /* CPU tab controls (F5 step 3), against the desktop fakes. */
+    press(LB_R1);
+    expect(ui_eng_tab() == ENG_CPU, "R1 wraps from System to CPU");
+    eng_cpu_t c;
+    press(LB_A); press(LB_RIGHT); press(LB_A);          /* governor: schedutil -> next (wraps) */
+    platform_cpu_info(&c);
+    expect(strcmp(c.governor, "interactive") == 0, "A, Right, A changes the governor");
+    press(LB_DOWN); press(LB_DOWN);                     /* Max */
+    press(LB_A); press(LB_LEFT); press(LB_A);
+    platform_cpu_info(&c);
+    expect(c.max_mhz == 1416, "max steps down one listed speed (1512 -> 1416)");
+    press(LB_A); press(LB_RIGHT); press(LB_RIGHT); press(LB_A);
+    platform_cpu_info(&c);
+    expect(c.max_mhz == 1512, "max can't go past the top of the chip's list");
+    press(LB_UP);                                       /* Min */
+    press(LB_A); for (int i = 0; i < 20; i++) press(LB_RIGHT); press(LB_A);
+    platform_cpu_info(&c);
+    expect(c.min_mhz == c.max_mhz, "min stops at the current max");
+    press(LB_A); for (int i = 0; i < 20; i++) press(LB_LEFT); press(LB_A);
+    platform_cpu_info(&c);
+    expect(c.min_mhz == 480, "min back to the bottom of the list");
+    press(LB_DOWN); press(LB_DOWN);                     /* cpu1 */
+    press(LB_A);
+    expect(!platform_cpu_online(1), "A on cpu1 takes it offline");
+    press(LB_A);
+    expect(platform_cpu_online(1), "A again brings it back");
+    press(LB_UP); press(LB_UP); press(LB_UP);           /* cpu1 -> Governor */
+    press(LB_A); press(LB_RIGHT); press(LB_B);
+    platform_cpu_info(&c);
+    expect(ui_screen() == SCREEN_ENG && strcmp(c.governor, "interactive") == 0, "B cancels an edit and stays");
+    press(LB_A); press(LB_LEFT); press(LB_A);           /* back to schedutil for the screens below */
+    platform_cpu_info(&c);
+    expect(strcmp(c.governor, "schedutil") == 0, "governor back to schedutil");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Engineering exits to Main, not the confirm screen");
 

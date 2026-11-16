@@ -27,6 +27,12 @@ int  platform_eng_profile_state(void);
 int  platform_eng_profile_save(void);    /* 0 ok */
 int  platform_eng_profile_clear(void);   /* 0 ok */
 
+/* Engineering live writes (F5 step 3): only values from the chip's own lists; every one logged.
+   0 ok, -1 refused (not listed / cpu0), -2 write or read-back failed. */
+int  platform_eng_set_governor(const char *gov);
+int  platform_eng_set_freq_mhz(int min_mhz, int max_mhz);
+int  platform_eng_set_core(int cpu, int on);
+
 /* Clock as "HH:MM". Real local time unless a fixed value was set (tests). */
 void platform_clock(char *buf, int buflen);
 void platform_set_fixed_clock(const char *hhmm);

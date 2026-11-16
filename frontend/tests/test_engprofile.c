@@ -12,7 +12,7 @@ static void expect(int cond, const char *what) {
     if (!cond) fails++;
 }
 
-static char cpu[256], data[256], flag[256];
+static char cpu[256], data[256], flag[256], cpus[256];
 
 static void put(const char *dir, const char *name, const char *text) {
     char p[512];
@@ -49,6 +49,22 @@ static void stock_cpu(void) {
     put(cpu, "scaling_max_freq", "1512000\n");
 }
 
+static void cores_on(void) {
+    char d[300];
+    for (int c = 1; c <= 3; c++) {
+        snprintf(d, sizeof d, "%s/cpu%d", cpus, c);
+        mkdir(d, 0755);
+        put(d, "online", "1\n");
+    }
+}
+
+static int core(int c) {
+    char d[300], buf[8];
+    snprintf(d, sizeof d, "%s/cpu%d", cpus, c);
+    get(d, "online", buf, sizeof buf);
+    return buf[0] == '1';
+}
+
 static void new_boot(void) { remove(flag); }
 
 static int log_has(const char *needle) {
@@ -68,8 +84,12 @@ int main(void) {
     snprintf(cpu, sizeof cpu, "%s/cpufreq", base);
     snprintf(data, sizeof data, "%s/data", base);   /* created on first write */
     snprintf(flag, sizeof flag, "%s/started", base);
+    snprintf(cpus, sizeof cpus, "%s/cpus", base);
     mkdir(cpu, 0755);
+    mkdir(cpus, 0755);
     engprofile_set_paths(cpu, data, flag);
+    engprofile_set_cpu_root(cpus);
+    cores_on();
     stock_cpu();
     char buf[128];
 
@@ -96,7 +116,7 @@ int main(void) {
     /* Save, then a new boot applies it. */
     expect(engprofile_save() == 0, "profile saved");
     get(data, "eng-profile", buf, sizeof buf);
-    expect(strcmp(buf, "cpu performance 600000 1200000") == 0, "profile contents");
+    expect(strcmp(buf, "cpu performance 600000 1200000 cores f") == 0, "profile contents");
     expect(!exists(data, "eng-profile.tmp"), "no temp file left");
     expect(engprofile_state() == ENG_STATE_SAVED, "state saved");
     stock_cpu();
@@ -136,6 +156,31 @@ int main(void) {
     put(data, "eng-profile", "garbage\n");
     new_boot();
     expect(engprofile_at_start() == ENG_PROFILE_INVALID, "unreadable profile refused");
+
+    /* Cores: cpu0 never goes offline; 1-3 can, and the profile keeps the mask. */
+    expect(eng_write_core_online(0, 0) == -1, "cpu0 offline refused");
+    expect(eng_write_core_online(4, 0) == -1, "cpu4 (no such core) refused");
+    expect(eng_write_core_online(2, 0) == 0 && !core(2), "cpu2 offline written");
+    expect(log_has("cpu2.online 1 -> 0 ok"), "log: core change");
+    engprofile_clear();
+    expect(engprofile_save() == 0, "profile with cpu2 offline saved");
+    get(data, "eng-profile", buf, sizeof buf);
+    expect(strstr(buf, " cores b") != NULL, "mask b (cpu0, 1, 3)");
+    cores_on();
+    stock_cpu();
+    new_boot();
+    expect(engprofile_at_start() == ENG_PROFILE_APPLIED && !core(2) && core(1) && core(3),
+           "new boot takes cpu2 offline again");
+    engprofile_menu_reached();
+    put(data, "eng-profile", "cpu schedutil 480000 1512000\n");
+    new_boot();
+    expect(engprofile_at_start() == ENG_PROFILE_APPLIED && core(2), "older profile (no mask) brings all cores online");
+    put(data, "eng-profile", "cpu schedutil 480000 1512000 cores 0\n");
+    cores_on();
+    new_boot();
+    expect(engprofile_at_start() == ENG_PROFILE_APPLIED && !core(1) && !core(2) && !core(3),
+           "mask 0 is read as cpu0 only (cpu0 can't go offline)");
+    engprofile_menu_reached();
 
     /* Clear removes saved and set-aside profiles. */
     put(data, "eng-profile.off", "cpu schedutil 480000 1512000\n");

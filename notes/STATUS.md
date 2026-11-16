@@ -10,7 +10,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 | Frontend | F0, F1, F2 | signed off (F2: 2026-11-12) |
 | Frontend | F3 settings parity | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f3-signed-off.md)) |
 | Frontend | F4 power and lid | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)) |
-| Frontend | **F5 Engineering Mode** | steps 1-2 device-checked on d334375 ([result](2026-11-16-dale-hw-result-f5-steps-1-2.md)); step 3 CPU controls next, GPU read-only unless a write test works (Q1-Q3 A A A, [note](2026-11-16-claude-decision-f5-plan.md)) |
+| Frontend | **F5 Engineering Mode** | steps 1-2 device-checked ([result](2026-11-16-dale-hw-result-f5-steps-1-2.md)); step 3 CPU controls built (not device-checked); step 4 heat guard next ([A](2026-11-16-claude-decision-f5-heat-guard.md)); GPU tab read-only, pin test on the device later |
 
 ## Handoff (2026-11-16-2, Claude): start here in a new chat
 - **Read [handoff-2026-11-16-2.md](handoff-2026-11-16-2.md) next**, then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project, started from the desktop app on DLN-DALEW2.
@@ -25,7 +25,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 ## Queue (in order; all Claude unless marked)
 1. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons (folded into item 4, the Redux video front-end); Wolfenstein 3D Y and X: not a bug, it is a GBA ROM (no X/Y). Done: `/tmp/.next` + amixer (#202), scan cache (#203). Game Room X = Favorites, not built yet (placeholder). Then a short device re-check.
 2. ~~Game Room card picker~~ #205, device-checked 2026-11-16 (with the #216 crash fix).
-3. **F5 Engineering Mode** (in progress: [plan](2026-11-16-claude-decision-f5-plan.md), steps 1-2 device-checked, step 3 controls next; heat guard A (Dale 16:12, [note](2026-11-16-claude-decision-f5-heat-guard.md)) is step 4). F4 signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)).
+3. **F5 Engineering Mode** (in progress: [plan](2026-11-16-claude-decision-f5-plan.md), steps 1-2 device-checked, step 3 CPU controls built, step 4 heat guard ([A](2026-11-16-claude-decision-f5-heat-guard.md)) next; then GPU tab + step 5). F4 signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)).
 4. **F6**: Wi-Fi off unless needed + Power & Lid settings page (moved from F4, Dale A 15:09); **Redux front-ends for the stock apps** in the BIOS/DOS style (Dale 2026-11-16): Video Player first (Redux file list + stock `ffplay`), then Music, Ebook, File Manager. Needs the FFplay.sh read from the device.
 5. **Installer B**: TF2 package with hold-A (after A is device-checked). Tagged Beta releases (`v0.5-beta.N`) once Beta is near.
 6. Extras installer (#149): REFUSED path and a fresh install still not run on the device.

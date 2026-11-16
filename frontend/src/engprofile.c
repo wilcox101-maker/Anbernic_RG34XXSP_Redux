@@ -13,6 +13,11 @@
 static char g_cpu[PATH_N] = ENG_CPUFREQ;
 static char g_data[PATH_N] = ENG_DATA_DIR;
 static char g_flag[PATH_N] = ENG_BOOT_FLAG;
+static char g_cpuroot[PATH_N] = "/sys/devices/system/cpu";
+
+void engprofile_set_cpu_root(const char *cpu_root) {
+    snprintf(g_cpuroot, sizeof g_cpuroot, "%s", cpu_root ? cpu_root : "/sys/devices/system/cpu");
+}
 
 void engprofile_set_paths(const char *cpufreq_dir, const char *data_dir, const char *boot_flag) {
     snprintf(g_cpu, sizeof g_cpu, "%s", cpufreq_dir ? cpufreq_dir : ENG_CPUFREQ);
@@ -168,15 +173,50 @@ int eng_write_freq_limits(int min_khz, int max_khz) {
     return ok ? 0 : -2;
 }
 
+static int core_path(char *out, size_t n, int cpu) {
+    return snprintf(out, n, "%s/cpu%d/online", g_cpuroot, cpu) < (int)n ? 0 : -1;
+}
+
+static int core_online(int cpu) {
+    char path[PATH_N * 2], buf[8];
+    if (cpu == 0) return 1;
+    if (core_path(path, sizeof path, cpu) != 0 || read_line_at(path, buf, sizeof buf) != 0) return -1;
+    return buf[0] == '1';
+}
+
+int eng_write_core_online(int cpu, int on) {
+    char what[24], old_v[8], new_v[8];
+    snprintf(what, sizeof what, "cpu%d.online", cpu);
+    int was = (cpu >= 1 && cpu <= 3) ? core_online(cpu) : -1;
+    snprintf(old_v, sizeof old_v, "%d", was);
+    snprintf(new_v, sizeof new_v, "%d", on ? 1 : 0);
+    if (cpu < 1 || cpu > 3 || was < 0) {           /* cpu0 never goes offline */
+        log_write(what, old_v, new_v, "refused");
+        return -1;
+    }
+    char path[PATH_N * 2];
+    core_path(path, sizeof path, cpu);
+    FILE *f = fopen(path, "w");
+    int err = !f;
+    if (f) { err = fputs(on ? "1" : "0", f) < 0; if (fclose(f) != 0) err = 1; }
+    int ok = !err && core_online(cpu) == (on ? 1 : 0);
+    log_write(what, old_v, new_v, ok ? "ok" : "FAILED");
+    return ok ? 0 : -2;
+}
+
 /* ---- profile ---- */
 
-typedef struct { char gov[32]; int min, max; } profile_t;
+typedef struct { char gov[32]; int min, max, cores; } profile_t;   /* cores: bit n = cpu n online */
 
 static int load_profile(const char *name, profile_t *p) {
     char path[PATH_N * 2], buf[128];
     data_path(path, sizeof path, name);
     if (read_line_at(path, buf, sizeof buf) != 0) return -1;
-    return sscanf(buf, "cpu %31s %d %d", p->gov, &p->min, &p->max) == 3 ? 0 : -2;
+    p->cores = 0xF;                                  /* older profiles: all cores online */
+    int n = sscanf(buf, "cpu %31s %d %d cores %x", p->gov, &p->min, &p->max, &p->cores);
+    if (n < 3) return -2;
+    p->cores = (p->cores & 0xF) | 1;                 /* cpu0 is always online */
+    return 0;
 }
 
 int engprofile_save(void) {
@@ -186,8 +226,10 @@ int engprofile_save(void) {
         log_write("profile", "-", "save", "FAILED (cpufreq unreadable)");
         return -1;
     }
+    p.cores = 1;
+    for (int c = 1; c <= 3; c++) if (core_online(c) == 1) p.cores |= 1 << c;
     char text[128];
-    snprintf(text, sizeof text, "cpu %s %d %d\n", p.gov, p.min, p.max);
+    snprintf(text, sizeof text, "cpu %s %d %d cores %x\n", p.gov, p.min, p.max, p.cores);
     int rc = write_atomic("eng-profile", text);
     if (rc == 0) {
         data_remove("eng-profile.off");
@@ -258,6 +300,10 @@ eng_profile_result_t engprofile_at_start(void) {
     }
     int err = eng_write_freq_limits(p.min, p.max) != 0;
     err |= eng_write_governor(p.gov) != 0;
+    for (int c = 1; c <= 3; c++) {
+        int want = (p.cores >> c) & 1;
+        if (core_online(c) != want) err |= eng_write_core_online(c, want) != 0;
+    }
     printf("[eng] profile applied: %s %d-%d kHz: %s\n", p.gov, p.min, p.max, err ? "FAILED" : "ok");
     return err ? ENG_PROFILE_INVALID : ENG_PROFILE_APPLIED;
 }
