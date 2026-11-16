@@ -94,6 +94,10 @@ stock screen tearing **[not yet on device]**. File Manager can't use it and stil
 Screen Timeout: after that long with no button press **in the Redux menu**, the handheld sleeps the
 way stock does; Power wakes it. Games and stock apps keep their own behaviour.
 
+After 1 minute with no button press in the Redux menu, the screen dims to about a third of your
+brightness; any button brings it back (the press still counts). Closing the lid in the menu sleeps the
+way stock does; open it and press Power to wake. **[not yet on device]**
+
 ### Settings > System
 | Row | Does |
 |---|---|

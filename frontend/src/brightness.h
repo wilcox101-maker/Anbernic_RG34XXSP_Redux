@@ -42,6 +42,17 @@ void brightness_reset(void);
 /* Backlight value 0-255 for a level: 16 at level 1 (never dark), 255 at level 20. */
 int brightness_disp_value(int level);
 
+/* Menu idle dimming (F4 step 3, notes/2026-11-10-dale-decision-power-management.md): after
+   BRIGHTNESS_DIM_AFTER_MS without input the backlight drops to BRIGHTNESS_DIM_PERCENT of the
+   current level (never below BRIGHTNESS_MIN); any button restores it. Nothing is saved. */
+#define BRIGHTNESS_DIM_AFTER_MS 60000u
+#define BRIGHTNESS_DIM_PERCENT  30
+
+/* on = 1 dims (once), on = 0 restores the saved level. brightness_step/apply also undim. */
+void brightness_dim(int on);
+int  brightness_dimmed(void);
+int  brightness_dim_level(int level);
+
 /* The level the last apply asked to write, or -1. For tests. */
 int brightness_last_written(void);
 
