@@ -65,6 +65,15 @@ kernel, boot chain and system image are handled separately. Don't redesign them.
   per-list toggle later. It is not in v1.)
 - Instant response: every input redraws within one frame. No transitions.
 
+**Two layouts (Dale's requests, kept here as their record):**
+- **BIOS Mode** (built): the current menus, BIOS-setup style.
+- **DOS Mode** (requested 2026-11-12): keep the development-menu style as a **DOS Mode** option
+  alongside BIOS Mode. Dale defines its layout as the menus grow; until then nothing is built.
+- **Every Redux screen uses these layouts, including the apps** (Dale, 2026-11-16): the stock app
+  screens (Video Player, Music, Ebook, File Manager) get Redux front-ends in the BIOS/DOS style,
+  with the stock engine underneath (for example the stock `ffplay` behind a Redux file list).
+  Video first. [Decision](../notes/2026-11-16-dale-decision-app-screens-card-picker.md).
+
 **Why it fits the hardware:** a text grid redraws in microseconds, needs no GPU, and uses almost no RAM.
 That leaves the full CPU/GPU budget to the emulators, and it renders the same on fbdev and on DRM.
 
