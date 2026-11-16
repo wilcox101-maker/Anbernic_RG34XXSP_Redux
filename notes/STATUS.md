@@ -9,7 +9,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 | Kernel | 2 RAM-resident / mainline | plan only; direction is Dale's call (below) |
 | Frontend | F0, F1, F2 | signed off (F2: 2026-11-12) |
 | Frontend | F3 settings parity | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f3-signed-off.md)) |
-| Frontend | **F4 power and lid** | started 2026-11-16, plan A ([decision](2026-11-16-dale-decision-f4-plan.md)) |
+| Frontend | **F4 power and lid** | exit test PASS on `6d87953` ([hw-result](2026-11-16-dale-hw-result-f4.md)); waiting on Dale: sign-off |
 
 ## Handoff (2026-11-16, Claude): start here in a new chat
 - **Read [handoff-2026-11-16.md](handoff-2026-11-16.md) next**, then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project, started from the desktop app on DLN-DALEW2.
@@ -19,16 +19,17 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - Owner: the Redux Project chat named in the newest handoff; every other chat is advisory. Grok is suspended; every queue item is Claude's.
 
 ## Waiting on Dale
+- **F4 sign-off** ([result](2026-11-16-dale-hw-result-f4.md)): SIGN F4 now (Wi-Fi off moves to F6) or after the Wi-Fi off PR.
 - **Phase 2 direction** (before Phase 2, not urgent for Beta): the H700 Kernel Research Ubuntu 24.04 image with update rollback, or `docs/ram-system-design.md`'s read-only squashfs in RAM.
 
 ## Queue (in order; all Claude unless marked)
 1. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons (folded into item 4, the Redux video front-end); Wolfenstein 3D Y and X: not a bug, it is a GBA ROM (no X/Y). Done: `/tmp/.next` + amixer (#202), scan cache (#203). Game Room X = Favorites, not built yet (placeholder). Then a short device re-check.
-2. ~~Game Room card picker~~ built in #205 (TF1/TF2 like stock, per-card cache, resume keeps the card). **Not device-checked yet** (#185 queue).
-3. **F4 power and lid** ([plan, Dale A](2026-11-16-dale-decision-f4-plan.md)): 1 lid in menu (built, not device-checked) · 2 governor restore (built, not device-checked) · 3 dim (built, not device-checked) + Wi-Fi off (next) · 4 in-game lid watcher (built, not device-checked; stock already sleeps on lid in RetroArch, Dale 13:53). Then **F5 Engineering Mode** (Dale A, 2026-11-14 13:37: phase order kept).
+2. ~~Game Room card picker~~ #205, device-checked 2026-11-16 (with the #216 crash fix).
+3. **F4 power and lid** ([plan](2026-11-16-dale-decision-f4-plan.md), [result](2026-11-16-dale-hw-result-f4.md)): steps 1-4 device-checked; Wi-Fi off not built (Dale decides: before sign-off or later). Then **F5 Engineering Mode** (Dale A, 2026-11-14 13:37: phase order kept).
 4. **F6: Redux front-ends for the stock apps** in the BIOS/DOS style (Dale 2026-11-16): Video Player first (Redux file list + stock `ffplay`), then Music, Ebook, File Manager. Needs the FFplay.sh read from the device.
 5. **Installer B**: TF2 package with hold-A (after A is device-checked). Tagged Beta releases (`v0.5-beta.N`) once Beta is near.
 6. Extras installer (#149): REFUSED path and a fresh install still not run on the device.
-- Backlog: **custom boot image picked on the device** (Dale, 2026-11-16), **DOS Mode** (Dale defines the layout; request recorded in `docs/ui-brief.md` §3), ASCII art maker, PC link (Dale-gated security item; ROM copy only in [Xroot Mode]), Expert Mode and its shortcut, chiptune composer (after 1.0, separate GPL-3 program), Wi-Fi idle scanning, features.ini, ZRAM (v1.x), the Phase 2 mainline track. L3/R3 stay unmapped.
+- Backlog: **Update option in Settings > System** (Dale 2026-11-16; security item, Dale merges), **DOS layout switch in Settings > UI** (Dale 2026-11-16), **custom boot image picked on the device** (Dale, 2026-11-16), **DOS Mode** (Dale defines the layout; request recorded in `docs/ui-brief.md` §3), ASCII art maker, PC link (Dale-gated security item; ROM copy only in [Xroot Mode]), Expert Mode and its shortcut, chiptune composer (after 1.0, separate GPL-3 program), Wi-Fi idle scanning, features.ini, ZRAM (v1.x), the Phase 2 mainline track. L3/R3 stay unmapped.
 
 ## Improvement ideas (AGENTS.md "Improvements"; Dale's `IMPROVE` lists them)
 - Run the C tests once under AddressSanitizer in CI (it caught the 2026-11-16 cache overflow at once; plain builds passed).
@@ -37,6 +38,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - `device-test-queue.yml` appends PRs whose not-verified list is just "none" (#194-#197 did); skip those to keep #185 short.
 
 ## Open notes
+- [2026-11-16-dale-hw-result-f4.md](2026-11-16-dale-hw-result-f4.md): dale → all (F4 session on 6d87953: exit test PASS; crash fixed by #216; Update + DOS switch requests)
 - [2026-11-16-claude-decision-f4-save-flush.md](2026-11-16-claude-decision-f4-save-flush.md): claude → dale (F4 save flush before lid sleep, A/B/C)
 - [2026-11-16-dale-hw-result-reads-f4-2.md](2026-11-16-dale-hw-result-reads-f4-2.md): dale → claude (RetroArch 1.20.0, SAVE_FILES works, saves on cards, Wolf3D is GBA)
 - [2026-11-16-dale-hw-result-reads-f4.md](2026-11-16-dale-hw-result-reads-f4.md): dale → claude (FFplay.sh, no ecwolf, RetroArch network/save settings)
