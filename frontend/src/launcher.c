@@ -18,6 +18,13 @@ void launcher_set_next_path(const char *path) {
     next_path = path;
 }
 
+/* dmenu_ln runs /tmp/.next after every exit 0 and never deletes it, so a launch line left from
+   an earlier game or app would run again after a clean exit with no choice (#185 check 25).
+   Called once at start: by then dmenu_ln has already run it. */
+void launcher_clear_next(void) {
+    remove(next_path);
+}
+
 /* Quote a path for a shell single-quoted string: 'foo'bar' -> 'foo'\''bar' */
 static void quote(FILE *f, const char *s) {
     fputc('\'', f);

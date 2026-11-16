@@ -20,6 +20,9 @@ typedef enum {
 /* Set the path written instead of /tmp/.next (for desktop tests). */
 void launcher_set_next_path(const char *path);
 
+/* Delete the launch file at start, so an old launch line never runs again. */
+void launcher_clear_next(void);
+
 /* Write the launch line and return 0 on success, -1 on error.
    core is used only for LAUNCH_RETROARCH (e.g. "gpsp_libretro.so").
    Does not call exit(). */

@@ -42,6 +42,8 @@ int volume_apply(void) {
     pid_t pid = fork();
     if (pid < 0) return -1;
     if (pid == 0) {
+        /* amixer prints the whole control on every call; keep it out of redux.log (#185). */
+        if (!freopen("/dev/null", "w", stdout)) _exit(126);
         execlp("sh", "sh", "-c", g_last, (char *)NULL);
         _exit(127);
     }
