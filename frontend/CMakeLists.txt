@@ -54,6 +54,19 @@ add_custom_command(
     DEPENDS redux_lidwatch ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
     COMMENT "Embedding the lid watcher")
 
+# Heat guard (F5 step 4): runs once per boot in its own session, in the menu and during games.
+# Built for the same machine as dmenu.bin and embedded in it; Redux writes it to /tmp and starts it.
+add_executable(redux_heatguard heatguard/redux_heatguard.c src/heatguard.c src/engprofile.c)
+target_include_directories(redux_heatguard PRIVATE src)
+target_compile_options(redux_heatguard PRIVATE -Wall -Wextra)
+set(REDUX_HEATGUARD_BLOB ${CMAKE_CURRENT_BINARY_DIR}/heatguard_blob.c)
+add_custom_command(
+    OUTPUT ${REDUX_HEATGUARD_BLOB}
+    COMMAND ${CMAKE_COMMAND} -DIN=$<TARGET_FILE:redux_heatguard> -DOUT=${REDUX_HEATGUARD_BLOB}
+            -DNAME=redux_heatguard_bin -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    DEPENDS redux_heatguard ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    COMMENT "Embedding the heat guard")
+
 add_executable(rg34xxsp-redux
     src/main.c
     src/grid.c
@@ -72,6 +85,9 @@ add_executable(rg34xxsp-redux
     src/govrestore.c
     src/lidwatch.c
     ${REDUX_LIDWATCH_BLOB}
+    src/heatguard.c
+    src/heatguard_install.c
+    ${REDUX_HEATGUARD_BLOB}
     src/volume.c
     src/brightness.c
     src/screentimeout.c
@@ -168,6 +184,10 @@ target_include_directories(test_lidwatch PRIVATE src)
 
 add_executable(test_brightness tests/test_brightness.c src/brightness.c)
 target_include_directories(test_brightness PRIVATE src)
+
+# Heat guard decision logic (no SDL, no device): ./test_heatguard.
+add_executable(test_heatguard tests/test_heatguard.c src/heatguard.c)
+target_include_directories(test_heatguard PRIVATE src)
 
 # Engineering safety net against temp folders (no SDL, no device): ./test_engprofile.
 add_executable(test_engprofile tests/test_engprofile.c src/engprofile.c)

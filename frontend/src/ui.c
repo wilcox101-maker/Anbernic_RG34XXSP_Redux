@@ -968,6 +968,7 @@ static void draw_status(int wifi, int cpu_temp) {
     if (wifi && platform_wifi_connected()) n += snprintf(s + n, sizeof s - n, " WIFI");
     if (cpu_temp) n += snprintf(s + n, sizeof s - n, " CPU %dC", platform_cpu_temp_c());
     if (vol_until) n += snprintf(s + n, sizeof s - n, " VOL %d", volume_get());
+    if (platform_hot()) n += snprintf(s + n, sizeof s - n, " HOT");   /* heat guard capped the CPU */
     snprintf(s + n, sizeof s - n, " %s", clock);
     grid_puts_right(ROW_TITLE, s);
 }
@@ -1117,7 +1118,9 @@ static void draw_eng_tab_body(void) {
         snprintf(t, sizeof t, "  Max seen:     %d C   (SoC, while this screen was open)", soc_max_c);
         body(10, t);
         body(12, "  Stock battery-temperature protection: off (pmu_bat_temp_enable = 0).");
-        body(13, "  Redux heat guard: not built yet (a later F5 step).");
+        body(13, "  Redux heat guard: CPU >= 75 C for 30 s caps it at 1200 MHz until below 65 C;");
+        body(14, "                    >= 90 C for 10 s saves and powers off. Charging is not touched.");
+        body(15, platform_hot() ? "  Guard state:  CAPPED (HOT)" : "  Guard state:  normal");
     } else if (eng_tab == ENG_THERMAL) {
         eng_zone_t z[ENG_MAX_ZONES];
         int n = platform_thermal_zones(z, ENG_MAX_ZONES);

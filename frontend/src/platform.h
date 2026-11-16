@@ -33,6 +33,9 @@ int  platform_eng_set_governor(const char *gov);
 int  platform_eng_set_freq_mhz(int min_mhz, int max_mhz);
 int  platform_eng_set_core(int cpu, int on);
 
+/* 1 while the heat guard has the CPU capped (F5 step 4). */
+int  platform_hot(void);
+
 /* Clock as "HH:MM". Real local time unless a fixed value was set (tests). */
 void platform_clock(char *buf, int buflen);
 void platform_set_fixed_clock(const char *hhmm);
