@@ -20,6 +20,7 @@
 #include "ui.h"
 #ifdef REDUX_PLATFORM_STOCK
 #include "evdev_reader.h"
+#include "launcher.h"
 #endif
 
 #define VIDEO_RETRY_MS 30000u      /* keep trying to open the display this long at boot */
@@ -138,6 +139,7 @@ int main(int argc, char **argv) {
     }
 
 #ifdef REDUX_PLATFORM_STOCK
+    launcher_clear_next();
     if (evdev_open() != 0)
         fprintf(stderr, "warning: could not open /dev/input/event1\n");
 #endif

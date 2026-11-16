@@ -95,5 +95,20 @@ int main(void) {
         printf("%s video player refuses quotes and bare names\n", ok ? "ok  " : "FAIL");
         if (!ok) failures++;
     }
+    {   /* #185: a launch line left in the next file is deleted at start */
+        const char *path = "test_launcher_next.txt";
+        launcher_set_next_path(path);
+        int rc = launcher_start(LAUNCH_RETROARCH, "gpsp_libretro.so", "/a/b.gba");
+        FILE *f = fopen(path, "r");
+        int had = f != NULL;
+        if (f) fclose(f);
+        launcher_clear_next();
+        f = fopen(path, "r");
+        int ok = rc == 0 && had && f == NULL;
+        if (f) fclose(f);
+        launcher_clear_next();   /* nothing there: no error */
+        printf("%s clear_next removes an old launch line\n", ok ? "ok  " : "FAIL");
+        if (!ok) failures++;
+    }
     return failures ? 1 : 0;
 }
