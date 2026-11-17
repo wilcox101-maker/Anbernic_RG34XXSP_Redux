@@ -119,6 +119,7 @@ add_executable(rg34xxsp-redux
     src/pkgs.c
     ${REDUX_EXTRAS_BLOB}
     src/netsvc.c
+    src/btchip.c
     src/launcher.c
     src/systems.c
     src/romscan.c
@@ -193,6 +194,10 @@ if(MSVC)
 else()
     target_compile_options(rg34xxsp-redux PRIVATE -Wall -Wextra)
 endif()
+
+# Bluetooth chip init against a temp folder (no device): ./test_btchip.
+add_executable(test_btchip tests/test_btchip.c src/btchip.c)
+target_include_directories(test_btchip PRIVATE src)
 
 # Terminal screen model (no SDL, no pty): ./test_vt, exit code 0 = pass.
 add_executable(test_vt tests/test_vt.c term/vt.c term/osk.c term/cjk.c ${REDUX_CJK_BLOB})
@@ -273,7 +278,7 @@ add_executable(test_sysinfo tests/test_sysinfo.c src/sysinfo.c)
 target_include_directories(test_sysinfo PRIVATE src)
 
 # Navigation test (back stack, Engineering tabs). Links the UI with the desktop platform; no window.
-add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/uistyle.c src/netsvc.c src/pkgs.c ${REDUX_EXTRAS_BLOB} src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/powerkeys.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c)
+add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/uistyle.c src/netsvc.c src/btchip.c src/pkgs.c ${REDUX_EXTRAS_BLOB} src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/powerkeys.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c)
 target_include_directories(test_ui_nav PRIVATE src)
 if(TARGET SDL2::SDL2)
     target_link_libraries(test_ui_nav PRIVATE SDL2::SDL2)
