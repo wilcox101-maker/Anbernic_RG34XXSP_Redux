@@ -101,7 +101,7 @@ void pkgs_refresh(void) {
     char cmd[256];
     for (int i = 0; i < n_pkgs; i++) {
         snprintf(cmd, sizeof cmd,
-                 "dpkg-query -W -f='${Status}' %s 2>/dev/null | grep -q 'install ok installed'", names[i]);
+                 "dpkg-query -W -f='${Status}' %.39s 2>/dev/null | grep -q 'install ok installed'", names[i]);
         installed[i] = run(cmd) == 0;
     }
 }
