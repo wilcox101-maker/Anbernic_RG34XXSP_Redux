@@ -51,12 +51,11 @@ RG34XXSP Redux
 │   └── ...
 │
 ├── Settings
-│   ├── Display
 │   ├── Audio
 │   ├── Power & Lid
 │   ├── System               (System Tools, Restart, Power Off, Boot Screen*, blanks, Stock Menu, Reset All*)
 │   ├── Emulation
-│   └── UI                     (colour presets)
+│   └── UI                     (brightness, screen timeout, font, colours, text sizes; Display folded in 2026-11-17)
 │
 └── Engineering Mode           (deliberate confirm required)
     ├── CPU
@@ -175,12 +174,12 @@ A:Launch  B:Back  X:Favorites  Y:Info  Start:Search  Select:Random  Left/Right:P
 ```
 Settings                                                            BAT 87% CHG WIFI 12:34
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│▓▓ Display                                                                              │
-│   Audio                                                                                │
+│▓▓ Audio                                                                                │
 │   Power & Lid                                                                          │
 │   System                                                                               │
 │   Emulation                                                                            │
 │   UI                                                                                   │
+│                                                                                        │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
@@ -458,9 +457,9 @@ Licences were checked against each font's own source (2026-11-10).
 
 Implementation is in **F3** (settings parity): fonts are converted by a stdlib Python tool into C
 arrays at build time, keep their copyright/licence headers, and are listed in a `LICENSES` section of
-`frontend/README.md`. The picker lives in Settings → Display and previews the font live.
+`frontend/README.md`. The picker lives in Settings → UI (Settings → Display until 2026-11-17) and previews the font live.
 
-**Built (F3, 2026-11-14):** Settings → Display row 3, `Font  < name >`, Left/Right cycles the five
+**Built (F3, 2026-11-14):** Settings → UI row 3 (was Display row 3), `Font  < name >`, Left/Right cycles the five
 fonts and the whole screen redraws in the new one; a sample line and box preview show while the row
 is selected. Saved to `/mnt/data/redux/font` (one key, e.g. `spleen`). Generated tables are committed
 (`frontend/src/font_extra.c`); the sources are fetched when regenerating, not kept in the repo.
@@ -475,6 +474,10 @@ The code and the mock-ups keep the 90 × 30 grid; only the renderer (`grid_prese
 | Header Size, Footer Size | Default, Large | title / help row twice as tall, same width |
 | Window Size | Default, Large, Largest | body rows twice as tall; Largest also twice as wide (a line shows 44 characters, the rest is cut) |
 | Menu Text, Header/Footer Text, Window Color | 16 VGA colours | defaults White, White, Black; menu text never equals the window colour, header/footer text is never black |
+
+Settings → UI rows: Brightness, Screen Timeout, Font, Accent Color, Menu Text, Header/Footer Text,
+Window Color, Header Size, Footer Size, Window Size, Reset Fonts (the Display menu was removed and its
+three rows moved here, Dale 2026-11-17 A).
 
 Body rows at each size: 26 (Default), 25 (one of header/footer Large), 24 (both), 13 or 12 (window
 Large/Largest). Scrolling lists show 20 rows at Default, otherwise body rows minus 3. A screen whose

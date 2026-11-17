@@ -75,7 +75,7 @@ python3 tools/install.py --uninstall 192.168.1.13 # back to the stock menu
 ## Colour presets
 
 The build has four accent colours (BIOS cyan, Amber, Green, White) plus the 16 standard VGA text
-colours (all but black) under *Settings → UI*, and five UI fonts under *Settings → Display → Font*. The
+colours (all but black) under *Settings → UI*, and five UI fonts under *Settings → UI → Font*. The
 full design is ten schemes named after the displays of 1975 to the 1990s (below, a design render); those
 are not built yet.
 
