@@ -18,7 +18,7 @@ static void feed(const char *s) { vt_feed(&t, (const unsigned char *)s, strlen(s
 static const char *row(int r) {
     static char line[VT_COLS + 1];
     for (int c = 0; c < VT_COLS; c++) {
-        unsigned char ch = t.cells[r][c].ch;
+        unsigned char ch = t.cells[r][c].wide ? '?' : t.cells[r][c].ch;
         line[c] = (ch >= 0x20 && ch < 0x7F) ? (char)ch : '?';
     }
     int n = VT_COLS;
@@ -119,14 +119,36 @@ int main(void) {
     expect(t.cells[0][3].ch == 0xDA && t.cells[0][4].ch == 0xC4 && t.cells[0][5].ch == 0xBF, "DEC special graphics");
     feed("lqk");
     expect(t.cells[0][6].ch == 'l', "back to ASCII after ESC ( B");
-    feed("\xe6\x97\xa5");                                     /* 日: no glyph */
-    expect(t.cells[0][9].ch == '?', "a glyph the fonts lack shows as ?");
+    feed("\xd0\x96");                                         /* Ж: no glyph, narrow */
+    expect(t.cells[0][9].ch == '?' && !t.cells[0][9].wide, "a narrow glyph the fonts lack shows as ?");
     feed("\xc3\xa9");                                         /* é */
     expect(t.cells[0][10].ch == 0x82, "Latin-1 letters map to CP437");
     feed("\x0e" "q" "\x0f" "q");                              /* SO selects G1 = ASCII by default */
     expect(t.cells[0][11].ch == 'q' && t.cells[0][12].ch == 'q', "SO/SI with G1 ASCII leaves text alone");
     feed("\x1b)0\x0e" "q" "\x0f");
     expect(t.cells[0][13].ch == 0xC4, "SO with G1 line drawing draws lines");
+
+    /* East Asian wide glyphs take two cells (CJK decision A, 2026-11-17). */
+    vt_init(&t);
+    feed("a\xe4\xb8\xad\xe6\x96\x87" "b");        /* a中文b */
+    expect(t.cells[0][1].wide == 1 && t.cells[0][1].cp == 0x4E2D && t.cells[0][2].wide == 2
+           && t.cells[0][3].wide == 1 && t.cells[0][3].cp == 0x6587 && t.cells[0][5].ch == 'b' && t.col == 6,
+           "a CJK glyph is two cells with its code point in the first");
+    expect(!strcmp(row(0), "a????b"), "the dump shows a wide glyph as ??");
+    expect(vt_is_wide(0x3042) && vt_is_wide(0xAC00) && vt_is_wide(0xFF21) && !vt_is_wide(0x00E9) && !vt_is_wide('a'),
+           "kana, Hangul and fullwidth are wide; Latin is not");
+    feed("\x1b[1;2H" "X");
+    expect(t.cells[0][1].ch == 'X' && !t.cells[0][1].wide && t.cells[0][2].ch == ' ' && !t.cells[0][2].wide,
+           "overwriting the first half blanks the second");
+    feed("\x1b[1;5H" "Y");
+    expect(t.cells[0][4].ch == 'Y' && t.cells[0][3].ch == ' ' && !t.cells[0][3].wide, "overwriting the second half blanks the first");
+    feed("\x1b[2;90H" "\xe4\xb8\xad");                 /* no room in the last column: wraps first */
+    expect(t.cells[1][89].ch == ' ' && t.cells[2][0].wide == 1 && t.cells[2][1].wide == 2 && t.col == 2,
+           "a wide glyph at the last column wraps to the next row");
+    feed("\x1b[3;89H" "\xe4\xb8\xad");                 /* exactly fits columns 89-90 */
+    expect(t.cells[2][88].wide == 1 && t.cells[2][89].wide == 2 && t.wrap_pending, "a wide glyph that just fits sets wrap pending");
+    feed("\xcc\x81");                                     /* combining acute: ignored */
+    expect(t.wrap_pending && t.row == 2, "a combining mark draws nothing");
 
     /* Alternate screen (curses programs) restores the shell's screen on exit. */
     vt_init(&t);

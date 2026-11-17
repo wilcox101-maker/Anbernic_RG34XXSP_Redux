@@ -163,7 +163,7 @@ static SDL_Color dim(SDL_Color c) { c.r /= 2; c.g /= 2; c.b /= 2; return c; }
 /* The key picker as cells over the bottom rows: light grey box, black text, the chosen key yellow,
    an active Shift/Ctrl cyan. */
 static void osk_cells(vt_cell_t out[OSK_HEIGHT][VT_COLS]) {
-    vt_cell_t bg = { ' ', 0, 7, 0 };
+    vt_cell_t bg = { ' ', 0, 7, 0, 0, 0 };
     for (int r = 0; r < OSK_HEIGHT; r++) for (int c = 0; c < VT_COLS; c++) out[r][c] = bg;
     out[0][0].ch = 0xDA; out[0][VT_COLS - 1].ch = 0xBF;
     out[OSK_HEIGHT - 1][0].ch = 0xC0; out[OSK_HEIGHT - 1][VT_COLS - 1].ch = 0xD9;
@@ -209,9 +209,12 @@ static void draw(SDL_Renderer *ren, const char *footer) {
                 SDL_SetRenderDrawColor(ren, bg.r, bg.g, bg.b, 255);
                 SDL_RenderFillRect(ren, &dst);
             }
-            if (cell.ch != ' ') {
+            /* A wide (CJK) glyph has no 8x16 bitmap yet: both of its cells show '?' so the columns
+               still line up with what the program laid out (16x16 glyphs come next). */
+            unsigned char ch = cell.wide ? '?' : cell.ch;
+            if (ch != ' ') {
                 SDL_SetTextureColorMod(atlas, fg.r, fg.g, fg.b);
-                SDL_Rect src = { cell.ch * FONT_W, 0, FONT_W, FONT_H };
+                SDL_Rect src = { ch * FONT_W, 0, FONT_W, FONT_H };
                 SDL_RenderCopy(ren, atlas, &src, &dst);
             }
             if (cell.attr & VT_UNDERLINE) {
