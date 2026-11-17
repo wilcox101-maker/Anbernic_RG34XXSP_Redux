@@ -16,7 +16,7 @@ The [dev release](https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux/rel
 | VGA 8×16 font | built into `dmenu.bin` (`frontend/src/font.c`), from Linux `lib/fonts/font_8x16.c` | GPL-2.0 |
 | Thin 7×14 and Chunky (Acorn 8×8) fonts | built into `dmenu.bin` (`frontend/src/font_extra.c`), from Linux `lib/fonts/font_7x14.c` and `font_acorn_8x8.c` | GPL-2.0 |
 | Spleen 8×16, © 2018-2026 Frederic Cambus | built into `dmenu.bin` (`frontend/src/font_extra.c`) | BSD-2-Clause, full text in [`frontend/README.md`](frontend/README.md#licenses-ui-fonts) |
-| GNU Unifont 8×16, © 1998-2023 Roman Czyborra, Paul Hardy and contributors | built into `dmenu.bin` (`frontend/src/font_extra.c`) | GPL-2.0-or-later with the GNU font embedding exception (also SIL OFL-1.1) |
+| GNU Unifont 8×16 and the 16×16 CJK glyphs, © 1998-2023 Roman Czyborra, Paul Hardy and contributors | built into `dmenu.bin` (`frontend/src/font_extra.c`; `frontend/term/cjk.hex` via `tools/cjkconv.py`, drawn by Redux Terminal) | GPL-2.0-or-later with the GNU font embedding exception (also SIL OFL-1.1) |
 | Redux boot screen and mark | `bootlogo.bmp`, [`branding/`](branding/README.md) | CC BY 4.0 (original artwork) |
 
 ## Used on the device, not shipped

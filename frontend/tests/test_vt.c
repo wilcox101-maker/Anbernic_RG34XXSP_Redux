@@ -1,6 +1,7 @@
 /* Redux Terminal screen model tests (no SDL, no pty). Exit 0 = pass. */
 #include "vt.h"
 #include "osk.h"
+#include "cjk.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -252,6 +253,17 @@ int main(void) {
     expect(!strcmp(osk_key(k.row, k.col)->label, "PgDn"), "left from the first key wraps to the last");
     osk_move(&k, -1, 0);
     expect(k.row == OSK_ROWS - 1, "up from the first row wraps to the last");
+
+    /* CJK glyph table (CJK PR 2): Unifont 16x16 for 中, kana and fullwidth; nothing for Latin. */
+    {
+        const uint8_t *g = cjk_glyph(0x4E2D);   /* 中 */
+        expect(g != NULL && g[8] == 0x3F && g[9] == 0xF8, "中 has its Unifont bitmap (row 4 = 3FF8)");
+        expect(cjk_glyph(0x3042) != NULL && cjk_glyph(0xFF21) != NULL, "hiragana あ and fullwidth A have glyphs");
+        expect(cjk_glyph('a') == NULL && cjk_glyph(0xAC00) == NULL, "Latin and Hangul (not in the table yet) have none");
+        static const unsigned char bad[] = "RDXCJK1\0\x05";
+        expect(cjk_set_blob(bad, sizeof bad - 1) < 0 && cjk_glyph(0x4E2D) == NULL, "a truncated blob is refused");
+        expect(cjk_set_blob(NULL, 0) == 3 && cjk_glyph(0x4E2D) != NULL, "the embedded blob has three ranges");
+    }
 
     printf("%s\n", fails ? "test_vt: FAILED" : "test_vt: all passed");
     return fails ? 1 : 0;
