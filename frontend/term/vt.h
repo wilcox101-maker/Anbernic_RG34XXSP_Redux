@@ -20,10 +20,15 @@
 #define VT_DIM       0x08
 
 typedef struct {
-    unsigned char ch;    /* CP437 code */
+    unsigned char ch;    /* CP437 code ('?' under a wide glyph, ' ' in its second cell) */
     uint8_t fg, bg;      /* 0..15 */
     uint8_t attr;        /* VT_* bits */
+    uint8_t wide;        /* 0 narrow; 1 first cell of an East Asian wide glyph (cp set); 2 its second cell */
+    uint32_t cp;         /* Unicode code point of a wide glyph (CJK, kana, Hangul, fullwidth) */
 } vt_cell_t;
+
+/* East Asian wide code point: takes two cells, as every terminal and curses program assume. */
+int vt_is_wide(uint32_t cp);
 
 typedef struct {
     vt_cell_t cells[VT_ROWS][VT_COLS];
