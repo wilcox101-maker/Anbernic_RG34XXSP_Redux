@@ -9,12 +9,16 @@
  * device buttons into keys. Embedded in dmenu.bin and written to /tmp at start (term.c); Apps
  * launches it through /tmp/.next like any other program, and dmenu_ln restarts the menu after it.
  *
- * Buttons (PR 1): D-pad and left stick = arrows, A = Enter, B = Esc, X = Tab, Y = Backspace,
+ * Buttons: D-pad and left stick = arrows, A = Enter, B = Esc, X = Tab, Y = Backspace,
  * L1 / R1 = Page Up / Page Down, L2 / R2 = Home / End, START = F10, MENU = quit.
- * Mouse (right stick, L3 / R3) and the SELECT on-screen keys come in PR 2.
+ * Mouse: the right stick moves a cursor, L3 = left click, R3 = right click, sent as xterm mouse
+ * events to a program that asked for them (mc, htop, alsamixer). SELECT opens the on-screen keys
+ * (osk.c): D-pad moves, A types, B or SELECT closes.
  * On a PC the keyboard types into it (for development). REDUX_TERM_DUMP=<file> writes the final
  * screen as text at exit (the CI smoke test) and REDUX_TERM_RAW=<file> records every byte the
- * program sent (for fixing a program that draws wrong). Nothing here writes outside /tmp. */
+ * program sent (for fixing a program that draws wrong); REDUX_TERM_SHOT=<file.bmp> saves the last
+ * frame and REDUX_TERM_OSK=1 starts with the key picker open (screenshots for a PR). Nothing here
+ * writes outside /tmp. */
 #define _GNU_SOURCE
 #include <SDL.h>
 #include <errno.h>
@@ -31,6 +35,8 @@
 #include <unistd.h>
 #include "vt.h"
 #include "font.h"
+#include "osk.h"
+#include "remap.h"
 #ifdef REDUX_PLATFORM_STOCK
 #include <linux/input.h>
 #include "remap_device.h"
@@ -45,6 +51,9 @@
 #define REPEAT_DELAY_MS 400
 #define REPEAT_EVERY_MS 60
 #define HOLD_AFTER_FAIL_MS 60000   /* a program that failed stays on screen this long */
+#define MOUSE_HIDE_MS 4000         /* the cursor hides this long after the stick went still */
+#define MOUSE_SPEED_PX_S 700.0f    /* at full deflection */
+#define MOUSE_TICK_MS 16
 
 #ifndef REDUX_BUILD
 #define REDUX_BUILD "dev"
@@ -58,6 +67,13 @@ static const SDL_Color palette[16] = {
 };
 
 static vt_t vt;
+static osk_t osk;
+/* Mouse cursor in pixels; shown while moving and for MOUSE_HIDE_MS after. */
+static float mouse_x = SCREEN_W / 2, mouse_y = SCREEN_H / 2;
+static int mouse_shown, mouse_held = -1;        /* button held: 0 left, 2 right, -1 none */
+static int mouse_cell_col = -1, mouse_cell_row = -1;
+static long long mouse_moved_at;
+static int stick_rx, stick_ry;                   /* right stick raw values */
 static int pty_fd = -1;
 static pid_t child = -1;
 static SDL_Texture *atlas;
@@ -143,18 +159,49 @@ static int build_atlas(SDL_Renderer *ren) {
 
 static SDL_Color dim(SDL_Color c) { c.r /= 2; c.g /= 2; c.b /= 2; return c; }
 
+/* The key picker as cells over the bottom rows: light grey box, black text, the chosen key yellow,
+   an active Shift/Ctrl cyan. */
+static void osk_cells(vt_cell_t out[OSK_HEIGHT][VT_COLS]) {
+    vt_cell_t bg = { ' ', 0, 7, 0 };
+    for (int r = 0; r < OSK_HEIGHT; r++) for (int c = 0; c < VT_COLS; c++) out[r][c] = bg;
+    out[0][0].ch = 0xDA; out[0][VT_COLS - 1].ch = 0xBF;
+    out[OSK_HEIGHT - 1][0].ch = 0xC0; out[OSK_HEIGHT - 1][VT_COLS - 1].ch = 0xD9;
+    for (int c = 1; c < VT_COLS - 1; c++) out[0][c].ch = out[OSK_HEIGHT - 1][c].ch = 0xC4;
+    for (int r = 1; r < OSK_HEIGHT - 1; r++) out[r][0].ch = out[r][VT_COLS - 1].ch = 0xB3;
+    const char *title = " Keys: D-pad moves, A types, B closes ";
+    for (int i = 0; title[i] && i + 2 < VT_COLS - 1; i++) out[0][i + 2].ch = (unsigned char)title[i];
+    for (int r = 0; r < OSK_ROWS; r++) {
+        for (int c = 0; c < osk_cols(r); c++) {
+            const osk_key_t *k = osk_key(r, c);
+            int x = osk_key_x(r, c), chosen = r == osk.row && c == osk.col;
+            int active = (k->mode == 1 && osk.shift) || (k->mode == 2 && osk.ctrl);
+            for (int i = 0; i < k->width + 2 && x + i < VT_COLS - 1; i++) {
+                vt_cell_t *cell = &out[r + 1][x + i];
+                cell->ch = (i == 0 || i == k->width + 1) ? ' ' : (unsigned char)k->label[i - 1];
+                if (osk.shift && !k->mode && !k->shifted && cell->ch >= 'a' && cell->ch <= 'z' && k->width == 1)
+                    cell->ch = (unsigned char)(cell->ch - 'a' + 'A');
+                if (osk.shift && k->shifted && i == 1) cell->ch = (unsigned char)k->shifted[0];
+                cell->bg = chosen ? 11 : active ? 14 : 7;
+            }
+        }
+    }
+}
+
 static void draw(SDL_Renderer *ren, const char *footer) {
+    static vt_cell_t overlay[OSK_HEIGHT][VT_COLS];
+    int ov_top = osk.open ? VT_ROWS - OSK_HEIGHT : VT_ROWS;
+    if (osk.open) osk_cells(overlay);
     SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
     SDL_RenderClear(ren);
     for (int r = 0; r < VT_ROWS; r++) {
         for (int c = 0; c < VT_COLS; c++) {
-            vt_cell_t cell = vt.cells[r][c];
+            vt_cell_t cell = r >= ov_top ? overlay[r - ov_top][c] : vt.cells[r][c];
             int fgi = cell.fg, bgi = cell.bg;
             if ((cell.attr & VT_BOLD) && fgi < 8) fgi += 8;   /* bold as bright, the console way */
             SDL_Color fg = palette[fgi & 15], bg = palette[bgi & 15];
             if (cell.attr & VT_DIM) fg = dim(fg);
             if (cell.attr & VT_INVERSE) { SDL_Color x = fg; fg = bg; bg = x; }
-            int at_cursor = vt.cursor_visible && r == vt.row && c == vt.col && !footer;
+            int at_cursor = vt.cursor_visible && r == vt.row && c == vt.col && !footer && r < ov_top;
             if (at_cursor) { SDL_Color x = fg; fg = bg; bg = x; if (fg.r == bg.r && fg.g == bg.g && fg.b == bg.b) bg = palette[7]; }
             SDL_Rect dst = { c * FONT_W, r * FONT_H, FONT_W, FONT_H };
             if (bg.r || bg.g || bg.b) {
@@ -185,6 +232,14 @@ static void draw(SDL_Renderer *ren, const char *footer) {
             SDL_RenderCopy(ren, atlas, &src, &dst);
         }
     }
+    if (mouse_shown && !footer) {
+        /* The pointer: a yellow frame round the cell under it, plus a dot at the exact point. */
+        SDL_Rect cellr = { (int)mouse_x / FONT_W * FONT_W, (int)mouse_y / FONT_H * FONT_H, FONT_W, FONT_H };
+        SDL_SetRenderDrawColor(ren, 255, 255, 0, 255);
+        SDL_RenderDrawRect(ren, &cellr);
+        SDL_Rect dot = { (int)mouse_x - 1, (int)mouse_y - 1, 3, 3 };
+        SDL_RenderFillRect(ren, &dot);
+    }
 }
 
 static void present(SDL_Renderer *ren, const char *footer) {
@@ -196,39 +251,53 @@ static void present(SDL_Renderer *ren, const char *footer) {
 
 static int quit_requested;
 static int any_button;              /* a press after the program ended closes the terminal */
-static int held_key = -1;           /* a repeating key held down (vt_key_t), -1 none */
+static int dirty_input;             /* the picker or the pointer changed: redraw */
+
+/* Held button with repeat: directions, page keys and Backspace repeat after REPEAT_DELAY_MS. */
+static int held_btn = -1;           /* logical_button_t, -1 none */
 static long long held_since, held_last;
 
-/* 1 if the key repeats while held. */
-static int repeats(vt_key_t k) {
-    return k == VTK_UP || k == VTK_DOWN || k == VTK_LEFT || k == VTK_RIGHT || k == VTK_PGUP ||
-           k == VTK_PGDN || k == VTK_BACKSPACE;
+static void mouse_report(int button, int release, int motion) {
+    char buf[32];
+    int col = (int)mouse_x / FONT_W, row = (int)mouse_y / FONT_H;
+    int n = vt_mouse_bytes(&vt, button, release, motion, col, row, buf, sizeof buf);
+    if (n) write_all(buf, n);
 }
 
-static void key_down(vt_key_t k) {
-    any_button = 1;
-    send_key(k);
-    if (repeats(k)) { held_key = k; held_since = held_last = now_ms(); }
-}
-
-static void key_up(vt_key_t k) {
-    if (held_key == (int)k) held_key = -1;
-}
-
-static void repeat_tick(void) {
-    if (held_key < 0) return;
-    long long t = now_ms();
-    if (t - held_since >= REPEAT_DELAY_MS && t - held_last >= REPEAT_EVERY_MS) {
-        send_key((vt_key_t)held_key);
-        held_last = t;
+/* Right stick: move the pointer; report motion to a program that wants it. */
+static void mouse_tick(long long now) {
+    static long long last;
+    if (!last) last = now;
+    float dt = (float)(now - last) / 1000.0f;
+    last = now;
+    float dx = stick_rx / 4096.0f, dy = stick_ry / 4096.0f;
+    if (dx > -0.15f && dx < 0.15f) dx = 0;   /* deadzone */
+    if (dy > -0.15f && dy < 0.15f) dy = 0;
+    if (dx || dy) {
+        /* Speed grows with the square of the deflection: fine control near the centre. */
+        mouse_x += dx * (dx < 0 ? -dx : dx) * MOUSE_SPEED_PX_S * dt;
+        mouse_y += dy * (dy < 0 ? -dy : dy) * MOUSE_SPEED_PX_S * dt;
+        if (mouse_x < 0) mouse_x = 0;
+        if (mouse_x > SCREEN_W - 1) mouse_x = SCREEN_W - 1;
+        if (mouse_y < 0) mouse_y = 0;
+        if (mouse_y > SCREEN_H - 1) mouse_y = SCREEN_H - 1;
+        mouse_moved_at = now;
+        if (!mouse_shown) { mouse_shown = 1; }
+        dirty_input = 1;
+        int col = (int)mouse_x / FONT_W, row = (int)mouse_y / FONT_H;
+        if (col != mouse_cell_col || row != mouse_cell_row) {
+            mouse_cell_col = col; mouse_cell_row = row;
+            mouse_report(mouse_held, 0, 1);
+        }
+    } else if (mouse_shown && now - mouse_moved_at > MOUSE_HIDE_MS && mouse_held < 0) {
+        mouse_shown = 0;
+        dirty_input = 1;
     }
 }
 
-#ifdef REDUX_PLATFORM_STOCK
-static int keys_fd = -1;
-static int stick_dir[6];   /* edge state per axis: left X/Y, right X/Y, hat X/Y */
+static int mouse_active(void) { return stick_rx > 600 || stick_rx < -600 || stick_ry > 600 || stick_ry < -600; }
 
-/* Logical button to key. -1: no key. */
+/* Button to key, outside the picker. -1: no key. */
 static int button_key(logical_button_t b) {
     switch (b) {
     case LB_UP: return VTK_UP;       case LB_DOWN: return VTK_DOWN;
@@ -242,18 +311,64 @@ static int button_key(logical_button_t b) {
     }
 }
 
-static void logical(logical_button_t b, int pressed) {
-    if (b == LB_MENU) { if (pressed) { quit_requested = 1; any_button = 1; } return; }
-    int k = button_key(b);
-    if (k < 0) { if (pressed) any_button = 1; return; }
-    if (pressed) key_down((vt_key_t)k); else key_up((vt_key_t)k);
+static int repeats(logical_button_t b) {
+    return b == LB_UP || b == LB_DOWN || b == LB_LEFT || b == LB_RIGHT || b == LB_L1 || b == LB_R1 || b == LB_Y;
 }
+
+/* One press (or repeat) of a logical button. */
+static void act(logical_button_t b) {
+    if (osk.open) {
+        switch (b) {
+        case LB_UP: osk_move(&osk, -1, 0); dirty_input = 1; return;
+        case LB_DOWN: osk_move(&osk, 1, 0); dirty_input = 1; return;
+        case LB_LEFT: osk_move(&osk, 0, -1); dirty_input = 1; return;
+        case LB_RIGHT: osk_move(&osk, 0, 1); dirty_input = 1; return;
+        case LB_A: { char buf[16]; int n = osk_press(&osk, buf, sizeof buf); if (n) write_all(buf, n); dirty_input = 1; return; }
+        case LB_B: case LB_SELECT: osk_toggle(&osk); dirty_input = 1; return;
+        default: break;   /* X, Y, L1/R1, L2/R2, Start still reach the program */
+        }
+    } else if (b == LB_SELECT) { osk_toggle(&osk); dirty_input = 1; return; }
+    int k = button_key(b);
+    if (k >= 0) send_key((vt_key_t)k);
+}
+
+static void logical(logical_button_t b, int pressed) {
+    if (pressed) any_button = 1;
+    if (b == LB_MENU) { if (pressed) quit_requested = 1; return; }
+    if (b == LB_L3 || b == LB_R3) {
+        /* Clicks go to the program only while it wants the mouse. */
+        int button = b == LB_L3 ? 0 : 2;
+        if (pressed) { mouse_held = button; mouse_shown = 1; mouse_moved_at = now_ms(); mouse_report(button, 0, 0); }
+        else { mouse_report(button, 1, 0); if (mouse_held == button) mouse_held = -1; }
+        dirty_input = 1;
+        return;
+    }
+    if (pressed) {
+        act(b);
+        if (repeats(b)) { held_btn = b; held_since = held_last = now_ms(); }
+    } else if (held_btn == (int)b) {
+        held_btn = -1;
+    }
+}
+
+static void repeat_tick(void) {
+    if (held_btn < 0) return;
+    long long t = now_ms();
+    if (t - held_since >= REPEAT_DELAY_MS && t - held_last >= REPEAT_EVERY_MS) {
+        act((logical_button_t)held_btn);
+        held_last = t;
+    }
+}
+
+#ifdef REDUX_PLATFORM_STOCK
+static int keys_fd = -1;
+static int stick_dir[6];   /* edge state per axis: left X/Y, right X/Y, hat X/Y */
 
 static logical_button_t axis_btn(int axis, int dir) {
     if (dir == 0) return LB_NONE;
     if (axis == 0 || axis == 4) return dir < 0 ? LB_LEFT : LB_RIGHT;
     if (axis == 1 || axis == 5) return dir < 0 ? LB_UP : LB_DOWN;
-    return LB_NONE;   /* right stick: the mouse, PR 2 */
+    return LB_NONE;   /* right stick: the mouse */
 }
 
 static void read_buttons(void) {
@@ -269,6 +384,8 @@ static void read_buttons(void) {
                        ev.code == DEV_ABS_HAT0X ? 4 : ev.code == DEV_ABS_HAT0Y ? 5 : -1;
             if (axis < 0) continue;
             int v = ev.value, dir;
+            if (axis == 2) { stick_rx = v; continue; }
+            if (axis == 3) { stick_ry = v; continue; }
             if (axis >= 4) dir = v < 0 ? -1 : v > 0 ? 1 : 0;
             else if (v <= -DEV_STICK_THRESHOLD) dir = -1;
             else if (v >= DEV_STICK_THRESHOLD) dir = 1;
@@ -284,7 +401,8 @@ static void read_buttons(void) {
 }
 #endif
 
-/* PC keyboard (development). */
+/* PC keyboard (development): plain keys go to the program; F11 opens the picker; F12 is MENU;
+   the keypad 8/2/4/6 and 5 drive the mouse (hold 5 = left click, 0 = right click). */
 static void sdl_key(const SDL_KeyboardEvent *e, int down) {
     int k = -1;
     switch (e->keysym.sym) {
@@ -300,11 +418,24 @@ static void sdl_key(const SDL_KeyboardEvent *e, int down) {
     case SDLK_F4: k = VTK_F4; break;   case SDLK_F5: k = VTK_F5; break;  case SDLK_F6: k = VTK_F6; break;
     case SDLK_F7: k = VTK_F7; break;   case SDLK_F8: k = VTK_F8; break;  case SDLK_F9: k = VTK_F9; break;
     case SDLK_F10: k = VTK_F10; break;
-    case SDLK_F12: if (down) quit_requested = 1; return;   /* MENU on a PC */
+    case SDLK_F11: if (down && !e->repeat) logical(LB_SELECT, 1); return;
+    case SDLK_F12: if (down) quit_requested = 1; return;
+    case SDLK_KP_8: stick_ry = down ? -4096 : 0; return;
+    case SDLK_KP_2: stick_ry = down ? 4096 : 0; return;
+    case SDLK_KP_4: stick_rx = down ? -4096 : 0; return;
+    case SDLK_KP_6: stick_rx = down ? 4096 : 0; return;
+    case SDLK_KP_5: if (!e->repeat) logical(LB_L3, down); return;
+    case SDLK_KP_0: if (!e->repeat) logical(LB_R3, down); return;
     default: break;
     }
-    if (k >= 0) { if (down) key_down((vt_key_t)k); else key_up((vt_key_t)k); return; }
-    /* Ctrl + letter: the control byte (Ctrl-C, Ctrl-L, ...). SDL repeats these for us. */
+    if (osk.open && down && !e->repeat) {
+        /* With the picker open the arrow keys and Enter drive it, like the D-pad and A. */
+        logical_button_t b = k == VTK_UP ? LB_UP : k == VTK_DOWN ? LB_DOWN : k == VTK_LEFT ? LB_LEFT :
+                             k == VTK_RIGHT ? LB_RIGHT : k == VTK_ENTER ? LB_A : k == VTK_ESC ? LB_B : LB_NONE;
+        if (b != LB_NONE) { act(b); return; }
+    }
+    if (k >= 0) { if (down) { any_button = 1; send_key((vt_key_t)k); } return; }   /* SDL repeats for us */
+    /* Ctrl + letter: the control byte (Ctrl-C, Ctrl-L, ...). */
     if (down && (e->keysym.mod & KMOD_CTRL) && e->keysym.sym >= 'a' && e->keysym.sym <= 'z') {
         char c = (char)(e->keysym.sym - 'a' + 1);
         write_all(&c, 1);
@@ -334,6 +465,8 @@ int main(int argc, char **argv) {
 
     font_load();   /* the font the user chose in Settings > UI */
     vt_init(&vt);
+    osk_init(&osk);
+    if (getenv("REDUX_TERM_OSK")) { osk.open = 1; mouse_shown = 1; mouse_moved_at = now_ms() + 60000; }
 
     SDL_Window *win = NULL;
     SDL_Renderer *ren = NULL;
@@ -374,7 +507,7 @@ int main(int argc, char **argv) {
 #ifdef REDUX_PLATFORM_STOCK
         if (keys_fd >= 0) { p[n].fd = keys_fd; p[n].events = POLLIN; n++; }
 #endif
-        int timeout = held_key >= 0 ? REPEAT_EVERY_MS : vt.dirty ? 0 : 30;
+        int timeout = (held_btn >= 0 || mouse_active()) ? MOUSE_TICK_MS : (vt.dirty || dirty_input) ? 0 : 30;
         if (n) poll(p, (nfds_t)n, timeout); else SDL_Delay((Uint32)timeout);
 
         /* Program output. */
@@ -424,11 +557,20 @@ int main(int argc, char **argv) {
             else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) vt.dirty = 1;
         }
         repeat_tick();
-        if (vt.dirty) present(ren, pty_fd < 0 ? footer : NULL);
+        mouse_tick(now_ms());
+        if (vt.dirty || dirty_input) { present(ren, pty_fd < 0 ? footer : NULL); dirty_input = 0; }
     }
 
     stop_child();
     if (raw) fclose(raw);
+    const char *shot = getenv("REDUX_TERM_SHOT");
+    if (shot) {
+        draw(ren, pty_fd < 0 && footer[0] ? footer : NULL);
+        SDL_Surface *sf = SDL_CreateRGBSurfaceWithFormat(0, SCREEN_W, SCREEN_H, 32, SDL_PIXELFORMAT_RGBA32);
+        if (sf && SDL_RenderReadPixels(ren, NULL, sf->format->format, sf->pixels, sf->pitch) == 0) SDL_SaveBMP(sf, shot);
+        else fprintf(stderr, "redux-term: screenshot failed: %s\n", SDL_GetError());
+        if (sf) SDL_FreeSurface(sf);
+    }
     const char *dump_path = getenv("REDUX_TERM_DUMP");
     if (dump_path) {
         /* Both screens: a curses program has switched back to the (blank) main screen by then. */

@@ -76,6 +76,11 @@ typedef enum {
 } vt_key_t;
 int vt_key_bytes(const vt_t *t, vt_key_t k, char *out, int cap);
 
+/* xterm mouse report for a program that asked for one (mouse_mode != 0), or 0 bytes if none did.
+   button: 0 left, 1 middle, 2 right; release = 1 for the button going up; motion = 1 for a move
+   with a button held (sent only in mode 1002/1003) or with none (1003 only). col/row 0-based. */
+int vt_mouse_bytes(const vt_t *t, int button, int release, int motion, int col, int row, char *out, int cap);
+
 /* Text dump for tests: VT_ROWS lines of the cells as ASCII ('?' for non-ASCII), each ending in
    '\n'; trailing spaces kept. Returns bytes written. */
 size_t vt_dump(const vt_t *t, char *buf, size_t len);

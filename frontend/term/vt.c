@@ -520,6 +520,38 @@ int vt_key_bytes(const vt_t *t, vt_key_t k, char *out, int cap) {
     return n;
 }
 
+static int put_num(char *out, int at, int v) {
+    char tmp[8]; int n = 0;
+    if (v <= 0) tmp[n++] = '0';
+    while (v > 0 && n < 7) { tmp[n++] = (char)('0' + v % 10); v /= 10; }
+    while (n > 0) out[at++] = tmp[--n];
+    return at;
+}
+
+int vt_mouse_bytes(const vt_t *t, int button, int release, int motion, int col, int row, char *out, int cap) {
+    if (!t->mouse_mode || cap < 12) return 0;
+    if (motion) {
+        if (t->mouse_mode == 1000) return 0;                       /* clicks only */
+        if (t->mouse_mode == 1002 && button < 0) return 0;         /* drag needs a held button */
+    }
+    int cb = button < 0 ? 3 : button;                              /* 3 = no button (motion) */
+    if (motion) cb += 32;
+    int n = 0;
+    if (t->mouse_sgr) {
+        out[n++] = 0x1B; out[n++] = '['; out[n++] = '<';
+        n = put_num(out, n, cb); out[n++] = ';';
+        n = put_num(out, n, col + 1); out[n++] = ';';
+        n = put_num(out, n, row + 1);
+        out[n++] = release ? 'm' : 'M';
+    } else {
+        /* X10 encoding: one byte each, offset 32; a release is button 3; fits our 90 x 30. */
+        if (release) cb = (cb & 32) | 3;
+        out[n++] = 0x1B; out[n++] = '['; out[n++] = 'M';
+        out[n++] = (char)(32 + cb); out[n++] = (char)(33 + col); out[n++] = (char)(33 + row);
+    }
+    return n;
+}
+
 size_t vt_dump(const vt_t *t, char *buf, size_t len) {
     size_t at = 0;
     for (int r = 0; r < VT_ROWS; r++) {
