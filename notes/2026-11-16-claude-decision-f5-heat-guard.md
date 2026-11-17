@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-16
 re: F5 step 4 heat guard limits (Q1 A in notes/2026-11-16-claude-decision-f5-plan.md); data from the 10 min heat run
-status: open (answered A 16:12; closes when step 4 is device-checked)
+status: closed (built and running on the device; cap not yet triggered, in the Beta exit test)
 ---
 
 # Decision: heat-guard limits on the SoC temperature
