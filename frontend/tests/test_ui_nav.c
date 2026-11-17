@@ -1,4 +1,3 @@
-#include <strings.h>
 /* Navigation test: B goes back one level, Engineering tabs wrap, B from Engineering exits to Main.
    Also the ROM scanner: systems list, launch, and scrolling a long list.
    Exit code 0 = pass. Uses the desktop platform layer (no window is opened). */
@@ -23,6 +22,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 
 static int fails;
