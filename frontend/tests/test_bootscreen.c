@@ -107,6 +107,7 @@ int main(void) {
         struct stat before, after;
         stat(TARGET, &before);
         expect(!bootscreen_is_redux(), "starts as Stock");
+        expect(!bootscreen_chose_stock(), "no choice yet: an update may write its logo");
         expect(bootscreen_install() == BOOTSCREEN_OK, "install succeeds");
         stat(TARGET, &after);
         expect(pixel(TARGET) == 0x22 && bootscreen_valid(TARGET), "the partition now holds the Redux logo");
@@ -123,6 +124,7 @@ int main(void) {
 
     expect(bootscreen_restore() == BOOTSCREEN_OK && pixel(TARGET) == 0x11, "restore puts the stock logo back");
     expect(!bootscreen_is_redux() && pixel(BACKUP) == 0x11, "state is Stock; the backup is kept");
+    expect(bootscreen_chose_stock(), "restore records the stock choice (updates leave the logo alone)");
     expect(entries(D "/mnt") == 1, "restore created nothing on the partition");
 
     reset();

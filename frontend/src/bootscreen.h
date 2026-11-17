@@ -46,8 +46,13 @@ void bootscreen_set_paths(const char *mount_dir, const char *redux_logo,
 /* 1 if the file is exactly the stock boot-logo format. */
 int bootscreen_valid(const char *path);
 
-/* 1 if Redux last installed its own logo (the marker), 0 if stock. */
+/* 1 if Redux last installed its own logo (the marker), 0 if stock or never chosen. */
 int bootscreen_is_redux(void);
+
+/* 1 only if the user put the stock logo back (Boot Screen restore). An update then leaves the boot
+   partition alone; otherwise it writes that build's logo (Dale 2026-11-17 13:44: the boot screen
+   comes with dmenu.bin). */
+int bootscreen_chose_stock(void);
 
 /* Put the Redux logo / the saved stock logo on the partition. BOOTSCREEN_* result. */
 int bootscreen_install(void);

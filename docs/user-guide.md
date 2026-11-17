@@ -132,7 +132,7 @@ never goes past the stock CPU frequency table.
 
 **Update tab:** A on the top row downloads the newest dev build of this repo (checksum-checked) and,
 after a 3-second hold, installs it and reboots; pick a history line to roll back. Each build comes
-with its own boot logo (`v0.1-dev <build>`); if the Redux boot screen is installed, the logo is
+with its own boot logo (`v0.1-dev <build>`); unless you put the stock boot screen back, the logo is
 updated with the build. If a new build fails to start 3 times, Redux goes back to the last build that
 reached the menu, then to the stock menu. **[not yet on device]**
 

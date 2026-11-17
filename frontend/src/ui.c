@@ -1132,10 +1132,10 @@ void ui_tick(uint32_t now_ms) {
                 int rc = platform_update_install(upd_sha, REDUX_BUILD, upd_rollback ? "rollback" : "update");
                 stock_started = 1;
                 if (rc == 0) {
-                    /* Boot logo follows the build (Dale 2026-11-17 A): only when Redux's logo is the
-                       one on the boot partition. Same checked in-place write as Boot Screen; a failure
+                    /* Boot logo follows the build (Dale 2026-11-17 A; 13:44: it comes with dmenu.bin) unless the
+                       user put the stock logo back. Same checked in-place write as Boot Screen; a failure
                        leaves the old logo (bootscreen writes the old bytes back) and still reboots. */
-                    if (platform_update_logo_changed() && bootscreen_is_redux()) {
+                    if (platform_update_logo_changed() && !bootscreen_chose_stock()) {
                         ui_busy("Installing", "Writing this build's boot logo.");
                         int b = bootscreen_install();
                         if (b != BOOTSCREEN_OK)
@@ -1560,7 +1560,8 @@ void ui_draw(void) {
             }
             list(0, show, COUNT(settings_items));
         }
-        if (apps_msg[0]) body(COUNT(settings_items) + 1, apps_msg);
+        /* Right under the list (12 lines), so Settings still fits with everything Large. */
+        if (apps_msg[0]) body(COUNT(settings_items), apps_msg);
         break;
     case SCREEN_AUDIO:
         frame("Settings > Audio", "A:Open  B:Back  M:Menu", 1, 0);

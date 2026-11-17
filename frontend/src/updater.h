@@ -30,8 +30,8 @@ int updater_download(const char *current_sha, char *sha_out, size_t n);
 int updater_install(const char *sha, const char *current_sha, const char *how);
 
 /* 1 if the last updater_install also replaced /mnt/vendor/redux/bootlogo.bmp with that build's logo
-   (the release had one). The caller then rewrites the boot partition only if the Redux logo is the
-   one installed there (bootscreen_is_redux). */
+   (the release had one). The caller then rewrites the boot partition unless the user chose the stock
+   logo (bootscreen_chose_stock). */
 int updater_logo_changed(void);
 
 /* 1 if builds/<sha>/dmenu.bin is kept. */

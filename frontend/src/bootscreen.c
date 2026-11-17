@@ -125,20 +125,34 @@ static int save_backup(const unsigned char *buf) {
     return 0;
 }
 
+/* The marker records the user's last choice: "redux" or "stock" (restore). No file = never chosen. */
 static void set_marker(int redux) {
-    if (!redux) { remove(g_marker); return; }
 #ifdef REDUX_PLATFORM_STOCK
     if (mkdir("/mnt/data/redux", 0755) != 0 && errno != EEXIST) return;
 #endif
     FILE *f = fopen(g_marker, "w");
     if (!f) return;
-    fputs("redux\n", f);
+    fputs(redux ? "redux\n" : "stock\n", f);
     fclose(f);
 }
 
-int bootscreen_is_redux(void) {
-    return access(g_marker, R_OK) == 0;
+static int marker_is(const char *word) {
+    char buf[16] = "";
+    FILE *f = fopen(g_marker, "r");
+    if (!f) return 0;
+    if (!fgets(buf, sizeof buf, f)) buf[0] = '\0';
+    fclose(f);
+    buf[strcspn(buf, "\r\n")] = '\0';
+    return strcmp(buf, word) == 0;
 }
+
+/* Older builds wrote "redux" or removed the file, so an empty or unknown marker that exists counts
+   as Redux, as it did before. */
+int bootscreen_is_redux(void) {
+    return access(g_marker, R_OK) == 0 && !marker_is("stock");
+}
+
+int bootscreen_chose_stock(void) { return marker_is("stock"); }
 
 static int apply(const char *source, int make_backup) {
     unsigned char *want = load(source);
