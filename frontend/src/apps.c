@@ -26,7 +26,9 @@ static const app_t apps[APP_COUNT] = {
     [APP_VIDEO]     = { "Video Player", "plays; no buttons", "/mnt/vendor/bin/video/vp.dge" },
     [APP_EBOOK_TF1] = { "Ebook Reader (TF1)", "verified", "/mnt/vendor/bin/ebook/reader_mmc.dge" },
     [APP_EBOOK_TF2] = { "Ebook Reader (TF2)", "not verified", "/mnt/vendor/bin/ebook/reader_sdcard.dge" },
-    [APP_FILES]     = { "File Manager", "verified (tears)", "/mnt/vendor/bin/fileM/dinguxCommand_en.dge" },
+    /* File Manager is Midnight Commander in the terminal (Dale 2026-11-17: replaces the stock
+       dinguxCommander; mc installed with apt, works, shows Chinese file names). */
+    [APP_FILES]     = { "File Manager", "verified", NULL, TERM_BIN, "HOME=/root", "-e mc" },
     [APP_PDF]       = { "PDF Reader", "later (needs a file picker)", NULL },
     [APP_TERMINAL]  = { "Terminal", "verified", NULL, TERM_BIN, "HOME=/root", NULL },
     [APP_TOP]       = { "Task Monitor (htop)", "verified", NULL, TERM_BIN, "HOME=/root", "-e htop" },
@@ -38,6 +40,9 @@ static const app_t apps[APP_COUNT] = {
     [APP_BLUETOOTH]    = { "Bluetooth", "verified", NULL, TERM_BIN, "HOME=/root", "-e bluetoothctl" },
     [APP_INPUT_TEST]   = { "Input Test", "verified", NULL, TERM_BIN, "HOME=/root", "-e evtest /dev/input/event1" },
     [APP_SPEAKER_TEST] = { "Speaker Test", "verified", NULL, TERM_BIN, "HOME=/root", "-e speaker-test -t wav -c 2 -l 1" },
+    /* --off: no logo, so the text fits the terminal width (Dale 12:56: the logo ran off the right).
+       It stays on screen until MENU quits the terminal. */
+    [APP_NEOFETCH]     = { "NeoFetch", "verified", NULL, TERM_BIN, "HOME=/root", "-e sh -c 'neofetch --off; exec sleep 86400'" },
 };
 
 static const char *root = "";
