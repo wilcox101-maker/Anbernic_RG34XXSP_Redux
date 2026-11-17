@@ -182,6 +182,26 @@ int main(void) {
            "mask 0 is read as cpu0 only (cpu0 can't go offline)");
     engprofile_menu_reached();
 
+    /* LED and rumble test: always ends green on, rumble off, red off. */
+    {
+        char batt[300], b2[8];
+        snprintf(batt, sizeof batt, "%s/batt", base);
+        mkdir(batt, 0755);
+        put(batt, "work_led", "x"); put(batt, "lowpwr_led", "x"); put(batt, "moto", "x");
+        engprofile_set_batt_dir(batt);
+        engprofile_set_no_sleep(1);
+        expect(eng_led_rumble_test() == 0, "LED/rumble test runs");
+        get(batt, "work_led", b2, sizeof b2);
+        int green = strcmp(b2, "1") == 0;
+        get(batt, "moto", b2, sizeof b2);
+        int still = strcmp(b2, "0") == 0;
+        get(batt, "lowpwr_led", b2, sizeof b2);
+        expect(green && still && strcmp(b2, "0") == 0, "ends with green on, rumble off, red off");
+        expect(log_has("led_rumble_test - -> red, green off, rumble ok"), "log: LED/rumble test");
+        engprofile_set_batt_dir("/tmp/redux-no-such-batt");
+        expect(eng_led_rumble_test() == -2, "missing attributes report a failure");
+    }
+
     /* Clear removes saved and set-aside profiles. */
     put(data, "eng-profile.off", "cpu schedutil 480000 1512000\n");
     expect(engprofile_clear() == 0 && engprofile_state() == ENG_STATE_NONE, "clear removes both");

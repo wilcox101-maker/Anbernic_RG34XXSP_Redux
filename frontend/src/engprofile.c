@@ -15,6 +15,13 @@ static char g_data[PATH_N] = ENG_DATA_DIR;
 static char g_flag[PATH_N] = ENG_BOOT_FLAG;
 static char g_cpuroot[PATH_N] = "/sys/devices/system/cpu";
 
+static char g_batt[PATH_N] = "/sys/class/power_supply/axp2202-battery";
+static int g_no_sleep;
+void engprofile_set_batt_dir(const char *dir) {
+    snprintf(g_batt, sizeof g_batt, "%s", dir ? dir : "/sys/class/power_supply/axp2202-battery");
+}
+void engprofile_set_no_sleep(int on) { g_no_sleep = on; }
+
 void engprofile_set_cpu_root(const char *cpu_root) {
     snprintf(g_cpuroot, sizeof g_cpuroot, "%s", cpu_root ? cpu_root : "/sys/devices/system/cpu");
 }
@@ -202,6 +209,37 @@ int eng_write_core_online(int cpu, int on) {
     int ok = !err && core_online(cpu) == (on ? 1 : 0);
     log_write(what, old_v, new_v, ok ? "ok" : "FAILED");
     return ok ? 0 : -2;
+}
+
+/* ---- LED and rumble test ---- */
+
+static int batt_write(const char *name, const char *v) {
+    char path[PATH_N * 2];
+    snprintf(path, sizeof path, "%s/%s", g_batt, name);
+    FILE *f = fopen(path, "w");
+    if (!f) return -1;
+    int ok = fputs(v, f) >= 0;
+    return (fclose(f) == 0 && ok) ? 0 : -1;
+}
+
+static void pause_ms(int ms) {
+    if (g_no_sleep) return;
+    struct timespec ts = { ms / 1000, (long)(ms % 1000) * 1000000L };
+    nanosleep(&ts, NULL);
+}
+
+int eng_led_rumble_test(void) {
+    int err = 0;
+    err |= batt_write("lowpwr_led", "1");   pause_ms(1000);   /* red */
+    err |= batt_write("lowpwr_led", "0");
+    err |= batt_write("work_led", "0");     pause_ms(1000);   /* green off */
+    err |= batt_write("moto", "1");         pause_ms(500);    /* rumble */
+    /* Always end in the normal state, whatever failed above. */
+    int end = batt_write("moto", "0");
+    end |= batt_write("work_led", "1");
+    end |= batt_write("lowpwr_led", "0");
+    log_write("led_rumble_test", "-", "red, green off, rumble", (err || end) ? "FAILED" : "ok");
+    return (err || end) ? -2 : 0;
 }
 
 /* ---- profile ---- */
