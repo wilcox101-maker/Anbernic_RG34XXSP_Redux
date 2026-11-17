@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <time.h>
 
 static int read_int(const char *path, int fallback) {
@@ -81,6 +82,16 @@ int platform_log_tail(int which, char lines[][ENG_LOG_COLS], int max) {
     /* dmesg: the kernel ring buffer, read only. Its output goes to /tmp (RAM), never the cards. */
     if (system("dmesg > /tmp/redux-dmesg.txt 2>&1") == -1) return 0;
     return engread_tail("/tmp/redux-dmesg.txt", lines, max);
+}
+int platform_fsck(const char *dev) {
+    /* Only /dev/ block devices; the name goes into a shell command. */
+    if (!dev || strncmp(dev, "/dev/", 5) != 0 || strspn(dev, "/abcdefghijklmnopqrstuvwxyz0123456789") != strlen(dev))
+        return 8;
+    char cmd[200];
+    snprintf(cmd, sizeof cmd, "echo '== fsck -n %s' >> /tmp/redux-fsck.txt; fsck -n %s >> /tmp/redux-fsck.txt 2>&1", dev, dev);
+    int st = system(cmd);
+    if (st == -1 || !WIFEXITED(st)) return 8;
+    return WEXITSTATUS(st);
 }
 int platform_hot(void) {
     FILE *f = fopen("/tmp/redux-hot", "r");   /* HG_FLAG */

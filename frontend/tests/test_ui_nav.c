@@ -200,6 +200,32 @@ int main(void) {
     press(LB_A); press(LB_LEFT); press(LB_A);           /* back to schedutil for the screens below */
     platform_cpu_info(&c);
     expect(strcmp(c.governor, "schedutil") == 0, "governor back to schedutil");
+
+    /* Input tab (F5 step 5b): buttons are shown, not acted on; L1/R1 still change tab. */
+    for (int i = 0; i < 5; i++) press(LB_R1);
+    expect(ui_eng_tab() == ENG_INPUT, "R1 x5 from CPU reaches Input");
+    int before = platform_eng_profile_state();
+    press(LB_X); press(LB_LEFT); press(LB_A);
+    expect(ui_eng_tab() == ENG_INPUT && ui_screen() == SCREEN_ENG && platform_eng_profile_state() == before,
+           "on Input, X/Left/A are only shown (no save, no tab change)");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "A      up") != NULL && strstr(dump, "Left   down") != NULL, "Input lists the last events");
+    }
+    /* Storage tab: A runs the read-only check (desktop fake: clean). */
+    press(LB_R1);
+    expect(ui_eng_tab() == ENG_STORAGE, "R1 from Input reaches Storage");
+    press(LB_A);
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "clean (exit 0)") != NULL, "Storage A shows the fsck -n results");
+    }
+    for (int i = 0; i < 3; i++) press(LB_R1);           /* Logs, System, CPU */
+    expect(ui_eng_tab() == ENG_CPU, "tabs wrap back to CPU");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Engineering exits to Main, not the confirm screen");
 

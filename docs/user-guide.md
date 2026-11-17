@@ -117,7 +117,7 @@ Main > Network scans; **Y** rescans. Pick a network, type the password on the on
 connected. **[not yet on device]** since the #88 fix.
 
 ## Engineering Mode
-Hold A for 3 seconds to enter. Tabs (L1/R1): CPU, GPU, Battery, Thermal, Display, Storage, Logs,
+Hold A for 3 seconds to enter. Tabs (L1/R1): CPU, GPU, Battery, Thermal, Display, Input, Storage, Logs,
 System, all live read-outs. On CPU, Up/Down picks a row and A edits the governor, min/max speed or
 cores 1-3; X saves the settings as a profile, Y removes it (F5, **[partly not yet on device]**). It
 never goes past the stock CPU frequency table.

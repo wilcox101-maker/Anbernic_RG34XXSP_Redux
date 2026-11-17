@@ -20,7 +20,7 @@ typedef enum {
 
 /* Engineering tabs. Only CPU and Battery have content now. */
 typedef enum {
-    ENG_CPU = 0, ENG_GPU, ENG_BATTERY, ENG_THERMAL, ENG_DISPLAY, ENG_STORAGE, ENG_LOGS, ENG_SYSTEM,
+    ENG_CPU = 0, ENG_GPU, ENG_BATTERY, ENG_THERMAL, ENG_DISPLAY, ENG_INPUT, ENG_STORAGE, ENG_LOGS, ENG_SYSTEM,
     ENG_TAB_COUNT
 } eng_tab_t;
 
