@@ -22,3 +22,5 @@ Dale's words: "1 - PASS / 2. - PASS / 3. - PASS / 4. - NO OSK / 5. - PASS / 6 - 
   So: 9 (moc + pdftotext install and run) PASS; Engineering > Update roll back from the history
   PASS; #273 boot logo on a unit with no marker PASS; the picker works in every app but mc.
   Check 7 (Bluetooth, Input Test, Network Setup, NeoFetch) not stated.
+- 15:15: "Picker opens with Select" (mc, on retest). Check 4's picker: PASS; the first try is not
+  reproducible (headless, scripted Select opens it over mc too). Closed, no code change.

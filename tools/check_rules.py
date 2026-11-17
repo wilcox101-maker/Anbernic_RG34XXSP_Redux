@@ -35,6 +35,9 @@ BINARY_EXT = {".img", ".bin", ".so", ".dge", ".elf", ".zip", ".7z", ".gz", ".xz"
               ".nds", ".pbp", ".fat", ".ext4", ".squashfs", ".ko", ".dtb"}
 TEXT_MD_OK = (".md",)          # .md is Markdown here, not Mega Drive
 MAX_BYTES = 1_000_000
+# Dale 2026-11-17 (CJK decision, A): the Unifont CJK glyph table is text and changes only when
+# Unifont does; it alone may be up to 2 MB.
+BIG_TEXT_OK = {"frontend/term/cjk.hex": 2_000_000}
 MEDIA_EXT = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"}   # our own screenshots, allowed
 
 # Rule 4: host tools are Python stdlib only.
@@ -63,8 +66,9 @@ def check_file(path, problems):
         problems.append(f"{p}: ELF binary committed (rule: no binaries)")
     if ext in BINARY_EXT and ext not in TEXT_MD_OK:
         problems.append(f"{p}: binary/ROM/image extension {ext} (rule: no binaries)")
-    if len(data) > MAX_BYTES and not p.startswith("reference/"):
-        problems.append(f"{p}: {len(data)} bytes, over {MAX_BYTES} (rule: no binaries; ask Dale)")
+    limit = BIG_TEXT_OK.get(p, MAX_BYTES)
+    if len(data) > limit and not p.startswith("reference/"):
+        problems.append(f"{p}: {len(data)} bytes, over {limit} (rule: no binaries; ask Dale)")
     if ext in MEDIA_EXT:
         return                 # our own screenshots/diagrams (size limit above still applies)
     if b"\0" in data[:8192]:
