@@ -80,6 +80,15 @@ int platform_eng_profile_save(void)  { fake_profile = 1; return 0; }
 int platform_eng_profile_clear(void) { fake_profile = 0; return 0; }
 
 int platform_hot(void) { return 0; }
+static const buildhist_entry_t fake_hist[] = {
+    { "070427e", "2026-11-17 10:11", 1, "manual" }, { "2917a5c", "2026-11-17 09:40", 1, "manual" },
+};
+int platform_build_history(buildhist_entry_t *e, int max) {
+    int n = 0;
+    for (; n < max && n < (int)(sizeof fake_hist / sizeof fake_hist[0]); n++) e[n] = fake_hist[n];
+    return n;
+}
+int platform_last_good(buildhist_entry_t *out) { *out = fake_hist[0]; return 0; }
 void platform_sticks(int out[4]) { out[0] = 120; out[1] = -4096; out[2] = 0; out[3] = 2048; }
 int platform_led_rumble_test(void) { return 0; }
 int platform_fsck(const char *dev) { (void)dev; return 0; }

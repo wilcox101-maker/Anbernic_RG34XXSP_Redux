@@ -96,6 +96,8 @@ int platform_fsck(const char *dev) {
 }
 int platform_led_rumble_test(void) { return eng_led_rumble_test(); }
 void platform_sticks(int out[4]) { for (int i = 0; i < 4; i++) out[i] = evdev_axis(i); }
+int platform_build_history(buildhist_entry_t *e, int max) { return buildhist_load(e, max); }
+int platform_last_good(buildhist_entry_t *out) { return buildhist_last_good(out); }
 int platform_hot(void) {
     FILE *f = fopen("/tmp/redux-hot", "r");   /* HG_FLAG */
     if (!f) return 0;

@@ -50,6 +50,11 @@ int  platform_led_rumble_test(void);
 /* Raw stick values for the Input tab: out[0..3] = left X, left Y, right X, right Y. */
 void platform_sticks(int out[4]);
 
+/* Engineering > Update (step 1, read-only): build history, newest first; the last known working build. */
+#include "buildhist.h"
+int  platform_build_history(buildhist_entry_t *e, int max);
+int  platform_last_good(buildhist_entry_t *out);    /* 0 found, -1 none */
+
 /* 1 while the heat guard has the CPU capped (F5 step 4). */
 int  platform_hot(void);
 

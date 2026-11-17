@@ -22,6 +22,7 @@
 #include "engprofile.h"
 #include "lidwatch.h"
 #include "heatguard.h"
+#include "buildhist.h"
 #include "ui.h"
 #ifdef REDUX_PLATFORM_STOCK
 #include "evdev_reader.h"
@@ -179,7 +180,11 @@ int main(int argc, char **argv) {
             for (int i = 0; i < PRESENT_BUFFERS; i++) present_frame();
 #ifdef REDUX_PLATFORM_STOCK
             static int menu_seen;
-            if (!menu_seen && ui_screen() == SCREEN_MAIN) { engprofile_menu_reached(); menu_seen = 1; }
+            if (!menu_seen && ui_screen() == SCREEN_MAIN) {
+                engprofile_menu_reached();
+                buildhist_menu_reached(REDUX_BUILD, time(NULL));   /* Engineering > Update: this build works */
+                menu_seen = 1;
+            }
 #endif
         }
         SDL_Event e;

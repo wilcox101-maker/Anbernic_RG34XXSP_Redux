@@ -61,7 +61,7 @@ static int system_selectable(int i) {
 static const char *internet_items[] = {
     "YouTube (if feasible)", "Web browser (text)"
 };
-static const char *eng_tabs[] = { "CPU", "GPU", "Battery", "Thermal", "Display", "Input", "Storage", "Logs", "System" };
+static const char *eng_tabs[] = { "CPU", "GPU", "Battery", "Thermal", "Display", "Input", "Storage", "Logs", "System", "Update" };
 #define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
 
 static screen_t screen;
@@ -1249,6 +1249,21 @@ static void draw_eng_tab_body(void) {
             body(15 + k, t);
         }
         body(23, "  Raw key codes: Apps > Input Test (evtest).");
+    } else if (eng_tab == ENG_UPDATE) {
+        buildhist_entry_t g, h[BUILDHIST_MAX];
+        snprintf(t, sizeof t, "  Current build:       %s", REDUX_BUILD); body(2, t);
+        if (platform_last_good(&g) == 0) snprintf(t, sizeof t, "  Last known working:  %s   (%s)", g.sha, g.when);
+        else snprintf(t, sizeof t, "  Last known working:  none recorded yet");
+        body(3, t);
+        body(5, "  History (newest first)   Build     Installed          Reached menu   How");
+        int n = platform_build_history(h, BUILDHIST_MAX);
+        if (n == 0) body(6, "    none yet: a build is recorded when it reaches the main menu");
+        for (int k = 0; k < n; k++) {
+            snprintf(t, sizeof t, "                           %-9.9s %-18.18s %-14s %.11s", h[k].sha, h[k].when,
+                     h[k].menu ? "yes" : "no", h[k].how);
+            body(6 + k, t);
+        }
+        body(18, "  Read-only for now. Download, install and roll back come in the next steps.");
     } else if (eng_tab == ENG_STORAGE) {
         eng_mount_t m[ENG_MAX_MOUNTS];
         platform_mounts(m);
