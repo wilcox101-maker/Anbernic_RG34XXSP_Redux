@@ -33,6 +33,11 @@ STOCK_CMD='CMD="/mnt/vendor/bin/dmenu.bin"'
 REDUX_CMD='CMD="/mnt/vendor/redux/run.sh"'
 OLD_CMD='CMD="/mnt/vendor/redux/dmenu.bin"'     # a hand deploy before the installer (deploy_frontend.py)
 LOGO_BYTES=921654
+# Redux currently needs the Stock OS Mod by cbepx-me (Phase 1; the Phase 2 ReduxOS image won't): the
+# frontend starts every RetroArch game with its RA_launch.sh and handles the power key with its
+# pwr_new.sh, and its SSH switch is how this installer gets in.
+MOD_CTRL="$R/mnt/mod/ctrl"
+MOD_FILES="RA_launch.sh pwr_new.sh"
 
 say()  { echo "redux-install: $*"; }
 fail() { echo "redux-install: STOPPED: $*" >&2; exit 1; }
@@ -51,6 +56,13 @@ ln_state() {
     else echo unknown; fi
 }
 
+# Prints the Stock OS Mod files that are missing (nothing = the Mod is there).
+mod_missing() {
+    m=""
+    for f in $MOD_FILES; do [ -f "$MOD_CTRL/$f" ] || m="$m /mnt/mod/ctrl/$f"; done
+    echo "${m# }"
+}
+
 sha_of() { sha256sum "$1" | cut -d' ' -f1; }
 free_kb() { df -Pk "$1" | awk 'NR==2 {print $4}'; }
 
@@ -65,6 +77,12 @@ do_check() {
     else say "run.sh: none"; fi
     [ -d "$VENDOR" ] && say "appfs free: $(free_kb "$VENDOR") KiB"
     for t in sha256sum base64 df sed grep; do have "$t" || say "missing tool: $t"; done
+    mm=$(mod_missing)
+    if [ -n "$mm" ]; then
+        say "not ready: Stock OS Mod not found (currently required; missing $mm)"
+        fail "Stock OS Mod not found (currently required); see docs/install.md, What you need"
+    fi
+    say "Stock OS Mod: found"
     case "$st" in
         stock)   say "ready to install" ;;
         redux|redux-old) say "Redux is installed; install again to upgrade, or uninstall" ;;
@@ -96,6 +114,8 @@ do_install() {
         *) fail "dmenu_ln has an unknown CMD= line; nothing touched" ;;
     esac
     for t in sha256sum base64 df sed grep; do have "$t" || fail "missing tool on the device: $t"; done
+    mm=$(mod_missing)
+    [ -z "$mm" ] || fail "not ready: Stock OS Mod not found (currently required; missing $mm); nothing touched"
     src="${REDUX_SRC:-redux_payload}"
     [ -f "$src" ] || have "$src" || fail "no Redux binary was sent"
     rsrc="${REDUX_SRC_RUN:-redux_payload_run}"

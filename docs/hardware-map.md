@@ -4,7 +4,7 @@ Source: the device tree embedded in the stock `boot.img` (firmware `rg34xxsp-fw-
 decompiled to [`reference/stock-202505/board.dts`](../reference/stock-202505/board.dts).
 
 > Anbernic ships **one device tree for the whole H700 family**. Some nodes describe hardware the
-> SP may not have (L3/R3, the rumble motor pin; the analog-stick mux is real: the SP has two sticks, below). Those are marked *family*
+> SP may not have (L3/R3; the analog-stick mux and the rumble motor are real: the SP has two sticks, below, and a motor, device-checked 2026-11-17). Those are marked *family*
 > below and need confirming on real hardware.
 
 ## SoC and memory
@@ -126,7 +126,7 @@ rate. The panel driver may override these timings at runtime (to verify on devic
 
 - USB-C, VBUS detect on PH13, battery temperature table, fuel gauge
 - Charge LEDs: `work_led` PI12, `low_pwr_led` PI11
-- `moto_pwm_gpio` PH2 *(family, rumble)*
+- `moto_pwm_gpio` PH2 (rumble motor: **present on the SP**, runs from `/sys/class/power_supply/axp2202-battery/moto`; device-checked, [result](../notes/2026-11-17-dale-hw-result-2917a5c.md) #7)
 - Power key: long-press 1.5 s, forced-off 6 s; wakes on both edges
 - **Battery-temperature protection is disabled:** `pmu_bat_temp_enable = <0x0>`. Confirmed dummy
   on device (see above).

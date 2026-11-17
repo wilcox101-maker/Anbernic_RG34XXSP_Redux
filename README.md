@@ -13,11 +13,15 @@ and BIOS files stay where stock keeps them.
 - **Inside the factory envelope by default:** the chip's own CPU and GPU speed tables (max 1512 MHz)
   and the stock thermal trip points. No overclocking or undervolting out of the box.
 - **Removes what stock wastes:** input latency, a CPU pinned at full speed, an ignored lid sensor.
+- **Rumble unlocked:** Redux unlocks rumble, a hidden firmware feature: the stock launcher never
+  offers it. Device-checked from Redux's Engineering test ([result](notes/2026-11-17-dale-hw-result-070427e.md) #2,
+  [by hand](notes/2026-11-17-dale-hw-result-2917a5c.md) #7); rumble inside games is not checked yet.
 - **Stability first:** your ROM cards are never written by Redux's own code, and stock is one command away.
 
 ## Quick start
 
-**You need:** an RG34XXSP on its stock firmware and your Wi-Fi, SSH switched on with its root
+**You need:** an RG34XXSP on its stock firmware with the **Stock OS Mod by cbepx-me** (currently
+required, see [Credits](#credits)), on your Wi-Fi with the Mod's SSH switched on and the root
 password, and a PC with Python 3 and `ssh` (built into Windows 10 and 11). Details, including the
 tested firmware and hardware revision: [docs/install.md](docs/install.md).
 
@@ -78,6 +82,21 @@ has booted on mainline yet. Plan and detail: [ROADMAP.md](ROADMAP.md) · live ta
 - No ROMs, BIOS files or Anbernic binaries are in this repo or its releases.
 
 *Not affiliated with or endorsed by Anbernic. Device names are used only to identify compatible hardware.*
+
+## Credits
+
+Redux stands on the pioneering work of **cbepx-me** and the
+[Anbernic H700 StockOS Modification](https://github.com/cbepx-me/Anbernic-H700-RG-xx-StockOS-Modification)
+project. The Mod showed what Anbernic's stock OS could become on these handhelds, and Redux's frontend
+currently relies on it: its RetroArch launcher, power and sleep handling, terminal and SSH switch.
+Thank you.
+
+**Redux is not the Stock OS Mod and will drift from it.** Redux replaces the launcher with its own
+frontend and makes its own choices. For example, it does not carry over the Mod's **Bezels Custom
+Manager**: Redux has no bezel manager, and doesn't list the Mod's card tools. Games still start
+through the Mod's `RA_launch.sh`, and the Mod's scripts handle bezels
+([stock-userspace.md](docs/stock-userspace.md)), so bezels already set in the Mod will probably still
+show in games (not device-checked). Please report Redux problems here, not to the Mod project.
 
 ## How Redux became possible
 

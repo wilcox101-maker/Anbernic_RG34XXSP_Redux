@@ -27,6 +27,14 @@ are already there. Redux does not ship or change them:
 - The stock emulators and apps (RetroArch and its cores, PPSSPP, OpenBOR, the stock players and
   tools), each under its own licence.
 
+## The Stock OS Mod
+Redux currently relies on the **Stock OS Mod by cbepx-me**
+([Anbernic H700 StockOS Modification](https://github.com/cbepx-me/Anbernic-H700-RG-xx-StockOS-Modification)):
+on the device, Redux calls the Mod's `RA_launch.sh`, `pwr_new.sh` and `SimpleTerminal`, and the
+installer uses its SSH switch. Redux ships none of the Mod's files and copies none of its code. (The
+Mod's repository had no licence file when checked on 2026-11-17, at `9511ace`.) If Redux ever copies
+a Mod file, its notice goes here.
+
 ## Reference material in this repo
 `reference/stock-202505/` holds text extracted from Anbernic's firmware: the decompiled device tree
 and kernel config (GPL-2.0 kernel sources), the u-boot environment and the initramfs init script.
