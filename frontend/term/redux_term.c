@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,6 +70,18 @@ static const SDL_Color palette[16] = {
 
 static vt_t vt;
 static osk_t osk;
+static FILE *evlog;
+static long long evlog_t0;
+static long long now_ms(void);
+static void logf_(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+static void logf_(const char *fmt, ...) {
+    if (!evlog) return;
+    va_list ap;
+    fprintf(evlog, "%6lld ", now_ms() - evlog_t0);
+    va_start(ap, fmt); vfprintf(evlog, fmt, ap); va_end(ap);
+    fputc('\n', evlog);
+    fflush(evlog);
+}
 /* Mouse cursor in pixels; shown while moving and for MOUSE_HIDE_MS after. */
 static float mouse_x = SCREEN_W / 2, mouse_y = SCREEN_H / 2;
 static int mouse_shown, mouse_held = -1;        /* button held: 0 left, 2 right, -1 none */
@@ -248,6 +261,7 @@ static void draw(SDL_Renderer *ren, const char *footer) {
 
 static void present(SDL_Renderer *ren, const char *footer) {
     for (int i = 0; i < PRESENT_BUFFERS; i++) { draw(ren, footer); SDL_RenderPresent(ren); }
+    logf_("frame osk=%d mouse=%d cursor=%d,%d%s", osk.open, mouse_shown, vt.row, vt.col, footer ? " footer" : "");
     vt.dirty = 0;
 }
 
@@ -328,15 +342,16 @@ static void act(logical_button_t b) {
         case LB_LEFT: osk_move(&osk, 0, -1); dirty_input = 1; return;
         case LB_RIGHT: osk_move(&osk, 0, 1); dirty_input = 1; return;
         case LB_A: { char buf[16]; int n = osk_press(&osk, buf, sizeof buf); if (n) write_all(buf, n); dirty_input = 1; return; }
-        case LB_B: case LB_SELECT: osk_toggle(&osk); dirty_input = 1; return;
+        case LB_B: case LB_SELECT: osk_toggle(&osk); dirty_input = 1; logf_("picker closed"); return;
         default: break;   /* X, Y, L1/R1, L2/R2, Start still reach the program */
         }
-    } else if (b == LB_SELECT) { osk_toggle(&osk); dirty_input = 1; return; }
+    } else if (b == LB_SELECT) { osk_toggle(&osk); dirty_input = 1; logf_("picker opened"); return; }
     int k = button_key(b);
     if (k >= 0) send_key((vt_key_t)k);
 }
 
 static void logical(logical_button_t b, int pressed) {
+    logf_("button %d %s osk=%d", (int)b, pressed ? "down" : "up", osk.open);
     if (pressed) any_button = 1;
     if (b == LB_MENU) { if (pressed) quit_requested = 1; return; }
     if (b == LB_L3 || b == LB_R3) {
@@ -405,6 +420,40 @@ static void read_buttons(void) {
 }
 #endif
 
+/* Scripted buttons (REDUX_TERM_SCRIPT), applied as their time comes. */
+static const char *script;
+static long long script_t0;
+
+static int button_named(const char *name, size_t n) {
+    static const struct { const char *name; logical_button_t b; } names[] = {
+        {"UP", LB_UP}, {"DOWN", LB_DOWN}, {"LEFT", LB_LEFT}, {"RIGHT", LB_RIGHT}, {"A", LB_A}, {"B", LB_B},
+        {"X", LB_X}, {"Y", LB_Y}, {"L1", LB_L1}, {"R1", LB_R1}, {"L2", LB_L2}, {"R2", LB_R2}, {"L3", LB_L3},
+        {"R3", LB_R3}, {"START", LB_START}, {"SELECT", LB_SELECT}, {"MENU", LB_MENU},
+    };
+    for (size_t i = 0; i < sizeof names / sizeof names[0]; i++)
+        if (strlen(names[i].name) == n && strncmp(names[i].name, name, n) == 0) return names[i].b;
+    return -1;
+}
+
+static void script_tick(long long now) {
+    while (script && *script) {
+        while (*script == ';' || *script == ' ') script++;
+        if (!*script) break;
+        char *end;
+        long ms = strtol(script, &end, 10);
+        if (end == script) { script = NULL; break; }
+        if (now - script_t0 < ms) break;
+        const char *p = end;
+        while (*p == ' ') p++;
+        const char *name = p;
+        while (*p && *p != ' ') p++;
+        int b = button_named(name, (size_t)(p - name));
+        int pressed = (int)strtol(p, &end, 10);
+        script = end;
+        if (b >= 0) logical((logical_button_t)b, pressed);
+    }
+}
+
 /* PC keyboard (development): plain keys go to the program; F11 opens the picker; F12 is MENU;
    the keypad 8/2/4/6 and 5 drive the mouse (hold 5 = left click, 0 = right click). */
 static void sdl_key(const SDL_KeyboardEvent *e, int down) {
@@ -469,6 +518,15 @@ int main(int argc, char **argv) {
         return 2;
     }
 
+    {
+        const char *lp = getenv("REDUX_TERM_LOG");
+#ifdef REDUX_PLATFORM_STOCK
+        if (!lp) lp = "/tmp/redux-term.log";
+#endif
+        if (lp) evlog = fopen(lp, "w");
+        evlog_t0 = now_ms();
+        logf_("start %s %s", REDUX_BUILD, cmd[0]);
+    }
     font_load();   /* the font the user chose in Settings > UI */
     vt_init(&vt);
     osk_init(&osk);
@@ -496,6 +554,8 @@ int main(int argc, char **argv) {
 
     if (spawn(cmd) != 0) return 1;
     long long started = now_ms();
+    script = getenv("REDUX_TERM_SCRIPT");
+    script_t0 = started;
 #ifdef REDUX_PLATFORM_STOCK
     keys_fd = open("/dev/input/event1", O_RDONLY | O_NONBLOCK);
     if (keys_fd < 0) fprintf(stderr, "redux-term: warning: could not open /dev/input/event1\n");
@@ -513,7 +573,7 @@ int main(int argc, char **argv) {
 #ifdef REDUX_PLATFORM_STOCK
         if (keys_fd >= 0) { p[n].fd = keys_fd; p[n].events = POLLIN; n++; }
 #endif
-        int timeout = (held_btn >= 0 || mouse_active()) ? MOUSE_TICK_MS : (vt.dirty || dirty_input) ? 0 : 30;
+        int timeout = (held_btn >= 0 || mouse_active() || script) ? MOUSE_TICK_MS : (vt.dirty || dirty_input) ? 0 : 30;
         if (n) poll(p, (nfds_t)n, timeout); else SDL_Delay((Uint32)timeout);
 
         /* Program output. */
@@ -564,11 +624,14 @@ int main(int argc, char **argv) {
             else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) vt.dirty = 1;
         }
         repeat_tick();
+        script_tick(now_ms());
         mouse_tick(now_ms());
         if (vt.dirty || dirty_input) { present(ren, pty_fd < 0 ? footer : NULL); dirty_input = 0; }
     }
 
     stop_child();
+    logf_("exit status=%d quit=%d", exit_status, quit_requested);
+    if (evlog) fclose(evlog);
     if (raw) fclose(raw);
     const char *shot = getenv("REDUX_TERM_SHOT");
     if (shot) {
