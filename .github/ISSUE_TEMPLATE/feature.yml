@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest something Redux could do.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do?
+      description: The problem or use, in your words.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea (optional)
+  - type: checkboxes
+    id: limits
+    attributes:
+      label: Redux's limits
+      options:
+        - label: I've read the ROADMAP non-goals (no overclocking by default, no bundled ROMs or BIOS files).
+          required: true

@@ -1,0 +1,72 @@
+# A pushed tag v* (e.g. v0.4.0-dev, v0.5.0-beta.1) publishes a GitHub release of that commit.
+# It reuses the build CI already made and tested for that commit on main (the same arm64 artifact
+# dev-build.yml publishes), so a release is byte-for-byte a dev build that passed. Attaches the files
+# plus SHA256SUMS, and takes the notes from the matching "## [version]" section of CHANGELOG.md.
+# Published as a pre-release while the version is 0.x (until Beta and 1.0). Changes nothing on the
+# device. Dale decides when to tag. CI artifacts are kept 30 days, so tag within 30 days of the
+# merge (or re-run ci on main for that commit first).
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      TAG: ${{ github.ref_name }}
+      SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: The tag must be on main and have a green CI run
+        id: run
+        run: |
+          git merge-base --is-ancestor "$SHA" origin/main \
+            || { echo "::error::$TAG ($SHA) is not on main; tag a merge commit on main"; exit 1; }
+          run_id=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$SHA&status=success&event=push" \
+                   --jq '.workflow_runs[0].id // empty')
+          [ -n "$run_id" ] || { echo "::error::no successful ci run on main for $SHA; wait for CI, then re-run this job"; exit 1; }
+          echo "id=$run_id" >> "$GITHUB_OUTPUT"
+      - name: Release notes from CHANGELOG.md
+        run: |
+          ver=${TAG#v}
+          awk -v v="$ver" '
+            $0 ~ "^## \\[" { if (found) exit; if (index($0, "## [" v "]") == 1) { found = 1; next } }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          [ -s notes.md ] || { echo "::error::CHANGELOG.md has no '## [$ver]' section; add it before tagging"; exit 1; }
+          printf '\n---\nBuilt from `%s` (CI run %s). Device-checked items are linked to their result notes; anything else is not verified on a device.\n' \
+            "${SHA:0:7}" "https://github.com/$REPO/actions/runs/${{ steps.run.outputs.id }}" >> notes.md
+      - uses: actions/download-artifact@v4
+        with:
+          name: redux-dmenu-bin-aarch64
+          run-id: ${{ steps.run.outputs.id }}
+          github-token: ${{ github.token }}
+          path: dist
+      - name: Files and checksums
+        run: |
+          cp tools/install.py installer/redux_install.sh installer/run.sh dist/
+          echo "${SHA:0:7}" > dist/BUILD.txt
+          cd dist
+          ls -l
+          sha256sum dmenu.bin bootlogo.bmp install.py redux_install.sh run.sh BUILD.txt > SHA256SUMS
+      - name: Publish
+        run: |
+          pre=""
+          case "$TAG" in v0.*) pre="--prerelease" ;; esac
+          gh release create "$TAG" --repo "$REPO" --verify-tag $pre --title "Redux $TAG" --notes-file notes.md \
+            dist/dmenu.bin dist/bootlogo.bmp dist/install.py dist/redux_install.sh dist/run.sh dist/BUILD.txt dist/SHA256SUMS
