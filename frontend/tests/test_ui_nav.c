@@ -889,6 +889,12 @@ int main(void) {
     press(LB_UP); press(LB_RIGHT);   /* Footer Large */
     press(LB_UP); press(LB_RIGHT);   /* Header Large */
     expect(grid_body_capacity() == 12, "header, footer and window large: 12 body rows");
+    {
+        int h, f, w;
+        ui_draw();
+        grid_effective_sizes(&h, &f, &w);
+        expect(h == 1 && f == 1 && w == 2, "the UI page itself stays at Largest with header and footer Large");
+    }
     press(LB_B);                     /* Settings: a short list, fits at Largest */
     {
         int h, f, w;
