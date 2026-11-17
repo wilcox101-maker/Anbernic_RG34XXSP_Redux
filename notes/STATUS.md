@@ -10,7 +10,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 | Frontend | F0, F1, F2 | signed off (F2: 2026-11-12) |
 | Frontend | F3 settings parity | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f3-signed-off.md)) |
 | Frontend | F4 power and lid | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)) |
-| Frontend | **F5 Engineering Mode** | steps 1-4 and 5a device-checked ([11-16](2026-11-16-dale-hw-result-f5-steps-1-2.md), [11-17](2026-11-17-dale-hw-result-7ee31d1.md)); heat-guard cap not yet triggered on the device; step 5b built (Input tab, Storage `fsck -n` check; not device-checked); next: LED/rumble by-hand write test, then the 30 min exit test and Dale's sign-off |
+| Frontend | **F5 Engineering Mode** | steps 1-5b device-checked ([11-16](2026-11-16-dale-hw-result-f5-steps-1-2.md), [7ee31d1](2026-11-17-dale-hw-result-7ee31d1.md), [2917a5c](2026-11-17-dale-hw-result-2917a5c.md)); Input tab fixes #240 to re-check; next: LED/rumble test, then Dale's sign-off. 30 min exit run moved to the Beta exit test (Dale 09:58) |
 
 ## Handoff (2026-11-16-2, Claude): start here in a new chat
 - **Read [handoff-2026-11-16-2.md](handoff-2026-11-16-2.md) next**, then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project, started from the desktop app on DLN-DALEW2.
