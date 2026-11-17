@@ -131,7 +131,7 @@ RG34XXSP Redux  v0.1-dev - dev                                      BAT 87% CHG 
 │                                                                                        │
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-A:Select  B:Back  M:Menu  Start:Search
+A:Select  M:Menu  Start:Search
 ```
 
 ## 4. Mock-up 2 — System / ROM list
