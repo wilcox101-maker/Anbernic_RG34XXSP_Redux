@@ -175,3 +175,4 @@
 - 2026-11-17 10:59 · claude · read: #252 merged by Dale · did: opened #253 run.sh fallback to last working build (Update step 4), CI green, Dale merges
 - 2026-11-17 11:06 · claude-readonly · read: MGR for DALE 11:00: repo optimization (FROM-REDUX-MANAGER-2026-11-17-b), Dale's one-task push permission · did: #254 README split, compatibility, FAQ, third-party notices, capture_demo.py (PR 1/4); for the Manager to merge
 - 2026-11-17 11:08 · claude-readonly · read: repo optimization (MGR 11:00) · did: #255 CONTRIBUTING, issue forms, SECURITY, CHANGELOG, release.yml (PR 2/4); for the Manager to merge
+- 2026-11-17 11:13 · claude-readonly · read: repo optimization (MGR 11:00) · did: #257 process docs to docs/process/ (stubs kept), pinned actions + Dependabot, .gitattributes, .editorconfig, branch list (PR 3/4); Dale merges (rule files)
