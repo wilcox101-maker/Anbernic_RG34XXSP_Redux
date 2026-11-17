@@ -1,5 +1,4 @@
 #include "apps.h"
-#include "vsync.h"
 #include "launcher.h"
 #include <stdio.h>
 #include <string.h>
@@ -16,37 +15,35 @@ typedef struct {
     const char *dge;              /* .dge app (launch_target LAUNCH_DGE), or NULL */
     const char *bin, *env, *args; /* or a program run from its own folder (launcher_start_app) */
 } app_t;
-/* SimpleTerminal: on rootfs (/mnt/mod/ctrl), not the card. The mod starts it as
-   HOME=/root ./SimpleTerminal; it takes -e <command>, and MENU quits. Task Monitor runs htop
-   (/usr/bin/htop, Ubuntu package htop). Not stock: Dale installed it with apt; Dale's decision
-   2026-11-13 is htop for all, so Redux must supply it on units that lack it (queue item). */
-#define TERM_BIN "/mnt/mod/ctrl/SimpleTerminal"
-/* Redux Terminal (frontend/term): written to /tmp by main at start (term.c). PR 1 of 3: the
-   terminal itself with a shell; SimpleTerminal stays until the apps move over (PR 3). */
-#define REDUX_TERM_BIN "/tmp/redux-term"
+/* Terminal programs run in Redux Terminal (frontend/term; Dale 2026-11-17 A, PR 3 of 3: the apps
+   moved over from the stock SimpleTerminal, which Redux no longer starts). main writes it to /tmp
+   at start (term.c); it takes -e <command> and --hold (wait for a button after the command ends),
+   and MENU quits. Task Monitor runs htop (/usr/bin/htop, Ubuntu package htop; Dale installed it
+   with apt, decision 2026-11-13 is htop for all: Settings > System > Packages supplies it). */
+#define TERM_BIN "/tmp/redux-term"
 static const app_t apps[APP_COUNT] = {
     [APP_MUSIC]     = { "Music Player", "verified", "/mnt/vendor/bin/music/ap.dge" },
     [APP_VIDEO]     = { "Video Player", "plays; no buttons", "/mnt/vendor/bin/video/vp.dge" },
     [APP_EBOOK_TF1] = { "Ebook Reader (TF1)", "verified", "/mnt/vendor/bin/ebook/reader_mmc.dge" },
     [APP_EBOOK_TF2] = { "Ebook Reader (TF2)", "not verified", "/mnt/vendor/bin/ebook/reader_sdcard.dge" },
-    /* File Manager is Midnight Commander in the terminal (Dale 2026-11-17: replaces the stock
-       dinguxCommander; mc installed with apt, works, shows Chinese file names). */
-    [APP_FILES]     = { "File Manager", "verified", NULL, TERM_BIN, "HOME=/root", "-e mc" },
+    /* File Manager is Midnight Commander (Dale 2026-11-17: replaces the stock dinguxCommander; mc
+       installed with apt, works, shows Chinese file names). Statuses below are "verified" only once
+       a device result backs the Redux Terminal launch (they were verified in SimpleTerminal). */
+    [APP_FILES]     = { "File Manager", "not verified", NULL, TERM_BIN, "HOME=/root", "-e mc" },
     [APP_PDF]       = { "PDF Reader", "later (needs a file picker)", NULL },
-    [APP_TERMINAL]  = { "Terminal", "verified", NULL, TERM_BIN, "HOME=/root", NULL },
-    [APP_TOP]       = { "Task Monitor (htop)", "verified", NULL, TERM_BIN, "HOME=/root", "-e htop" },
+    [APP_TERMINAL]  = { "Terminal", "not verified", NULL, TERM_BIN, "HOME=/root", NULL },
+    [APP_TOP]       = { "Task Monitor (htop)", "not verified", NULL, TERM_BIN, "HOME=/root", "-e htop" },
     /* Tools: stock Ubuntu programs, each seen present with no missing libraries on Dale's unit
        (2026-11-13 check). The default ALSA card is the one Redux's volume (amixer) already uses.
        evtest reads the buttons device without grabbing it, so MENU still quits the terminal. */
-    [APP_MIXER]        = { "Audio Mixer", "verified", NULL, TERM_BIN, "HOME=/root", "-e alsamixer" },
-    [APP_NETWORK]      = { "Network Setup", "verified", NULL, TERM_BIN, "HOME=/root", "-e nmtui" },
-    [APP_BLUETOOTH]    = { "Bluetooth", "verified", NULL, TERM_BIN, "HOME=/root", "-e bluetoothctl" },
-    [APP_INPUT_TEST]   = { "Input Test", "verified", NULL, TERM_BIN, "HOME=/root", "-e evtest /dev/input/event1" },
-    [APP_SPEAKER_TEST] = { "Speaker Test", "verified", NULL, TERM_BIN, "HOME=/root", "-e speaker-test -t wav -c 2 -l 1" },
+    [APP_MIXER]        = { "Audio Mixer", "not verified", NULL, TERM_BIN, "HOME=/root", "-e alsamixer" },
+    [APP_NETWORK]      = { "Network Setup", "not verified", NULL, TERM_BIN, "HOME=/root", "-e nmtui" },
+    [APP_BLUETOOTH]    = { "Bluetooth", "not verified", NULL, TERM_BIN, "HOME=/root", "-e bluetoothctl" },
+    [APP_INPUT_TEST]   = { "Input Test", "not verified", NULL, TERM_BIN, "HOME=/root", "-e evtest /dev/input/event1" },
+    [APP_SPEAKER_TEST] = { "Speaker Test", "not verified", NULL, TERM_BIN, "HOME=/root", "--hold -e speaker-test -t wav -c 2 -l 1" },
     /* --off: no logo, so the text fits the terminal width (Dale 12:56: the logo ran off the right).
-       It stays on screen until MENU quits the terminal. */
-    [APP_NEOFETCH]     = { "NeoFetch", "verified", NULL, TERM_BIN, "HOME=/root", "-e sh -c 'neofetch --off; exec sleep 86400'" },
-    [APP_REDUX_TERM]   = { "Redux Terminal", "not verified", NULL, REDUX_TERM_BIN, "HOME=/root", NULL },
+       --hold keeps it on screen until a button. */
+    [APP_NEOFETCH]     = { "NeoFetch", "not verified", NULL, TERM_BIN, "HOME=/root", "--hold -e neofetch --off" },
 };
 
 static const char *root = "";
@@ -117,15 +114,7 @@ int apps_launch(int i) {
     if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return -2;
     /* The video player hands playback back through /tmp/.next (launcher_start_video). */
     if (i == APP_VIDEO) return launcher_start_video(apps[i].dge) == 0 ? 0 : -1;
-    /* SimpleTerminal tears (stock SDL presents without vsync): preload the vsync library for it
-       (Dale's decision 2026-11-14, B). If it can't be written, launch without it. File Manager is
-       not covered: it never calls a present function (see frontend/vsync/redux_vsync.c). */
-    char env[300];
-    if (apps[i].bin && strcmp(apps[i].bin, TERM_BIN) == 0 && vsync_install(env, sizeof env) == 0)
-        launcher_set_preload(env);
     int rc = apps[i].dge ? launcher_start(LAUNCH_DGE, apps[i].dge, NULL)
                          : launcher_start_app(apps[i].bin, apps[i].env, apps[i].args);
-    /* A failed launch must not leave the preload for the next .dge or app launch. */
-    if (rc != 0) launcher_set_preload(NULL);
     return rc == 0 ? 0 : -1;
 }
