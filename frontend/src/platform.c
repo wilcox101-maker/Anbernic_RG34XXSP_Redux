@@ -97,6 +97,7 @@ int platform_update_download(const char *current, char *sha, size_t n) {
 int platform_update_have(const char *sha) {
     return sha && (!strcmp(sha, "abc1234") || !strcmp(sha, "070427e") || !strcmp(sha, "2917a5c"));
 }
+int platform_update_logo_changed(void) { return 0; }
 int platform_update_install(const char *sha, const char *current, const char *how) {
     (void)current; (void)how;
     fake_installed = platform_update_have(sha);

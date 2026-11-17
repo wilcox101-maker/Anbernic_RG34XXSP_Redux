@@ -3,6 +3,7 @@
 #include "ui.h"
 #include "uistyle.h"
 #include "pkgs.h"
+#include "netsvc.h"
 #include "grid.h"
 #include "platform.h"
 #include "launcher.h"
@@ -40,10 +41,12 @@ enum { MAIN_GAME_ROOM = 0, MAIN_MUSIC = 1, MAIN_VIDEO = 2, MAIN_DOCUMENTS = 3, M
    five F0 names so this screen still matches the mock-up. */
 static const char *settings_items[] = {
     "Audio", "Power & Lid", "System", "Emulation", "UI",
-    "Bluetooth", "Input Test", "Network Setup", "Task Monitor"
+    "Bluetooth", "Input Test", "Network Setup", "Task Monitor", "SSH", "SMB (Samba)"
 };
+/* Settings rows 9-10: SSH and SMB on/off, the stock system.cfg way (Dale 2026-11-17 A). */
+enum { SETTINGS_SSH = 9, SETTINGS_SMB = 10 };
 /* Settings rows 5-8 open stock terminal tools (moved from Apps, Dale 2026-11-17 11:49). */
-static const int settings_app[] = { -1, -1, -1, -1, -1, APP_BLUETOOTH, APP_INPUT_TEST, APP_NETWORK, APP_TOP };
+static const int settings_app[] = { -1, -1, -1, -1, -1, APP_BLUETOOTH, APP_INPUT_TEST, APP_NETWORK, APP_TOP, -1, -1 };
 static const char *audio_items[] = { "Audio Mixer", "Speaker Test" };
 static const int audio_app[] = { APP_MIXER, APP_SPEAKER_TEST };
 /* No Input row: button tests live on the Engineering Input tab (Dale, 2026-11-17). */
@@ -122,7 +125,7 @@ static char wifi_result_ssid[WIFI_SSID_MAX];
 static int wifi_result_ok;
 static char wifi_retry[64];
 static char stock_msg[80];
-static char apps_msg[48];
+static char apps_msg[96];
 
 /* Colour presets (docs/ui-brief.md section 3). Default BIOS cyan. Saved to THEME_PATH. */
 #ifdef REDUX_PLATFORM_STOCK
@@ -986,6 +989,17 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (btn == LB_A && screen == SCREEN_SETTINGS) {
+        if (selected == SETTINGS_SSH || selected == SETTINGS_SMB) {
+            int which = selected == SETTINGS_SSH ? NETSVC_SSH : NETSVC_SMB;
+            int on = !netsvc_get(which);
+            int rc = netsvc_set(which, on);
+            snprintf(apps_msg, sizeof apps_msg, "  %s %s%s", netsvc_name(which), on ? "on" : "off",
+                     rc == 0 ? (on ? ": reachable from your network (root login)." : ".")
+                     : rc == -1 ? ": could not save the setting; nothing changed."
+                                : ": saved, but the service did not switch. Restart to apply.");
+            dirty = 1;
+            return;
+        }
         if (selected == SETTINGS_AUDIO)   { apps_msg[0] = '\0'; go(SCREEN_AUDIO); }
         if (selected == SETTINGS_SYSTEM)  go(SCREEN_SYSTEM_DEFAULTS);
         if (selected >= 0 && selected < COUNT(settings_app) && settings_app[selected] >= 0)
@@ -1118,6 +1132,15 @@ void ui_tick(uint32_t now_ms) {
                 int rc = platform_update_install(upd_sha, REDUX_BUILD, upd_rollback ? "rollback" : "update");
                 stock_started = 1;
                 if (rc == 0) {
+                    /* Boot logo follows the build (Dale 2026-11-17 A): only when Redux's logo is the
+                       one on the boot partition. Same checked in-place write as Boot Screen; a failure
+                       leaves the old logo (bootscreen writes the old bytes back) and still reboots. */
+                    if (platform_update_logo_changed() && bootscreen_is_redux()) {
+                        ui_busy("Installing", "Writing this build's boot logo.");
+                        int b = bootscreen_install();
+                        if (b != BOOTSCREEN_OK)
+                            fprintf(stderr, "[update] boot logo not written: %s\n", bootscreen_message(b));
+                    }
                     snprintf(stock_msg, sizeof stock_msg, "Installed %s: rebooting", upd_sha);
                     if (power_reboot() != 0) snprintf(stock_msg, sizeof stock_msg, "Installed %s. Restart to use it.", upd_sha);
                 } else {
@@ -1525,7 +1548,18 @@ void ui_draw(void) {
     }
     case SCREEN_SETTINGS:
         frame("Settings", "A:Enter  B:Back  M:Menu", 1, 0);
-        list(0, settings_items, COUNT(settings_items));
+        {
+            char rows[COUNT(settings_items)][40];
+            const char *show[COUNT(settings_items)];
+            for (int i = 0; i < COUNT(settings_items); i++) {
+                if (i == SETTINGS_SSH || i == SETTINGS_SMB)
+                    snprintf(rows[i], sizeof rows[i], "%-14s %s", settings_items[i],
+                             netsvc_get(i == SETTINGS_SSH ? NETSVC_SSH : NETSVC_SMB) ? "On" : "Off");
+                else snprintf(rows[i], sizeof rows[i], "%s", settings_items[i]);
+                show[i] = rows[i];
+            }
+            list(0, show, COUNT(settings_items));
+        }
         if (apps_msg[0]) body(COUNT(settings_items) + 1, apps_msg);
         break;
     case SCREEN_AUDIO:

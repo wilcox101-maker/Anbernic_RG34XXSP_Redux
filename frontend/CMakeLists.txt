@@ -88,6 +88,7 @@ add_executable(rg34xxsp-redux
     src/uistyle.c
     src/pkgs.c
     ${REDUX_EXTRAS_BLOB}
+    src/netsvc.c
     src/launcher.c
     src/systems.c
     src/romscan.c
@@ -210,6 +211,10 @@ target_include_directories(test_updater PRIVATE src)
 add_executable(test_pkgs tests/test_pkgs.c src/pkgs.c ${REDUX_EXTRAS_BLOB})
 target_include_directories(test_pkgs PRIVATE src)
 
+# SSH / SMB switches against a temp system.cfg (no systemctl): ./test_netsvc.
+add_executable(test_netsvc tests/test_netsvc.c src/netsvc.c)
+target_include_directories(test_netsvc PRIVATE src)
+
 # Heat guard decision logic (no SDL, no device): ./test_heatguard.
 add_executable(test_heatguard tests/test_heatguard.c src/heatguard.c)
 target_include_directories(test_heatguard PRIVATE src)
@@ -226,7 +231,7 @@ add_executable(test_sysinfo tests/test_sysinfo.c src/sysinfo.c)
 target_include_directories(test_sysinfo PRIVATE src)
 
 # Navigation test (back stack, Engineering tabs). Links the UI with the desktop platform; no window.
-add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/uistyle.c src/pkgs.c ${REDUX_EXTRAS_BLOB} src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/powerkeys.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c)
+add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/uistyle.c src/netsvc.c src/pkgs.c ${REDUX_EXTRAS_BLOB} src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/powerkeys.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c)
 target_include_directories(test_ui_nav PRIVATE src)
 if(TARGET SDL2::SDL2)
     target_link_libraries(test_ui_nav PRIVATE SDL2::SDL2)

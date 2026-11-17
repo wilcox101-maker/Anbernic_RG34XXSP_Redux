@@ -14,6 +14,9 @@
 
 static char g_redux[256] = UPDATER_REDUX;
 static updater_fetch_fn g_fetch;
+static int g_logo;   /* the last install also replaced bootlogo.bmp */
+
+int updater_logo_changed(void) { return g_logo; }
 
 void updater_set_paths(const char *redux_dir) {
     snprintf(g_redux, sizeof g_redux, "%s", redux_dir ? redux_dir : UPDATER_REDUX);
@@ -83,6 +86,12 @@ int updater_download(const char *current_sha, char *sha_out, size_t n) {
         if (fetch(url, p) != 0) { rm_dir(inc); return -1; }
     }
     if (!sum_ok(inc, "BUILD.txt") || !sum_ok(inc, "dmenu.bin")) { rm_dir(inc); return -2; }
+    /* The boot logo stamped with this build (Dale 2026-11-17 A). Optional: a release without one
+       still installs; one that fails its checksum is refused like dmenu.bin. */
+    snprintf(url, sizeof url, "%s/bootlogo.bmp", UPDATER_URL);
+    snprintf(p, sizeof p, "%s/bootlogo.bmp", inc);
+    if (fetch(url, p) != 0) remove(p);
+    else if (!sum_ok(inc, "bootlogo.bmp")) { rm_dir(inc); return -2; }
     char sha[32] = "";
     snprintf(p, sizeof p, "%s/BUILD.txt", inc);
     FILE *f = fopen(p, "r");
@@ -173,12 +182,28 @@ int updater_install(const char *sha, const char *current_sha, const char *how) {
         mkdirs(keepdir);
         snprintf(keep, sizeof keep, "%s/dmenu.bin", keepdir);
         copy_file(cur, keep, 0755);
+        char curlogo[400];
+        snprintf(curlogo, sizeof curlogo, "%s/bootlogo.bmp", g_redux);
+        snprintf(keep, sizeof keep, "%s/bootlogo.bmp", keepdir);
+        if (access(curlogo, R_OK) == 0) copy_file(curlogo, keep, 0644);
     }
     snprintf(src, sizeof src, "%s/builds/%s/dmenu.bin", g_redux, sha);
     snprintf(tmp, sizeof tmp, "%s/dmenu.bin.new", g_redux);
     snprintf(dst, sizeof dst, "%s/dmenu.bin", g_redux);
     if (copy_file(src, tmp, 0755) != 0) return -2;
     if (chmod(tmp, 0755) != 0 || rename(tmp, dst) != 0) { remove(tmp); return -2; }
+    /* That build's boot logo becomes the Redux logo (/mnt/vendor/redux/bootlogo.bmp). Writing it
+       to the boot partition is the caller's step (bootscreen_install, only if Redux's logo is the
+       one installed). A failure here keeps the old logo file; the new dmenu.bin stays. */
+    char lsrc[400], ltmp[400], ldst[400];
+    snprintf(lsrc, sizeof lsrc, "%s/builds/%s/bootlogo.bmp", g_redux, sha);
+    snprintf(ltmp, sizeof ltmp, "%s/bootlogo.bmp.new", g_redux);
+    snprintf(ldst, sizeof ldst, "%s/bootlogo.bmp", g_redux);
+    g_logo = 0;
+    if (access(lsrc, R_OK) == 0) {
+        if (copy_file(lsrc, ltmp, 0644) == 0 && rename(ltmp, ldst) == 0) g_logo = 1;
+        else remove(ltmp);
+    }
     sync();
     buildhist_installed(sha, time(NULL), how);
     prune(sha, current_sha);

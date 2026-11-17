@@ -90,6 +90,7 @@ stock screen tearing **[not yet on device]**. File Manager (mc) runs in the same
 |---|---|
 | **Audio** | Audio Mixer, Speaker Test (stock terminal tools) |
 | Power & Lid, Emulation | **[placeholder]** |
+| **SSH**, **SMB (Samba)** | A switches On/Off, the stock way: sets `global.ssh` / `global.samba` in `/mnt/mod/ctrl/configs/system.cfg` and starts or stops `ssh` / `smbd` + `nmbd` at once, so it also holds after a reboot. On means anyone on your Wi-Fi can try to log in as root: use a strong root password. **[not yet on device]** |
 | **System** | see below |
 | **UI** | **Brightness** (1-20; never fully dark) **[device-checked]**, **Screen Timeout** (Off, 1, 2, 3, 5, 10, 15, 30 min; default 5), **Font** (five fonts, same layout in each) (these three were the Display menu). **Accent Color** (selection bar: BIOS cyan, Amber, Green, White, then the 16 standard VGA text colours except black; A opens the list). **Menu Text**, **Header/Footer Text**, **Window Color** (any of the 16 VGA colours; a choice that would hide text is skipped). **Header Size**, **Footer Size** (Default, Large = twice as tall), **Window Size** (Default, Large = twice as tall, Largest = also twice as wide). A screen whose content doesn't fit drops a size there. **Reset Fonts** puts the three sizes back to Default. Left/Right changes a row, applies at once, saved. Sizes and the three colours **[not yet on device]** |
 
@@ -128,6 +129,12 @@ Hold A for 3 seconds to enter. Tabs (L1/R1): CPU, GPU, Battery, Thermal, Display
 System, Update (build history), all live read-outs. On CPU, Up/Down picks a row and A edits the governor, min/max speed or
 cores 1-3; X saves the settings as a profile, Y removes it (F5, **[partly not yet on device]**). It
 never goes past the stock CPU frequency table.
+
+**Update tab:** A on the top row downloads the newest dev build of this repo (checksum-checked) and,
+after a 3-second hold, installs it and reboots; pick a history line to roll back. Each build comes
+with its own boot logo (`v0.1-dev <build>`); if the Redux boot screen is installed, the logo is
+updated with the build. If a new build fails to start 3 times, Redux goes back to the last build that
+reached the menu, then to the stock menu. **[not yet on device]**
 
 ## Extras (installed from your PC)
 StockOS is a full Ubuntu 22.04. `tools/extras.py` (in the repo; Python 3, works on Windows) installs
