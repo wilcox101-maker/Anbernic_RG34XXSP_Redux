@@ -12,4 +12,3 @@ dmenu_ln* text eol=lf
 *.bmp  binary
 *.pbm  binary
 *.gif  binary
-*.bin  binary

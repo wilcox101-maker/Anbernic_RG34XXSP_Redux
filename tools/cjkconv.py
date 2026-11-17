@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Build frontend/term/cjk.bin, the 16x16 CJK glyphs Redux Terminal draws, from GNU Unifont.
+"""The 16x16 CJK glyphs Redux Terminal draws, from GNU Unifont.
 
-Python 3 standard library only; runs on Windows. The source is not kept in the repo: it is
-unifont.hex from the Debian/Ubuntu package `unifont` (/usr/share/unifont/unifont.hex) or from
-unifoundry.com (GPL-2.0-or-later with the font embedding exception, also OFL-1.1; see
-THIRD-PARTY-NOTICES.md). Then:
+Python 3 standard library only; runs on Windows. Two steps, because the repo keeps no binaries
+(tools/check_rules.py): the glyphs live in the repo as text, frontend/term/cjk.hex (Unifont's own
+.hex format, only the ranges below), and the build turns that into the blob redux-term embeds.
 
-    python tools/cjkconv.py /usr/share/unifont/unifont.hex frontend/term/cjk.bin
+    python tools/cjkconv.py subset /usr/share/unifont/unifont.hex frontend/term/cjk.hex
+        once, when updating Unifont (Debian/Ubuntu package `unifont`, or unifoundry.com;
+        GPL-2.0-or-later with the font embedding exception, also OFL-1.1: THIRD-PARTY-NOTICES.md)
+    python tools/cjkconv.py blob frontend/term/cjk.hex build/cjk.bin
+        at build time (frontend/CMakeLists.txt)
 
 Blob layout (little-endian): magic "RDXCJK1\\0", u32 range count, then per range u32 first code
 point and u32 count, then the bitmaps in range order: 32 bytes per code point, two bytes per row,
@@ -30,7 +33,7 @@ def read_hex(path):
     with open(path, encoding="ascii", errors="replace") as f:
         for line in f:
             line = line.strip()
-            if ":" not in line:
+            if ":" not in line or line.startswith("#"):
                 continue
             code, bits = line.split(":", 1)
             try:
@@ -58,16 +61,28 @@ def build(glyphs):
     return bytes(out), missing
 
 
+def in_ranges(cp):
+    return any(first <= cp <= last for first, last in RANGES)
+
+
 def main(argv):
-    if len(argv) != 3:
+    if len(argv) != 4 or argv[1] not in ("subset", "blob"):
         print(__doc__)
         return 2
-    glyphs = read_hex(argv[1])
-    blob, missing = build(glyphs)
-    with open(argv[2], "wb") as f:
-        f.write(blob)
+    glyphs = read_hex(argv[2])
     total = sum(last - first + 1 for first, last in RANGES)
-    print("cjkconv: %d code points, %d without a 16-wide glyph, %d bytes -> %s" % (total, missing, len(blob), argv[2]))
+    if argv[1] == "subset":
+        kept = sorted(cp for cp in glyphs if in_ranges(cp))
+        with open(argv[3], "w", encoding="ascii", newline="\n") as f:
+            f.write("# GNU Unifont 16x16 glyphs for Redux Terminal (tools/cjkconv.py subset); see THIRD-PARTY-NOTICES.md\n")
+            for cp in kept:
+                f.write("%04X:%s\n" % (cp, glyphs[cp].hex().upper()))
+        print("cjkconv: %d of %d code points have a 16-wide glyph -> %s" % (len(kept), total, argv[3]))
+        return 0
+    blob, missing = build(glyphs)
+    with open(argv[3], "wb") as f:
+        f.write(blob)
+    print("cjkconv: %d code points, %d without a 16-wide glyph, %d bytes -> %s" % (total, missing, len(blob), argv[3]))
     return 0
 
 
