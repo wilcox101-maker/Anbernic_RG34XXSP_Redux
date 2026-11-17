@@ -185,9 +185,9 @@ Settings                                                            BAT 87% CHG 
 │   Input Test                                                                           │
 │   Network Setup                                                                        │
 │   Task Monitor                                                                         │
-│   SSH            Off                                                                   │
-│   SMB (Samba)    Off                                                                   │
-│                                                                                        │
+│   SSH             Off                                                                  │
+│   SMB (Samba)     Off                                                                  │
+│   Bluetooth Radio On                                                                   │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
