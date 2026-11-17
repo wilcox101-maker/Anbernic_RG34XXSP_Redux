@@ -1548,7 +1548,7 @@ void ui_draw(void) {
             "  Large: twice as tall.",
             "  Large: twice as tall. Largest: also twice as wide.",
             "  A: all three sizes back to Default. Too big for a screen: one size smaller there." };
-        body(12, ui_msg[0] ? ui_msg : help[selected]);
+        body(UI_ROWS, ui_msg[0] ? ui_msg : help[selected]);   /* right under the rows: 12 lines, fits with everything Large */
         break;
     }
     case SCREEN_UI_COLORS: {

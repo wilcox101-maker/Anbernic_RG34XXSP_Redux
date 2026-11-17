@@ -889,6 +889,12 @@ int main(void) {
     press(LB_UP); press(LB_RIGHT);   /* Footer Large */
     press(LB_UP); press(LB_RIGHT);   /* Header Large */
     expect(grid_body_capacity() == 12, "header, footer and window large: 12 body rows");
+    {
+        int h, f, w;
+        ui_draw();
+        grid_effective_sizes(&h, &f, &w);
+        expect(h == 1 && f == 1 && w == 2, "the UI page itself stays at Largest with header and footer Large");
+    }
     press(LB_B);                     /* Settings: a short list, fits at Largest */
     {
         int h, f, w;
@@ -1141,7 +1147,7 @@ int main(void) {
                && apps_row_of(APP_MIXER) == -1 && apps_row_of(APP_SPEAKER_TEST) == -1
                && apps_row_of(APP_TOP) == -1 && apps_row_of(APP_BLUETOOTH) == -1
                && apps_row_of(APP_INPUT_TEST) == -1 && apps_row_of(APP_NETWORK) == -1
-               && apps_count() == APP_COUNT - 9
+               && apps_count() == APP_COUNT - 9   /* NeoFetch is listed */
                && apps_list_id(apps_row_of(APP_PDF)) == APP_PDF,
                "Apps rows map to app ids without the Main, Audio and Settings tools");
         int sorted = 1;
@@ -1258,7 +1264,7 @@ int main(void) {
         }
     }
     /* A failed launch must not leave the vsync preload for the next one (Read Only review, #4);
-       File Manager gets no preload (it never presents a frame, so the library can't help it). */
+       File Manager is now mc in the terminal. */
     {
         char line[256] = "";
         FILE *f;
@@ -1271,16 +1277,17 @@ int main(void) {
         if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
         expect(line[0] && strstr(line, "LD_PRELOAD") == NULL, "no LD_PRELOAD left over from the failed launch");
         remove("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
-        mkdir("/tmp/redux-apps/mnt/vendor/bin/fileM", 0755);
-        write_empty("/tmp/redux-apps/mnt/vendor/bin/fileM/dinguxCommand_en.dge");
         line[0] = '\0';
         expect(apps_launch(APP_FILES) == 0, "File Manager launches");
         f = fopen("/tmp/redux-next-apps", "r");
         if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
-        expect(strstr(line, "dinguxCommand_en.dge") && !strstr(line, "LD_PRELOAD"),
-               "File Manager launches without the vsync preload");
-        remove("/tmp/redux-apps/mnt/vendor/bin/fileM/dinguxCommand_en.dge");
-        rmdir("/tmp/redux-apps/mnt/vendor/bin/fileM");
+        expect(strstr(line, "./'SimpleTerminal' -e mc\n") != NULL, "File Manager is mc in the terminal");
+        line[0] = '\0';
+        expect(apps_launch(APP_NEOFETCH) == 0, "NeoFetch launches");
+        f = fopen("/tmp/redux-next-apps", "r");
+        if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
+        expect(strstr(line, "-e sh -c 'neofetch --off; exec sleep 86400'") != NULL, "NeoFetch runs without the logo and stays up");
+        expect(apps_row_of(APP_NEOFETCH) >= 0, "NeoFetch is in the Apps list");
         remove("/tmp/redux-next-apps");
         remove(UI_RESUME_PATH);
     }

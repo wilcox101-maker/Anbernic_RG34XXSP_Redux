@@ -34,7 +34,7 @@ The title bar shows the build (`v0.1-dev <sha>`).
 | Music | Stock Music Player |
 | Video | Stock Video Player. **Known problem:** playing a video crashes back to Main (queue 12a) |
 | Documents | Stock Ebook Reader for TF1 |
-| File Manager | Stock File Manager (on Main only, not in Apps) |
+| File Manager | Midnight Commander (`mc`) in the terminal; needs `mc` installed (see Extras). M quits. On Main only |
 | Apps | The app list (below) |
 | Internet | YouTube / Web browser **[placeholder]** |
 | Network | Wi-Fi: scan, pick a network, type the password, connect |
@@ -76,13 +76,14 @@ it stays frozen when opened again (Dale 2026-11-17; a Redux network page is plan
 |---|---|---|
 | Ebook Reader (TF1) / (TF2) | stock reader (Pixel Reader) for each card; M quits | TF1 device-checked; TF2 not yet |
 | PDF Reader | later (needs a file picker) | placeholder |
+| NeoFetch | system summary (`neofetch`, no logo so it fits); needs `neofetch` installed; M quits | device-checked (before the no-logo change) |
 | Terminal | stock SimpleTerminal | device-checked |
 
 On Main: **Music Player** (stock `ap.dge`, device-checked), **Video Player** (stock `vp.dge`: plays,
 but takes no buttons during playback; a Redux front-end is planned in F6).
 
 Terminal apps quit with **M**. The terminal apps start with a vsync helper meant to reduce the
-stock screen tearing **[not yet on device]**. File Manager can't use it and still tears (a stock bug).
+stock screen tearing **[not yet on device]**. File Manager (mc) runs in the same terminal.
 
 ## Settings
 | Item | Status |
@@ -187,6 +188,6 @@ launcher plus its own folder ([what changes](install.md#what-exactly-changes-on-
 
 ## Known problems (2026-11-14)
 - Video Player crashes when you play a video (12a).
-- Stock File Manager and Terminal tear when the screen changes (stock graphics library has no
-  vsync). The vsync helper covers Terminal only and is not yet tested; File Manager stays as stock.
+- Terminal tears when the screen changes (stock graphics library has no vsync); the vsync helper
+  is not yet tested. Terminal text looks soft (Dale 2026-11-17); a sharper terminal is planned.
 - Placeholders listed above.
