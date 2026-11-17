@@ -5,6 +5,7 @@
 #include "ui.h"
 #include "uistyle.h"
 #include "netsvc.h"
+#include "btchip.h"
 #include "platform.h"
 #include "launcher.h"
 #include "romscan.h"
@@ -943,15 +944,30 @@ int main(void) {
         down(8); press(LB_A);              /* Settings */
         ui_draw();
         grid_dump(dump, sizeof dump);
-        expect(strstr(dump, "SSH            On") && strstr(dump, "SMB (Samba)    Off"), "Settings shows SSH On, SMB Off");
+        expect(strstr(dump, "SSH             On") && strstr(dump, "SMB (Samba)     Off"), "Settings shows SSH On, SMB Off");
         down(10); press(LB_A);             /* SMB */
         expect(netsvc_get(NETSVC_SMB) == 1 && ui_screen() == SCREEN_SETTINGS, "A on SMB switches it on, stays on Settings");
         ui_draw();
         grid_dump(dump, sizeof dump);
-        expect(strstr(dump, "SMB (Samba)    On") && strstr(dump, "reachable from your network"), "SMB On with the network warning");
+        expect(strstr(dump, "SMB (Samba)     On") && strstr(dump, "reachable from your network"), "SMB On with the network warning");
         press(LB_UP); press(LB_A);         /* SSH */
         expect(netsvc_get(NETSVC_SSH) == 0, "A on SSH switches it off");
         remove("/tmp/redux.system.cfg");
+        /* Bluetooth Radio (Dale 2026-11-17 A): on by default; A switches it off and back on. */
+        remove("/tmp/redux.bluetooth");
+        btchip_set_paths("/tmp/redux.bluetooth", "/tmp/redux-no-hci0");
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Bluetooth Radio On") != NULL, "Settings shows Bluetooth Radio On by default");
+        press(LB_DOWN); press(LB_DOWN); press(LB_A);   /* row 11 */
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(btchip_enabled() == 0 && strstr(dump, "Bluetooth Radio Off") && strstr(dump, "off until switched on"),
+               "A on Bluetooth Radio switches it off, saved");
+        press(LB_A);
+        expect(btchip_enabled() == 1, "A again switches it on");
+        remove("/tmp/redux.bluetooth");
+        btchip_set_paths(NULL, NULL);
     }
 
     /* Brightness: Settings → UI row 0 (Display menu removed, Dale 2026-11-17 A); Left/Right steps 1-20. */

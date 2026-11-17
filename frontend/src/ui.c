@@ -4,6 +4,7 @@
 #include "uistyle.h"
 #include "pkgs.h"
 #include "netsvc.h"
+#include "btchip.h"
 #include "grid.h"
 #include "platform.h"
 #include "launcher.h"
@@ -42,12 +43,13 @@ enum { MAIN_GAME_ROOM = 0, MAIN_MUSIC = 1, MAIN_VIDEO = 2, MAIN_DOCUMENTS = 3, M
    five F0 names so this screen still matches the mock-up. */
 static const char *settings_items[] = {
     "Audio", "Power & Lid", "System", "Emulation", "UI",
-    "Bluetooth", "Input Test", "Network Setup", "Task Monitor", "SSH", "SMB (Samba)"
+    "Bluetooth", "Input Test", "Network Setup", "Task Monitor", "SSH", "SMB (Samba)", "Bluetooth Radio"
 };
-/* Settings rows 9-10: SSH and SMB on/off, the stock system.cfg way (Dale 2026-11-17 A). */
-enum { SETTINGS_SSH = 9, SETTINGS_SMB = 10 };
+/* Settings rows 9-10: SSH and SMB on/off, the stock system.cfg way (Dale 2026-11-17 A).
+   Row 11: the Bluetooth chip init at start, on by default (Dale 2026-11-17 A, btchip.h). */
+enum { SETTINGS_SSH = 9, SETTINGS_SMB = 10, SETTINGS_BT_RADIO = 11 };
 /* Settings rows 5-8 open stock terminal tools (moved from Apps, Dale 2026-11-17 11:49). */
-static const int settings_app[] = { -1, -1, -1, -1, -1, APP_BLUETOOTH, APP_INPUT_TEST, APP_NETWORK, APP_TOP, -1, -1 };
+static const int settings_app[] = { -1, -1, -1, -1, -1, APP_BLUETOOTH, APP_INPUT_TEST, APP_NETWORK, APP_TOP, -1, -1, -1 };
 static const char *audio_items[] = { "Audio Mixer", "Speaker Test" };
 static const int audio_app[] = { APP_MIXER, APP_SPEAKER_TEST };
 /* No Input row: button tests live on the Engineering Input tab (Dale, 2026-11-17). */
@@ -1028,6 +1030,16 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             dirty = 1;
             return;
         }
+        if (selected == SETTINGS_BT_RADIO) {
+            int on = !btchip_enabled();
+            int rc = btchip_set(on);
+            snprintf(apps_msg, sizeof apps_msg, "  Bluetooth radio %s%s", on ? "on" : "off",
+                     rc == 0 ? (on ? ": starting the chip (a few seconds)." : ": off until switched on again.")
+                     : rc == -1 ? ": could not save the setting; nothing changed."
+                                : ": saved, but the command failed. Restart to apply.");
+            dirty = 1;
+            return;
+        }
         if (selected == SETTINGS_AUDIO)   { apps_msg[0] = '\0'; go(SCREEN_AUDIO); }
         if (selected == SETTINGS_SYSTEM)  go(SCREEN_SYSTEM_DEFAULTS);
         if (selected >= 0 && selected < COUNT(settings_app) && settings_app[selected] >= 0)
@@ -1594,8 +1606,10 @@ void ui_draw(void) {
             const char *show[COUNT(settings_items)];
             for (int i = 0; i < COUNT(settings_items); i++) {
                 if (i == SETTINGS_SSH || i == SETTINGS_SMB)
-                    snprintf(rows[i], sizeof rows[i], "%-14s %s", settings_items[i],
+                    snprintf(rows[i], sizeof rows[i], "%-15s %s", settings_items[i],
                              netsvc_get(i == SETTINGS_SSH ? NETSVC_SSH : NETSVC_SMB) ? "On" : "Off");
+                else if (i == SETTINGS_BT_RADIO)
+                    snprintf(rows[i], sizeof rows[i], "%-15s %s", settings_items[i], btchip_enabled() ? "On" : "Off");
                 else snprintf(rows[i], sizeof rows[i], "%s", settings_items[i]);
                 show[i] = rows[i];
             }

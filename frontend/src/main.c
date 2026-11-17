@@ -22,6 +22,7 @@
 #include "engprofile.h"
 #include "lidwatch.h"
 #include "term.h"
+#include "btchip.h"
 #include "heatguard.h"
 #include "buildhist.h"
 #include "ui.h"
@@ -158,6 +159,8 @@ int main(int argc, char **argv) {
     launcher_clear_next();
     if (lidwatch_install() == 0) launcher_set_lidwatch(lidwatch_path());   /* F4 step 4 */
     else fprintf(stderr, "warning: could not write %s; no save flush on lid close\n", lidwatch_path());
+    /* Bluetooth chip: stock's menu runs setBluetooth.sh init at boot; Redux does the same (Dale A). */
+    if (btchip_at_start()) fprintf(stderr, "bluetooth: setBluetooth.sh init started\n");
     /* Redux Terminal: Apps lists it only while this copy exists (apps_launch checks the path). */
     if (term_install() != 0) fprintf(stderr, "warning: could not write %s\n", term_path());
     /* F5 step 4: the heat guard. A copy already running (started earlier this boot) keeps going. */
