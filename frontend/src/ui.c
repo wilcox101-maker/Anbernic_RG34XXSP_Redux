@@ -37,9 +37,10 @@ enum { MAIN_GAME_ROOM = 0, MAIN_MUSIC = 1, MAIN_VIDEO = 2, MAIN_DOCUMENTS = 3, M
 /* ROM names come from romscan (read-only). The desktop fixture recreates the
    five F0 names so this screen still matches the mock-up. */
 static const char *settings_items[] = {
-    "Display", "Audio", "Input", "Power & Lid", "System", "Emulation", "UI"
+    "Display", "Audio", "Power & Lid", "System", "Emulation", "UI"
 };
-enum { SETTINGS_DISPLAY = 0, SETTINGS_SYSTEM = 4, SETTINGS_UI = 6 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
+/* No Input row: button tests live on the Engineering Input tab (Dale, 2026-11-17). */
+enum { SETTINGS_DISPLAY = 0, SETTINGS_SYSTEM = 3, SETTINGS_UI = 5 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
 enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3, SYSTEM_BOOT = 5, SYSTEM_RESET = 6 };
 typedef struct { const char *label; int selectable; int action; } system_row_t;
 static const system_row_t system_rows[] = {
@@ -783,7 +784,12 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             eng_cpu_button(btn);
         return;
     }
-    if (screen == SCREEN_ENG && eng_tab == ENG_LOGS && btn == LB_A) { eng_log_src = (eng_log_src + 1) % 3; dirty = 1; return; }
+    /* Logs: Left/Right pick the log. Tabs change only with L1/R1, never A (Dale, 2026-11-17). */
+    if (screen == SCREEN_ENG && eng_tab == ENG_LOGS && (btn == LB_LEFT || btn == LB_RIGHT)) {
+        eng_log_src = (eng_log_src + (btn == LB_RIGHT ? 1 : 2)) % 3;
+        dirty = 1;
+        return;
+    }
     if (screen == SCREEN_ENG && eng_tab == ENG_DISPLAY && btn == LB_A) {
         ui_busy("LED and rumble test", "Red LED 1 s, green LED off 1 s, rumble 0.5 s.\nThe green LED always comes back on.");
         snprintf(eng_msg, sizeof eng_msg, "%s", platform_led_rumble_test() == 0
@@ -802,8 +808,8 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         dirty = 1;
         return;
     }
-    if (screen == SCREEN_ENG && (btn == LB_L1 || btn == LB_LEFT))  { switch_eng_tab(-1); return; }
-    if (screen == SCREEN_ENG && (btn == LB_R1 || btn == LB_RIGHT)) { switch_eng_tab(+1); return; }
+    if (screen == SCREEN_ENG && btn == LB_L1) { switch_eng_tab(-1); return; }
+    if (screen == SCREEN_ENG && btn == LB_R1) { switch_eng_tab(+1); return; }
     if (screen == SCREEN_ENG && btn == LB_X) {
         snprintf(eng_msg, sizeof eng_msg, "%s", platform_eng_profile_save() == 0
                  ? "Profile saved: applied at every start." : "Saving the profile failed.");
@@ -1265,7 +1271,7 @@ static void draw_eng_tab_body(void) {
         static const char *src[3] = { "redux.log", "eng-writes.log", "dmesg" };
         char lines[18][ENG_LOG_COLS];
         int n = platform_log_tail(eng_log_src, lines, 18);
-        snprintf(t, sizeof t, "  %s (last %d lines)   A: next log", src[eng_log_src], n); body(2, t);
+        snprintf(t, sizeof t, "  %s (last %d lines)   Left/Right: other log", src[eng_log_src], n); body(2, t);
         for (int k = 0; k < n; k++) {
             snprintf(t, sizeof t, "  %.84s", lines[k]);
             body(4 + k, t);

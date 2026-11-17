@@ -159,8 +159,10 @@ int main(void) {
     expect(ui_eng_tab() == ENG_CPU, "Engineering opens on the CPU tab");
     press(LB_R1);
     expect(ui_eng_tab() == ENG_GPU, "R1 moves to GPU");
-    press(LB_LEFT); press(LB_LEFT);
-    expect(ui_eng_tab() == ENG_SYSTEM, "Left wraps from CPU to System");
+    press(LB_LEFT);
+    expect(ui_eng_tab() == ENG_GPU, "Left does not change tab (L1/R1 only)");
+    press(LB_L1); press(LB_L1);
+    expect(ui_eng_tab() == ENG_SYSTEM, "L1 wraps from CPU to System");
     press(LB_X);
     expect(platform_eng_profile_state() == 1, "X on Engineering saves the profile");
     press(LB_Y);
@@ -616,8 +618,8 @@ int main(void) {
     press(LB_B);
 
     ui_init();
-    down(8); press(LB_A); down(4); press(LB_A);
-    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "Settings has no Network; row 4 is System");
+    down(8); press(LB_A); down(3); press(LB_A);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "Settings has no Network or Input; row 3 is System");
     press(LB_B);
     expect(ui_screen() == SCREEN_SETTINGS, "B from System returns to Settings");
 
@@ -669,7 +671,7 @@ int main(void) {
     stock_set_bak(0);
     stock_calls = 0;
     ui_init();
-    down(8); press(LB_A); down(4); press(LB_A);
+    down(8); press(LB_A); down(3); press(LB_A);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "Settings System opens System Defaults");
     {
         char dump[8192];
@@ -754,7 +756,7 @@ int main(void) {
     }
     sysinfo_set_root("/tmp/redux-sysinfo-nav");
     ui_init();
-    down(8); press(LB_A); down(4); press(LB_A); press(LB_A);
+    down(8); press(LB_A); down(3); press(LB_A); press(LB_A);
     expect(ui_screen() == SCREEN_SYSINFO, "System Tools opens from System Defaults");
     {
         char dump[8192];
@@ -777,7 +779,7 @@ int main(void) {
     remove("/tmp/redux.theme");
     ui_init();
     down(8); press(LB_A);          /* Settings */
-    down(6); press(LB_A);          /* UI (last row) */
+    down(5); press(LB_A);          /* UI (last row) */
     expect(ui_screen() == SCREEN_UI_COLORS, "Settings → UI opens Colors");
     down(1); press(LB_A);          /* Amber */
     {
@@ -791,7 +793,7 @@ int main(void) {
     expect(ui_screen() == SCREEN_SETTINGS, "B from Colors returns to Settings");
     /* reload confirms the save */
     ui_init();
-    down(8); press(LB_A); down(6); press(LB_A);
+    down(8); press(LB_A); down(5); press(LB_A);
     {
         char dump[8192];
         ui_draw();
@@ -802,7 +804,7 @@ int main(void) {
     }
     press(LB_UP); press(LB_A);     /* from the top row, Up wraps to the last row: VGA White */
     ui_init();
-    down(8); press(LB_A); down(6); press(LB_A);
+    down(8); press(LB_A); down(5); press(LB_A);
     {
         char dump[8192];
         ui_draw();
@@ -910,7 +912,7 @@ int main(void) {
         f = fopen("/tmp/redux-nav-keep", "w"); if (f) { fputs("x\n", f); fclose(f); }
         ui_init();
         expect(font_current() == FONT_SPLEEN && screentimeout_minutes() == 10, "settings set before Reset All");
-        down(8); press(LB_A); down(4); press(LB_A); press(LB_UP);
+        down(8); press(LB_A); down(3); press(LB_A); press(LB_UP);
         expect(ui_list_selected() == 8, "Up from System Tools: Reset All");
         press(LB_A);
         expect(ui_screen() == SCREEN_RESET_CONFIRM, "Reset All opens its confirm");
@@ -942,7 +944,7 @@ int main(void) {
     power_set_run(power_hook);
     power_calls = 0;
     ui_init();
-    down(8); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_A);
+    down(8); press(LB_A); down(3); press(LB_A); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "Restart opens the confirm");
     press(LB_A);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "a short A stays on Restart confirm");
@@ -965,7 +967,7 @@ int main(void) {
 
     power_calls = 0;
     ui_init();
-    down(8); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    down(8); press(LB_A); down(3); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_POWEROFF_CONFIRM, "Power Off opens the confirm");
     press(LB_A);
     expect(ui_screen() == SCREEN_POWEROFF_CONFIRM, "a short A stays on Power Off confirm");
@@ -999,7 +1001,7 @@ int main(void) {
         expect(strstr(dump, "VOL ") == NULL, "VOL overlay clears after 1.5 s");
     }
     /* on a confirm screen, volume must not cancel */
-    down(8); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_A);
+    down(8); press(LB_A); down(3); press(LB_A); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "on Restart confirm");
     ui_button(LB_VOL_UP, 1, 3000);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "volume does not leave the confirm");
@@ -1157,7 +1159,7 @@ int main(void) {
 
     /* Card Scripts switch removed (Dale A, 2026-11-16): no row for it any more. */
     ui_init();
-    down(8); press(LB_A); down(4); press(LB_A);       /* Settings > System */
+    down(8); press(LB_A); down(3); press(LB_A);       /* Settings > System */
     {
         char dump[8192];
         ui_draw();
@@ -1187,7 +1189,7 @@ int main(void) {
                              "/tmp/redux-nav-boot/marker");
         bootscreen_set_run(boot_hook);
         ui_init();
-        down(8); press(LB_A); down(4); press(LB_A);       /* Settings > System */
+        down(8); press(LB_A); down(3); press(LB_A);       /* Settings > System */
         down(3);
         expect(ui_list_selected() == 3, "Boot Screen is the row after Power Off");
         press(LB_A);
@@ -1228,7 +1230,7 @@ int main(void) {
     expect(ui_screen() == SCREEN_MAIN && ui_list_selected() == 0, "M on Display goes to Main");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B on Main after M stays on Main (back stack cleared)");
-    down(8); press(LB_A); down(4); press(LB_A); down(4); press(LB_A);   /* Stock Menu confirm */
+    down(8); press(LB_A); down(3); press(LB_A); down(4); press(LB_A);   /* Stock Menu confirm */
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "Stock Menu confirm is open");
     press(LB_MENU);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "M on a confirm screen cancels back one level");
