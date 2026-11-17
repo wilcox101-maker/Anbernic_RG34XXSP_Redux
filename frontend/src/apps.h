@@ -10,6 +10,7 @@ typedef enum {
     /* Tools (Core Apps decision A, 2026-11-13): stock terminal programs in SimpleTerminal. */
     APP_MIXER, APP_NETWORK, APP_BLUETOOTH, APP_INPUT_TEST, APP_SPEAKER_TEST,
     APP_NEOFETCH,   /* Dale 2026-11-17: installed with apt, works */
+    APP_REDUX_TERM, /* Redux's own terminal (Dale 2026-11-17 A): sharp text, buttons as keys */
     APP_COUNT
 } app_id_t;
 

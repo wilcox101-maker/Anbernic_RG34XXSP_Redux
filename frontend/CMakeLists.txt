@@ -67,6 +67,19 @@ add_custom_command(
     DEPENDS redux_heatguard ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
     COMMENT "Embedding the heat guard")
 
+# Redux Terminal (Dale 2026-11-17 A): a pty + VT100/xterm subset drawn with Redux's fonts. Built for
+# the same machine as dmenu.bin and embedded in it; Redux writes it to /tmp at start (src/term.c).
+add_executable(redux_term term/redux_term.c term/vt.c src/font.c src/font_extra.c src/remap_device.c)
+target_include_directories(redux_term PRIVATE src term)
+target_compile_options(redux_term PRIVATE -Wall -Wextra)
+set(REDUX_TERM_BLOB ${CMAKE_CURRENT_BINARY_DIR}/term_blob.c)
+add_custom_command(
+    OUTPUT ${REDUX_TERM_BLOB}
+    COMMAND ${CMAKE_COMMAND} -DIN=$<TARGET_FILE:redux_term> -DOUT=${REDUX_TERM_BLOB}
+            -DNAME=redux_term_bin -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    DEPENDS redux_term ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    COMMENT "Embedding the terminal")
+
 # Package catalog for Settings > System > Packages: tools/extras.ini, the same file the PC tool
 # reads, embedded so the list on the device and on the PC never differ.
 set(REDUX_EXTRAS_BLOB ${CMAKE_CURRENT_BINARY_DIR}/extras_ini_blob.c)
@@ -111,11 +124,14 @@ add_executable(rg34xxsp-redux
     ${REDUX_VSYNC_BLOB}
     src/ports.c
     src/bootscreen.c
+    src/term.c
+    ${REDUX_TERM_BLOB}
 )
 target_include_directories(rg34xxsp-redux PRIVATE src)
 
 if(REDUX_PLATFORM STREQUAL "stock")
     target_compile_definitions(rg34xxsp-redux PRIVATE REDUX_PLATFORM_STOCK)
+    target_compile_definitions(redux_term PRIVATE REDUX_PLATFORM_STOCK)
 endif()
 
 # Short git SHA so a deployed dmenu.bin can be identified. "dev" if git is missing.
@@ -138,23 +154,32 @@ if(NOT DEFINED REDUX_BUILD)
     endif()
 endif()
 target_compile_definitions(rg34xxsp-redux PRIVATE "REDUX_BUILD=\"${REDUX_BUILD}\"")
+target_compile_definitions(redux_term PRIVATE "REDUX_BUILD=\"${REDUX_BUILD}\"")
 
 # Newer SDL2 packages export targets; older ones only set variables.
-if(TARGET SDL2::SDL2)
-    if(TARGET SDL2::SDL2main)
-        target_link_libraries(rg34xxsp-redux PRIVATE SDL2::SDL2main)
+function(redux_link_sdl target)
+    if(TARGET SDL2::SDL2)
+        if(TARGET SDL2::SDL2main)
+            target_link_libraries(${target} PRIVATE SDL2::SDL2main)
+        endif()
+        target_link_libraries(${target} PRIVATE SDL2::SDL2)
+    else()
+        target_include_directories(${target} PRIVATE ${SDL2_INCLUDE_DIRS})
+        target_link_libraries(${target} PRIVATE ${SDL2_LIBRARIES})
     endif()
-    target_link_libraries(rg34xxsp-redux PRIVATE SDL2::SDL2)
-else()
-    target_include_directories(rg34xxsp-redux PRIVATE ${SDL2_INCLUDE_DIRS})
-    target_link_libraries(rg34xxsp-redux PRIVATE ${SDL2_LIBRARIES})
-endif()
+endfunction()
+redux_link_sdl(rg34xxsp-redux)
+redux_link_sdl(redux_term)
 
 if(MSVC)
     target_compile_options(rg34xxsp-redux PRIVATE /W4 /utf-8)
 else()
     target_compile_options(rg34xxsp-redux PRIVATE -Wall -Wextra)
 endif()
+
+# Terminal screen model (no SDL, no pty): ./test_vt, exit code 0 = pass.
+add_executable(test_vt tests/test_vt.c term/vt.c)
+target_include_directories(test_vt PRIVATE term)
 
 # Boot Screen manager against a temp folder (no SDL, no device): ./test_bootscreen.
 add_executable(test_bootscreen tests/test_bootscreen.c src/bootscreen.c)
