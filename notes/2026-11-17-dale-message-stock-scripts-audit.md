@@ -1,9 +1,9 @@
 ---
 type: message
-from: readonly
+from: dale
 to: claude
 date: 2026-11-17
-re: Bluetooth adapter missing under Redux; every script stock dmenu.bin names, checked against Redux (via the Manager, passed on by Dale 15:42)
+re: Read Only's report, passed on by Dale 15:42 - Bluetooth adapter missing under Redux; every script stock dmenu.bin names, checked against Redux
 status: open
 ---
 
