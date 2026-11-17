@@ -58,6 +58,8 @@ int  platform_last_good(buildhist_entry_t *out);    /* 0 found, -1 none */
    -3 bad data) and install a kept build (0 ok; the caller reboots). Security item: Dale merges. */
 int  platform_update_download(const char *current, char *sha, size_t n);
 int  platform_update_install(const char *sha, const char *current, const char *how);
+/* Step 3: 1 if builds/<sha>/dmenu.bin is kept on the device (roll-back possible). */
+int  platform_update_have(const char *sha);
 
 /* 1 while the heat guard has the CPU capped (F5 step 4). */
 int  platform_hot(void);

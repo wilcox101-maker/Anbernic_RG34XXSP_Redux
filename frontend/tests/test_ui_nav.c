@@ -289,6 +289,23 @@ int main(void) {
     ui_button(LB_A, 0, 5200);
     press(LB_B);
     expect(ui_screen() == SCREEN_ENG && ui_eng_tab() == ENG_UPDATE, "B returns to the Update tab");
+    press(LB_DOWN); press(LB_A);                        /* history row 1: 070427e, reached the menu, kept */
+    expect(ui_screen() == SCREEN_UPDATE_CONFIRM, "A on a working history build opens the roll-back confirm");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Roll back to:   070427e") != NULL, "the confirm names the roll-back build");
+    }
+    ui_button(LB_A, 1, 6000); ui_tick(9100); ui_button(LB_A, 0, 9200);
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Installed 070427e") != NULL, "holding A 3 s rolls back (desktop: no reboot)");
+    }
+    press(LB_B);
+    press(LB_UP);                                       /* back to the Check row */
     press(LB_R1);                                       /* back to CPU */
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Engineering exits to Main, not the confirm screen");

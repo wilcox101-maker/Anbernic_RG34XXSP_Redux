@@ -94,9 +94,12 @@ int platform_update_download(const char *current, char *sha, size_t n) {
     snprintf(sha, n, "abc1234");
     return (current && strcmp(current, "abc1234") == 0) ? 1 : 0;
 }
+int platform_update_have(const char *sha) {
+    return sha && (!strcmp(sha, "abc1234") || !strcmp(sha, "070427e") || !strcmp(sha, "2917a5c"));
+}
 int platform_update_install(const char *sha, const char *current, const char *how) {
     (void)current; (void)how;
-    fake_installed = sha && strcmp(sha, "abc1234") == 0;
+    fake_installed = platform_update_have(sha);
     return fake_installed ? 0 : -1;
 }
 void platform_sticks(int out[4]) { out[0] = 120; out[1] = -4096; out[2] = 0; out[3] = 2048; }
