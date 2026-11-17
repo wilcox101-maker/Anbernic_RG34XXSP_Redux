@@ -1,7 +1,7 @@
 #ifndef REDUX_STOCKMENU_H
 #define REDUX_STOCKMENU_H
 
-/* Restore the stock launcher. The command is docs/dale-scripts.md S7.
+/* Restore the stock launcher. The command is docs/process/dale-scripts.md S7.
    Copy to a temp file on the same filesystem, then rename over dmenu_ln.
    The running script is not rewritten in place. Refuses when dmenu_ln.bak
    is missing. The .bak stays. Writes /mnt/vendor/ctrl/dmenu_ln.

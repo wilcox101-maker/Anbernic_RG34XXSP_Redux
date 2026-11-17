@@ -100,7 +100,7 @@ boot tries Redux again; nothing on the card is changed. (Between failures the st
 If it keeps happening, look at `/mnt/vendor/redux/redux.log`, and go back to stock **over SSH** (the
 handheld still boots and SSH still works):
 1. From the PC: `python install.py --uninstall <ip>`, then restart.
-2. Or, logged in over SSH, the one-liner **S7** from [dale-scripts.md](dale-scripts.md) (copies
+2. Or, logged in over SSH, the one-liner **S7** from [dale-scripts.md](process/dale-scripts.md) (copies
    `dmenu_ln.bak` back and reboots).
 3. If the Redux boot screen is installed: [Boot logo by hand](#boot-logo-by-hand).
 
