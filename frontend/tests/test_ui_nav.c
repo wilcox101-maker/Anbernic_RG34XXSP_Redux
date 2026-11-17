@@ -275,6 +275,20 @@ int main(void) {
         expect(strstr(dump, "Last known working:  070427e") != NULL && strstr(dump, "2917a5c") != NULL
                && strstr(dump, "Current build:") != NULL, "Update shows current, last known working and history");
     }
+    press(LB_A);                                        /* check for an update (desktop fake: abc1234) */
+    expect(ui_screen() == SCREEN_UPDATE_CONFIRM, "Update A downloads and opens the install confirm");
+    ui_button(LB_A, 1, 100); ui_tick(1000); ui_button(LB_A, 0, 1100);
+    expect(ui_screen() == SCREEN_UPDATE_CONFIRM, "a short A does not install");
+    ui_button(LB_A, 1, 2000); ui_tick(5100);
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Installed abc1234") != NULL, "holding A 3 s installs (desktop: no reboot)");
+    }
+    ui_button(LB_A, 0, 5200);
+    press(LB_B);
+    expect(ui_screen() == SCREEN_ENG && ui_eng_tab() == ENG_UPDATE, "B returns to the Update tab");
     press(LB_R1);                                       /* back to CPU */
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Engineering exits to Main, not the confirm screen");

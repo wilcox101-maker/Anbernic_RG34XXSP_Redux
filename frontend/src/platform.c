@@ -89,6 +89,16 @@ int platform_build_history(buildhist_entry_t *e, int max) {
     return n;
 }
 int platform_last_good(buildhist_entry_t *out) { *out = fake_hist[0]; return 0; }
+static int fake_installed;
+int platform_update_download(const char *current, char *sha, size_t n) {
+    snprintf(sha, n, "abc1234");
+    return (current && strcmp(current, "abc1234") == 0) ? 1 : 0;
+}
+int platform_update_install(const char *sha, const char *current, const char *how) {
+    (void)current; (void)how;
+    fake_installed = sha && strcmp(sha, "abc1234") == 0;
+    return fake_installed ? 0 : -1;
+}
 void platform_sticks(int out[4]) { out[0] = 120; out[1] = -4096; out[2] = 0; out[3] = 2048; }
 int platform_led_rumble_test(void) { return 0; }
 int platform_fsck(const char *dev) { (void)dev; return 0; }

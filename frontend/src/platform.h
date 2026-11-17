@@ -54,6 +54,10 @@ void platform_sticks(int out[4]);
 #include "buildhist.h"
 int  platform_build_history(buildhist_entry_t *e, int max);
 int  platform_last_good(buildhist_entry_t *out);    /* 0 found, -1 none */
+/* Step 2: download the newest dev build (updater_download codes: 0 new, 1 same, -1 network, -2 checksum,
+   -3 bad data) and install a kept build (0 ok; the caller reboots). Security item: Dale merges. */
+int  platform_update_download(const char *current, char *sha, size_t n);
+int  platform_update_install(const char *sha, const char *current, const char *how);
 
 /* 1 while the heat guard has the CPU capped (F5 step 4). */
 int  platform_hot(void);
