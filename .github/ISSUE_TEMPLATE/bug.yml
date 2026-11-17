@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in Redux doesn't work as described.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Security problems: please use private reporting instead (SECURITY.md).
+        Never attach ROMs, BIOS files or a stock firmware image.
+  - type: input
+    id: build
+    attributes:
+      label: Redux build
+      description: The title bar shows `v0.1-dev - <sha>`; or the commit you built.
+      placeholder: v0.1-dev - 1038c32
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware version
+      description: Revision and RAM, e.g. "v1.0 / 2 GB" (original) or "Metallic Blue / 1 GB".
+      placeholder: v1.0 / 2 GB
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Stock firmware version
+      description: The Anbernic firmware on the card, e.g. "V1.0.6".
+    validations:
+      required: true
+  - type: textarea
+    id: check
+    attributes:
+      label: Output of `python install.py --check <ip>`
+      render: text
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Game Room
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs. actual
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (optional)
+      description: "`/mnt/vendor/redux/redux.log`, if you can get it over SSH."
+      render: text
