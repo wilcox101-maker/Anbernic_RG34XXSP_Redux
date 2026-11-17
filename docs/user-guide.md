@@ -74,6 +74,7 @@ it stays frozen when opened again (Dale 2026-11-17; a Redux network page is plan
 
 | App | What it is | Status |
 |---|---|---|
+| *from Packages* | every package in Settings > System > Packages that has an Apps name appears here once installed (BTop Monitor, CPU Stress Monitor, Disk Usage, Tmux, Music (cmus), Music (MOC)) and runs in Redux Terminal; remove the package and the row goes | **[not yet on device]** |
 | Ebook Reader (TF1) / (TF2) | stock reader (Pixel Reader) for each card; M quits | TF1 device-checked; TF2 not yet |
 | PDF Reader | later (needs a file picker) | placeholder |
 | NeoFetch | system summary (`neofetch`, no logo so it fits); needs `neofetch` installed; M quits | device-checked (before the no-logo change) |

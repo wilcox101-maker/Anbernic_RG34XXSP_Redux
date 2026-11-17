@@ -1316,6 +1316,27 @@ int main(void) {
         remove("/tmp/redux-next-apps");
         remove(UI_RESUME_PATH);
     }
+    /* Catalog packages that are installed appear in Apps (Dale 2026-11-17 A): btop's binary in the
+       fixture root adds "BTop Monitor", launched in Redux Terminal with its launch line. */
+    mkdir("/tmp/redux-apps/usr", 0755); mkdir("/tmp/redux-apps/usr/bin", 0755);
+    write_empty("/tmp/redux-apps/usr/bin/btop");
+    apps_rescan();
+    {
+        int row = -1;
+        for (int r = 0; r < apps_count(); r++) if (!strcmp(apps_name(apps_list_id(r)), "BTop Monitor")) row = r;
+        expect(row >= 0 && !strcmp(apps_status(apps_list_id(row)), "from Packages"), "an installed catalog package is an Apps row");
+        char line[256] = "";
+        expect(row >= 0 && apps_launch(apps_list_id(row)) == 0, "the catalog row launches");
+        FILE *f = fopen("/tmp/redux-next-apps", "r");
+        if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
+        expect(strcmp(line, "cd '/tmp' && HOME=/root ./'redux-term' -e btop\n") == 0, "it runs the catalog launch line in Redux Terminal");
+        remove("/tmp/redux-next-apps");
+        remove("/tmp/redux-apps/usr/bin/btop");
+        apps_rescan();
+        row = -1;
+        for (int r = 0; r < apps_count(); r++) if (!strcmp(apps_name(apps_list_id(r)), "BTop Monitor")) row = r;
+        expect(row < 0, "removed package: the row is gone after a rescan");
+    }
     remove("/tmp/redux-apps/tmp/redux-term");
     apps_set_root("");
 
