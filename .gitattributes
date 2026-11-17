@@ -1,0 +1,14 @@
+# LF line endings for files the handheld or CI runs, even from a Windows checkout
+# (a CRLF shell script fails on the device with "/bin/sh^M: not found").
+*.sh   text eol=lf
+*.py   text eol=lf
+*.c    text eol=lf
+*.h    text eol=lf
+*.yml  text eol=lf
+dmenu_ln* text eol=lf
+
+# Binary assets
+*.png  binary
+*.bmp  binary
+*.pbm  binary
+*.gif  binary

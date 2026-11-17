@@ -10,7 +10,7 @@
 - [ ] Other
 
 ## Checklist
-- [ ] Work is on a `claude/` branch (or a helper's prefix from `docs/roles.md`) (not pushed straight to main)
+- [ ] Work is on a `claude/` branch (or a helper's prefix from `docs/process/roles.md`) (not pushed straight to main)
 - [ ] If a note event occurred, the note and `notes/STATUS.md` are updated in this PR
 - [ ] `notes/ACTIVITY.md` line was appended on main (or will be)
 - [ ] No Anbernic binaries, ROMs, or BIOS files are included
