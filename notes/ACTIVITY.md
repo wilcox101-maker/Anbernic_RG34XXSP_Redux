@@ -189,3 +189,4 @@
 - 2026-11-17 13:52 · claude · read: Dale SWAP 13:50 · did: handoff-2026-11-17 merged; next chat starts with HELLO
 - 2026-11-17 14:18 · claude · read: Dale 13:56 A: three-PR split for Redux Terminal · did: merged #275 Redux Terminal PR 1 (vt model, SDL pty terminal, Apps row, tests in CI); not device-checked. Next: PR 2 mouse + Select keys
 - 2026-11-17 14:28 · claude · read: Dale 13:56 A (three PRs) · did: merged #276 Redux Terminal PR 2 (right-stick mouse, L3/R3 clicks, Select on-screen keys); not device-checked. Next: PR 3 move mc/htop/alsamixer/nmtui/neofetch onto it
+- 2026-11-17 14:33 · claude · read: Dale 13:56 A (three PRs) · did: merged #277 Redux Terminal PR 3 (all terminal apps on redux-term, --hold, SimpleTerminal retired). Terminal item built end to end; one batched device test pending (#275-#277). Next: terminal Music/Video/Bluetooth/Documents candidates
