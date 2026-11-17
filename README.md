@@ -37,16 +37,17 @@ The first piece of Redux is a lightweight C/SDL2 menu that **replaces only the s
 | **Undo** | `install.py --uninstall`, or *Settings → System → System Defaults → Stock Menu* on the device | Reflash stock |
 | **Your existing setup** | Keeps stock RetroArch configs, saves, BIOS files and Stock OS Mod tools | Usually rebuilt from scratch |
 | **Game cards** | Redux's own code never writes to, formats or resizes your ROM cards. The stock engines it launches (RetroArch, OpenBOR) keep saving there exactly as on stock, and Redux asks RetroArch to flush its saves before a lid sleep | Varies |
-| **Look** | Retro BIOS-setup interface: 4 colour presets and 5 UI fonts, changed on the device (10 schemes designed) | Theme packs |
+| **Look** | Retro BIOS-setup interface: 4 accent colours plus the 16-colour VGA palette, and 5 UI fonts, changed on the device | Theme packs |
 | **Branding** | The boot screen comes from plain files in [`branding/`](branding/) | Usually hard-coded |
 | **For tinkerers** | Engineering Mode: live CPU, GPU, battery, thermal, storage and log read-outs; CPU governor, speeds and cores, always inside the chip's own tables; a heat guard | Rarely built in |
 | **Footprint** | One ~250 KB program (it carries its two small helpers); about 0% CPU idle in the menu (measured 2026-11-10) | Full frontends |
 
 ### Colour presets
 
-Today the build has four accent colours (BIOS cyan, Amber, Green, White) under *Settings → UI*, and five
-UI fonts under *Settings → Display → Font*. The full design is ten schemes named after the displays of
-1975 to the 1990s (below, a design render); the other six are not built yet.
+The build has four accent colours (BIOS cyan, Amber, Green, White) plus the 16 standard VGA text
+colours (all but black) under *Settings → UI*, and five UI fonts under *Settings → Display → Font*. The
+full design is ten schemes named after the displays of 1975 to the 1990s (below, a design render); those
+are not built yet.
 
 <p align="center"><img src="docs/img/redux-color-presets.png" width="80%" alt="Ten designed Redux colour schemes"></p>
 

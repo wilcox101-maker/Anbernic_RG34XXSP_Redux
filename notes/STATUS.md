@@ -26,7 +26,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 1. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons (folded into item 4, the Redux video front-end); Wolfenstein 3D Y and X: not a bug, it is a GBA ROM (no X/Y). Done: `/tmp/.next` + amixer (#202), scan cache (#203). Game Room X = Favorites, not built yet (placeholder). Then a short device re-check.
 2. ~~Game Room card picker~~ #205, device-checked 2026-11-16 (with the #216 crash fix).
 3. **F5 Engineering Mode** (in progress: [plan](2026-11-16-claude-decision-f5-plan.md), steps 1-2 device-checked, steps 3-4 and 5a built; next input viewer, LED/rumble, `fsck -n`). F4 signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)).
-4. **Dale's requests 2026-11-17 08:40:** (1) Music and Video out of Apps, (2) Apps sorted, (3) app status from device results: this PR. Next: (4) Loading ROM as a full screen, (5) Engineering hold A = 3 s and say so, (6) the 16 standard colours as accent options.
+4. **Dale's requests 2026-11-17 08:40:** (1)-(3) Apps tidy #231, (5) Engineering hold 3 s #232, (4) full-screen Loading #233, (6) VGA colours: this PR. Then a short device re-check.
 5. **F6**: Wi-Fi off unless needed + Power & Lid settings page (moved from F4, Dale A 15:09); **Redux front-ends for the stock apps** in the BIOS/DOS style (Dale 2026-11-16): Video Player first (Redux file list + stock `ffplay`), then Music, Ebook, File Manager. Needs the FFplay.sh read from the device.
 6. **Installer B**: TF2 package with hold-A (after A is device-checked). Tagged Beta releases (`v0.5-beta.N`) once Beta is near.
 7. Extras installer (#149): REFUSED path and a fresh install still not run on the device.
