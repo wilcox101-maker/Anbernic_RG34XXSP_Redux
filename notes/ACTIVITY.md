@@ -182,3 +182,4 @@
 - 2026-11-17 11:48 · claude · read: Dale 11:43 + A 11:44 Display into UI; 11:38 boot screen request · did: merged #264 Display folded into Settings > UI; boot screen DECIDE asked
 - 2026-11-17 12:08 · claude · read: Dale 11:49 apps move; 11:56 SSH/SMB + nmtui freeze · did: merged #265 tools moved to Settings and Settings > Audio; SSH/SMB DECIDE asked
 - 2026-11-17 12:13 · claude · read: Dale AA 12:09 (boot logo A, SSH/SMB A) · did: opened #266 boot logo follows the build (Dale merges), CI green; SSH/SMB needs autostart lines from device
+- 2026-11-17 13:01 · claude · read: Dale 12:54 results (3-6,8 PASS, 7 fail) + requests to 12:59 · did: merged #269 UI page fits Largest, #270 NeoFetch + mc; terminal DECIDE asked
