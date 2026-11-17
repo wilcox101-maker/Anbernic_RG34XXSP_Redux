@@ -26,7 +26,10 @@ _Static_assert(LB_LEFT < 64 && LB_RIGHT < 64 && LB_A < 64, "logical buttons clas
 
 static int keys_fd = -1;
 static int power_fd = -1;
-static int stick_state[6];   /* 0-3 sticks, 4-5 D-pad hat (own state, so stick and hat don't cancel) */
+static int stick_state[6];
+static int raw_axis[4];     /* last raw stick values, for the Input tab */
+
+int evdev_axis(int i) { return (i >= 0 && i < 4) ? raw_axis[i] : 0; }   /* 0-3 sticks, 4-5 D-pad hat (own state, so stick and hat don't cancel) */
 
 static logical_button_t axis_to_btn(int axis, int dir) {
     if (dir == 0) return LB_NONE;
@@ -127,6 +130,7 @@ int evdev_poll(void (*cb)(logical_button_t, int pressed)) {
 
             int dir = 0;
             int v = ev.value;
+            if (axis < 4) raw_axis[axis] = v;
             if (ev.code == DEV_ABS_HAT0X || ev.code == DEV_ABS_HAT0Y)
                 dir = v < 0 ? -1 : v > 0 ? 1 : 0;
             else if (v <= -PRESS_THR) dir = -1;

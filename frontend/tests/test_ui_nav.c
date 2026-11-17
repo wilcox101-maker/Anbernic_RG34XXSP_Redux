@@ -223,6 +223,8 @@ int main(void) {
         ui_draw();
         grid_dump(dump, sizeof dump);
         expect(strstr(dump, "L3     up") != NULL && strstr(dump, "[ R3     ]") != NULL, "Input lists L3 and shows R3");
+        expect(strstr(dump, "Left stick   X  +120  Y -4096") != NULL && strstr(dump, "Y +2048") != NULL,
+               "Input shows the raw stick values");
     }
     /* R1 held off the tab, released elsewhere, then back: no stuck light. */
     ui_button(LB_R1, 1, 30);                          /* to Storage */

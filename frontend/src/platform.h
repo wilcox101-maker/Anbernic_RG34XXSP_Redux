@@ -47,6 +47,9 @@ int  platform_fsck(const char *dev);
 /* LED and rumble test (F5 step 5c). 0 ok. Always leaves the green LED on and the rumble off. */
 int  platform_led_rumble_test(void);
 
+/* Raw stick values for the Input tab: out[0..3] = left X, left Y, right X, right Y. */
+void platform_sticks(int out[4]);
+
 /* 1 while the heat guard has the CPU capped (F5 step 4). */
 int  platform_hot(void);
 

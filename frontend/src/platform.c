@@ -80,6 +80,7 @@ int platform_eng_profile_save(void)  { fake_profile = 1; return 0; }
 int platform_eng_profile_clear(void) { fake_profile = 0; return 0; }
 
 int platform_hot(void) { return 0; }
+void platform_sticks(int out[4]) { out[0] = 120; out[1] = -4096; out[2] = 0; out[3] = 2048; }
 int platform_led_rumble_test(void) { return 0; }
 int platform_fsck(const char *dev) { (void)dev; return 0; }
 
