@@ -17,4 +17,8 @@ Dale's words: "1 - PASS / 2. - PASS / 3. - PASS / 4. - NO OSK / 5. - PASS / 6 - 
 
 - PASS: 1, 2, 3, 5, 6.
 - FAIL 4: in mc the Select on-screen keys did not show ("NO OSK"); the pointer part of check 4 not
-  stated. Checks 7-9 not yet reported.
+  stated.
+- 15:00: "8 SKIP / 9 PASS / Roll back PASS / Boot Logo PASS / No OSK in all apps except mc".
+  So: 9 (moc + pdftotext install and run) PASS; Engineering > Update roll back from the history
+  PASS; #273 boot logo on a unit with no marker PASS; the picker works in every app but mc.
+  Check 7 (Bluetooth, Input Test, Network Setup, NeoFetch) not stated.
