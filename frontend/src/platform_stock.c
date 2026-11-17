@@ -104,6 +104,7 @@ int platform_update_install(const char *sha, const char *current, const char *ho
     return updater_install(sha, current, how);
 }
 int platform_update_have(const char *sha) { return updater_have(sha); }
+int platform_update_logo_changed(void) { return updater_logo_changed(); }
 int platform_hot(void) {
     FILE *f = fopen("/tmp/redux-hot", "r");   /* HG_FLAG */
     if (!f) return 0;

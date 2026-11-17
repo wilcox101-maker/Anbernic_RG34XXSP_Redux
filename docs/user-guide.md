@@ -127,6 +127,12 @@ System, Update (build history), all live read-outs. On CPU, Up/Down picks a row 
 cores 1-3; X saves the settings as a profile, Y removes it (F5, **[partly not yet on device]**). It
 never goes past the stock CPU frequency table.
 
+**Update tab:** A on the top row downloads the newest dev build of this repo (checksum-checked) and,
+after a 3-second hold, installs it and reboots; pick a history line to roll back. Each build comes
+with its own boot logo (`v0.1-dev <build>`); if the Redux boot screen is installed, the logo is
+updated with the build. If a new build fails to start 3 times, Redux goes back to the last build that
+reached the menu, then to the stock menu. **[not yet on device]**
+
 ## Extras (installed from your PC)
 StockOS is a full Ubuntu 22.04. `tools/extras.py` (in the repo; Python 3, works on Windows) installs
 extra tools over SSH:

@@ -1097,6 +1097,15 @@ void ui_tick(uint32_t now_ms) {
                 int rc = platform_update_install(upd_sha, REDUX_BUILD, upd_rollback ? "rollback" : "update");
                 stock_started = 1;
                 if (rc == 0) {
+                    /* Boot logo follows the build (Dale 2026-11-17 A): only when Redux's logo is the
+                       one on the boot partition. Same checked in-place write as Boot Screen; a failure
+                       leaves the old logo (bootscreen writes the old bytes back) and still reboots. */
+                    if (platform_update_logo_changed() && bootscreen_is_redux()) {
+                        ui_busy("Installing", "Writing this build's boot logo.");
+                        int b = bootscreen_install();
+                        if (b != BOOTSCREEN_OK)
+                            fprintf(stderr, "[update] boot logo not written: %s\n", bootscreen_message(b));
+                    }
                     snprintf(stock_msg, sizeof stock_msg, "Installed %s: rebooting", upd_sha);
                     if (power_reboot() != 0) snprintf(stock_msg, sizeof stock_msg, "Installed %s. Restart to use it.", upd_sha);
                 } else {

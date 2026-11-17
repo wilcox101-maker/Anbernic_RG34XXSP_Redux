@@ -104,6 +104,44 @@ int main(void) {
     expect(n == 2 && !strcmp(h[0].sha, "abc1234") && !h[0].menu && !strcmp(h[0].how, "update"), "history: abc1234 nomenu update");
     expect(buildhist_last_good(&g) == 0 && !strcmp(g.sha, "0000aaa"), "last known working is still the old build");
 
+    expect(!updater_logo_changed(), "a release without a boot logo leaves bootlogo.bmp alone");
+
+    /* Boot logo per build (Dale 2026-11-17 A): downloaded, checked, kept, installed beside dmenu.bin. */
+    snprintf(p, sizeof p, "%s/bootlogo.bmp", redux); put(p, "LOGO-OLD");
+    make_release("beef001", "LOGOBIN");
+    {
+        char q[400], cmd[700];
+        snprintf(q, sizeof q, "%s/bootlogo.bmp", rel); put(q, "LOGO-beef001");
+        snprintf(cmd, sizeof cmd, "cd '%s' && sha256sum dmenu.bin BUILD.txt bootlogo.bmp > SHA256SUMS.txt", rel);
+        if (system(cmd) != 0) return 2;
+    }
+    expect(updater_download("abc1234", sha, sizeof sha) == 0, "release with a boot logo downloads");
+    snprintf(p, sizeof p, "%s/builds/beef001/bootlogo.bmp", redux);
+    expect(same(p, "LOGO-beef001"), "the build's logo is kept with it");
+    expect(updater_install("beef001", "abc1234", "update") == 0 && updater_logo_changed(), "install reports a new logo");
+    snprintf(p, sizeof p, "%s/bootlogo.bmp", redux);
+    expect(same(p, "LOGO-beef001"), "bootlogo.bmp is that build's logo");
+    snprintf(p, sizeof p, "%s/bootlogo.bmp.new", redux);
+    expect(!exists(p), "no bootlogo.bmp.new left");
+    snprintf(p, sizeof p, "%s/builds/abc1234/bootlogo.bmp", redux);
+    expect(!exists(p) || same(p, "LOGO-OLD"), "the running build keeps its own logo only if it had none kept");
+    expect(updater_install("abc1234", "beef001", "rollback") == 0, "roll back to abc1234");
+    snprintf(p, sizeof p, "%s/bootlogo.bmp", redux);
+    expect(same(p, "LOGO-beef001") && !updater_logo_changed(), "abc1234 had no logo: the current logo file stays");
+    /* A tampered logo is refused like a tampered binary. */
+    make_release("bad0002", "OKBIN");
+    {
+        char q[400], cmd[700];
+        snprintf(q, sizeof q, "%s/bootlogo.bmp", rel); put(q, "LOGO-good");
+        snprintf(cmd, sizeof cmd, "cd '%s' && sha256sum dmenu.bin BUILD.txt bootlogo.bmp > SHA256SUMS.txt", rel);
+        if (system(cmd) != 0) return 2;
+        put(q, "LOGO-evil");
+    }
+    expect(updater_download("abc1234", sha, sizeof sha) == -2 && !updater_have("bad0002"), "logo checksum mismatch: -2, not kept");
+    {
+        char q[400]; snprintf(q, sizeof q, "%s/bootlogo.bmp", rel); remove(q);
+    }
+
     /* Prune: keep 3 newest distinct + current + new + last good. */
     const char *olds[] = { "1110001", "1110002", "1110003", "1110004" };
     for (int i = 0; i < 4; i++) {
