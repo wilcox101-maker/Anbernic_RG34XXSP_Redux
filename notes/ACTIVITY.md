@@ -185,3 +185,4 @@
 - 2026-11-17 13:01 · claude · read: Dale 12:54 results (3-6,8 PASS, 7 fail) + requests to 12:59 · did: merged #269 UI page fits Largest, #270 NeoFetch + mc; terminal DECIDE asked
 - 2026-11-17 13:14 · claude · read: Dale 13:06 apt A, terminal A · did: opened #272 Settings > System > Packages (Dale merges), CI green after a Release-only warning fix; next Redux Terminal
 - 2026-11-17 13:24 · claude · read: Dale merged #266 #267 #272 · did: fixed #266 and #272 merge conflicts; next Redux Terminal
+- 2026-11-17 13:49 · claude · read: Dale 13:44 results, SMB PASS 13:48, #273 merged · did: fixed boot logo trigger and Settings fit (#273); next Redux Terminal
