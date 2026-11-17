@@ -12,17 +12,27 @@ import tempfile
 import time
 
 
-def run(term, cmd, hold_ms=None, extra=()):
+LOG = None
+
+
+def run(term, cmd, hold_ms=None, extra=(), script=None):
+    global LOG
     with tempfile.NamedTemporaryFile(suffix=".dump", delete=False) as f:
         dump = f.name
-    env = dict(os.environ, SDL_VIDEODRIVER="dummy", REDUX_TERM_DUMP=dump)
+    log = dump + ".log"
+    env = dict(os.environ, SDL_VIDEODRIVER="dummy", REDUX_TERM_DUMP=dump, REDUX_TERM_LOG=log)
     if hold_ms is not None:
         env["REDUX_TERM_HOLD_MS"] = str(hold_ms)
+    if script:
+        env["REDUX_TERM_SCRIPT"] = script
     t0 = time.time()
     r = subprocess.run([term, *extra, "-e", "sh", "-c", cmd], env=env, timeout=60)
     with open(dump, encoding="utf-8", errors="replace") as f:
         text = f.read()
+    with open(log, encoding="utf-8", errors="replace") as f:
+        LOG = f.read()
     os.unlink(dump)
+    os.unlink(log)
     return r.returncode, text, time.time() - t0
 
 
@@ -58,6 +68,13 @@ def main():
     rc, text, took = run(term, r'printf "\033[?1049h\033[2;29r\033[2;1H\033(0lqqk\033(B box\033[?1049l"; echo back; sleep 2.2')
     check(text.split("--- other screen ---")[0].split("\n")[0].startswith("back"), "leaving the alternate screen restores the shell's screen")
     check("???? box" in text.split("--- other screen ---")[1], "line drawing landed on the alternate screen")
+
+    # Scripted buttons: Select opens the picker, A types the highlighted key (q) into the shell, B
+    # closes it; the event log records each step (what Dale reads back from the device).
+    rc, text, took = run(term, 'read x; echo "got:$x"; sleep 2.2',
+                         script="300 SELECT 1;400 SELECT 0;600 A 1;700 A 0;900 B 1;1000 B 0;1200 A 1;1300 A 0")
+    check("picker opened" in LOG and "picker closed" in LOG and "frame osk=1" in LOG, "the log shows the picker opening, a frame with it, and closing")
+    check("got:q" in text, "A on the picker typed q, and A outside it sent Enter")
 
     print("check_term: " + ("FAILED" if fails else "all passed"))
     return 1 if fails else 0

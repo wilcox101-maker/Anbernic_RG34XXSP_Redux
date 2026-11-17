@@ -5,7 +5,7 @@
 enum { S_GROUND, S_ESC, S_CSI, S_OSC, S_OSC_ESC, S_DCS, S_DCS_ESC, S_CHARSET };
 
 static vt_cell_t blank(const vt_t *t) {
-    vt_cell_t c = { ' ', t->fg, t->bg, 0 };
+    vt_cell_t c = { ' ', t->fg, t->bg, 0, 0, 0 };
     /* Erase uses the current background (xterm bce), never bold/underline. */
     return c;
 }
@@ -76,6 +76,14 @@ unsigned char vt_cp437(uint32_t cp) {
     return 0;
 }
 
+int vt_is_wide(uint32_t cp) {
+    return (cp >= 0x1100 && cp <= 0x115F) || (cp >= 0x2E80 && cp <= 0x303E) || (cp >= 0x3041 && cp <= 0x33FF) ||
+           (cp >= 0x3400 && cp <= 0x4DBF) || (cp >= 0x4E00 && cp <= 0x9FFF) || (cp >= 0xA000 && cp <= 0xA4CF) ||
+           (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) || (cp >= 0xFE30 && cp <= 0xFE4F) ||
+           (cp >= 0xFF00 && cp <= 0xFF60) || (cp >= 0xFFE0 && cp <= 0xFFE6) ||
+           (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD);
+}
+
 /* DEC special graphics (ESC ( 0): the line-drawing set curses uses when it does not trust UTF-8. */
 static unsigned char dec_graphics(unsigned char ch) {
     switch (ch) {
@@ -128,21 +136,38 @@ static void reverse_index(vt_t *t) {
     t->wrap_pending = 0;
 }
 
-static void put_glyph(vt_t *t, unsigned char ch) {
-    if (t->wrap_pending) {
+/* Writing over half of a wide glyph leaves the other half blank, as xterm does. */
+static void clear_wide_halves(vt_t *t, int col) {
+    vt_cell_t *cell = &t->cells[t->row][col];
+    if (cell->wide == 1 && col + 1 < VT_COLS && t->cells[t->row][col + 1].wide == 2) {
+        t->cells[t->row][col + 1].wide = 0; t->cells[t->row][col + 1].ch = ' ';
+    } else if (cell->wide == 2 && col > 0 && t->cells[t->row][col - 1].wide == 1) {
+        t->cells[t->row][col - 1].wide = 0; t->cells[t->row][col - 1].ch = ' '; t->cells[t->row][col - 1].cp = 0;
+    }
+}
+
+static void put_cell(vt_t *t, unsigned char ch, uint32_t cp, uint8_t wide, int width) {
+    if (t->wrap_pending || (width == 2 && t->col == VT_COLS - 1)) {
         if (t->autowrap) { t->col = 0; linefeed(t); }
-        else t->col = VT_COLS - 1;
+        else t->col = VT_COLS - width;
         t->wrap_pending = 0;
     }
     if (t->insert_mode) {
-        for (int c = VT_COLS - 1; c > t->col; c--) t->cells[t->row][c] = t->cells[t->row][c - 1];
+        for (int c = VT_COLS - 1; c >= t->col + width; c--) t->cells[t->row][c] = t->cells[t->row][c - width];
     }
-    vt_cell_t *cell = &t->cells[t->row][t->col];
-    cell->ch = ch; cell->fg = t->fg; cell->bg = t->bg; cell->attr = t->attr;
-    if (t->col == VT_COLS - 1) t->wrap_pending = 1;
-    else t->col++;
+    for (int i = 0; i < width; i++) {
+        clear_wide_halves(t, t->col + i);
+        vt_cell_t *cell = &t->cells[t->row][t->col + i];
+        cell->ch = i == 0 ? ch : ' '; cell->fg = t->fg; cell->bg = t->bg; cell->attr = t->attr;
+        cell->wide = (uint8_t)(wide ? (i == 0 ? 1 : 2) : 0);
+        cell->cp = i == 0 ? cp : 0;
+    }
+    if (t->col + width >= VT_COLS) { t->col = VT_COLS - 1; t->wrap_pending = 1; }
+    else t->col += width;
     mark(t);
 }
+
+static void put_glyph(vt_t *t, unsigned char ch) { put_cell(t, ch, 0, 0, 1); }
 
 static void clamp_cursor(vt_t *t) {
     if (t->col < 0) t->col = 0;
@@ -392,6 +417,11 @@ static void glyph_cp(vt_t *t, uint32_t cp) {
     if (cp < 0x80) {
         ch = (unsigned char)cp;
         if (t->charset[t->shift] == 1) ch = dec_graphics(ch);
+    } else if (vt_is_wide(cp)) {
+        put_cell(t, '?', cp, 1, 2);   /* two cells; the program draws the glyph if it has one */
+        return;
+    } else if (cp >= 0x0300 && cp <= 0x036F) {
+        return;                       /* combining mark: nothing to draw in a cell font */
     } else {
         ch = vt_cp437(cp);
         if (!ch) ch = '?';
@@ -556,7 +586,7 @@ size_t vt_dump(const vt_t *t, char *buf, size_t len) {
     size_t at = 0;
     for (int r = 0; r < VT_ROWS; r++) {
         for (int c = 0; c < VT_COLS; c++) {
-            unsigned char ch = t->cells[r][c].ch;
+            unsigned char ch = t->cells[r][c].wide ? '?' : t->cells[r][c].ch;
             if (ch < 0x20 || ch >= 0x7F) ch = '?';
             if (at + 1 < len) buf[at] = (char)ch;
             at++;

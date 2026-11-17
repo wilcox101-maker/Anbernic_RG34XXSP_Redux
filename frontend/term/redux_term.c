@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,6 +38,7 @@
 #include "vt.h"
 #include "font.h"
 #include "osk.h"
+#include "cjk.h"
 #include "remap.h"
 #ifdef REDUX_PLATFORM_STOCK
 #include <linux/input.h>
@@ -69,6 +71,18 @@ static const SDL_Color palette[16] = {
 
 static vt_t vt;
 static osk_t osk;
+static FILE *evlog;
+static long long evlog_t0;
+static long long now_ms(void);
+static void logf_(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+static void logf_(const char *fmt, ...) {
+    if (!evlog) return;
+    va_list ap;
+    fprintf(evlog, "%6lld ", now_ms() - evlog_t0);
+    va_start(ap, fmt); vfprintf(evlog, fmt, ap); va_end(ap);
+    fputc('\n', evlog);
+    fflush(evlog);
+}
 /* Mouse cursor in pixels; shown while moving and for MOUSE_HIDE_MS after. */
 static float mouse_x = SCREEN_W / 2, mouse_y = SCREEN_H / 2;
 static int mouse_shown, mouse_held = -1;        /* button held: 0 left, 2 right, -1 none */
@@ -158,12 +172,44 @@ static int build_atlas(SDL_Renderer *ren) {
     return 0;
 }
 
+/* 16x16 CJK glyphs: uploaded into a 1024 x 1024 atlas (4096 slots, more than a screen can show)
+   the first time each one is drawn; when the atlas is full it starts over. */
+#define CJK_ATLAS_PX 1024
+#define CJK_SLOTS ((CJK_ATLAS_PX / 16) * (CJK_ATLAS_PX / 16))
+static SDL_Texture *cjk_atlas;
+static uint32_t cjk_slot_cp[CJK_SLOTS];   /* code point in each slot, 0 = free */
+static int cjk_used;
+
+static int cjk_slot(SDL_Renderer *ren, uint32_t cp, const uint8_t *glyph) {
+    if (!cjk_atlas) {
+        cjk_atlas = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, CJK_ATLAS_PX, CJK_ATLAS_PX);
+        if (!cjk_atlas) return -1;
+        SDL_SetTextureBlendMode(cjk_atlas, SDL_BLENDMODE_BLEND);
+    }
+    unsigned h = (cp * 2654435761u) % CJK_SLOTS;
+    for (int probe = 0; probe < CJK_SLOTS; probe++, h = (h + 1) % CJK_SLOTS) {
+        if (cjk_slot_cp[h] == cp) return (int)h;
+        if (cjk_slot_cp[h] == 0) break;
+    }
+    if (cjk_used >= CJK_SLOTS - 1) { memset(cjk_slot_cp, 0, sizeof cjk_slot_cp); cjk_used = 0; h = (cp * 2654435761u) % CJK_SLOTS; }
+    static Uint32 px[16 * 16];
+    for (int y = 0; y < 16; y++) {
+        unsigned bits = ((unsigned)glyph[y * 2] << 8) | glyph[y * 2 + 1];
+        for (int x = 0; x < 16; x++) px[y * 16 + x] = (bits & (0x8000u >> x)) ? 0xFFFFFFFFu : 0u;
+    }
+    SDL_Rect r = { (int)(h % (CJK_ATLAS_PX / 16)) * 16, (int)(h / (CJK_ATLAS_PX / 16)) * 16, 16, 16 };
+    if (SDL_UpdateTexture(cjk_atlas, &r, px, 16 * 4) != 0) return -1;
+    cjk_slot_cp[h] = cp;
+    cjk_used++;
+    return (int)h;
+}
+
 static SDL_Color dim(SDL_Color c) { c.r /= 2; c.g /= 2; c.b /= 2; return c; }
 
 /* The key picker as cells over the bottom rows: light grey box, black text, the chosen key yellow,
    an active Shift/Ctrl cyan. */
 static void osk_cells(vt_cell_t out[OSK_HEIGHT][VT_COLS]) {
-    vt_cell_t bg = { ' ', 0, 7, 0 };
+    vt_cell_t bg = { ' ', 0, 7, 0, 0, 0 };
     for (int r = 0; r < OSK_HEIGHT; r++) for (int c = 0; c < VT_COLS; c++) out[r][c] = bg;
     out[0][0].ch = 0xDA; out[0][VT_COLS - 1].ch = 0xBF;
     out[OSK_HEIGHT - 1][0].ch = 0xC0; out[OSK_HEIGHT - 1][VT_COLS - 1].ch = 0xD9;
@@ -197,6 +243,8 @@ static void draw(SDL_Renderer *ren, const char *footer) {
     for (int r = 0; r < VT_ROWS; r++) {
         for (int c = 0; c < VT_COLS; c++) {
             vt_cell_t cell = r >= ov_top ? overlay[r - ov_top][c] : vt.cells[r][c];
+            if (cell.wide == 2 && r < ov_top && c > 0 && vt.cells[r][c - 1].wide == 1 && cjk_glyph(vt.cells[r][c - 1].cp))
+                continue;   /* drawn with its first half, background included */
             int fgi = cell.fg, bgi = cell.bg;
             if ((cell.attr & VT_BOLD) && fgi < 8) fgi += 8;   /* bold as bright, the console way */
             SDL_Color fg = palette[fgi & 15], bg = palette[bgi & 15];
@@ -209,9 +257,27 @@ static void draw(SDL_Renderer *ren, const char *footer) {
                 SDL_SetRenderDrawColor(ren, bg.r, bg.g, bg.b, 255);
                 SDL_RenderFillRect(ren, &dst);
             }
-            if (cell.ch != ' ') {
+            /* A wide (CJK) glyph: 16x16 from Unifont over both cells; "??" when the table lacks it,
+               so the columns still line up with what the program laid out. */
+            unsigned char ch = cell.wide ? '?' : cell.ch;
+            if (cell.wide == 1 && c + 1 < VT_COLS && vt.cells[r][c + 1].wide == 2 && r < ov_top) {
+                const uint8_t *g = cjk_glyph(cell.cp);
+                int slot = g ? cjk_slot(ren, cell.cp, g) : -1;
+                if (slot >= 0) {
+                    SDL_SetTextureColorMod(cjk_atlas, fg.r, fg.g, fg.b);
+                    SDL_Rect src = { (slot % (CJK_ATLAS_PX / 16)) * 16, (slot / (CJK_ATLAS_PX / 16)) * 16, 16, 16 };
+                    SDL_Rect wd = { dst.x, dst.y, 16, 16 };
+                    /* The second cell's background first, so the glyph's right half sits on it. */
+                    vt_cell_t c2 = vt.cells[r][c + 1];
+                    SDL_Color bg2 = palette[((c2.attr & VT_INVERSE) ? c2.fg : c2.bg) & 15];
+                    if (bg2.r || bg2.g || bg2.b) { SDL_SetRenderDrawColor(ren, bg2.r, bg2.g, bg2.b, 255); SDL_Rect d2 = { dst.x + FONT_W, dst.y, FONT_W, FONT_H }; SDL_RenderFillRect(ren, &d2); }
+                    SDL_RenderCopy(ren, cjk_atlas, &src, &wd);
+                    ch = ' ';
+                }
+            }
+            if (ch != ' ') {
                 SDL_SetTextureColorMod(atlas, fg.r, fg.g, fg.b);
-                SDL_Rect src = { cell.ch * FONT_W, 0, FONT_W, FONT_H };
+                SDL_Rect src = { ch * FONT_W, 0, FONT_W, FONT_H };
                 SDL_RenderCopy(ren, atlas, &src, &dst);
             }
             if (cell.attr & VT_UNDERLINE) {
@@ -245,6 +311,7 @@ static void draw(SDL_Renderer *ren, const char *footer) {
 
 static void present(SDL_Renderer *ren, const char *footer) {
     for (int i = 0; i < PRESENT_BUFFERS; i++) { draw(ren, footer); SDL_RenderPresent(ren); }
+    logf_("frame osk=%d mouse=%d cursor=%d,%d%s", osk.open, mouse_shown, vt.row, vt.col, footer ? " footer" : "");
     vt.dirty = 0;
 }
 
@@ -325,15 +392,16 @@ static void act(logical_button_t b) {
         case LB_LEFT: osk_move(&osk, 0, -1); dirty_input = 1; return;
         case LB_RIGHT: osk_move(&osk, 0, 1); dirty_input = 1; return;
         case LB_A: { char buf[16]; int n = osk_press(&osk, buf, sizeof buf); if (n) write_all(buf, n); dirty_input = 1; return; }
-        case LB_B: case LB_SELECT: osk_toggle(&osk); dirty_input = 1; return;
+        case LB_B: case LB_SELECT: osk_toggle(&osk); dirty_input = 1; logf_("picker closed"); return;
         default: break;   /* X, Y, L1/R1, L2/R2, Start still reach the program */
         }
-    } else if (b == LB_SELECT) { osk_toggle(&osk); dirty_input = 1; return; }
+    } else if (b == LB_SELECT) { osk_toggle(&osk); dirty_input = 1; logf_("picker opened"); return; }
     int k = button_key(b);
     if (k >= 0) send_key((vt_key_t)k);
 }
 
 static void logical(logical_button_t b, int pressed) {
+    logf_("button %d %s osk=%d", (int)b, pressed ? "down" : "up", osk.open);
     if (pressed) any_button = 1;
     if (b == LB_MENU) { if (pressed) quit_requested = 1; return; }
     if (b == LB_L3 || b == LB_R3) {
@@ -402,6 +470,40 @@ static void read_buttons(void) {
 }
 #endif
 
+/* Scripted buttons (REDUX_TERM_SCRIPT), applied as their time comes. */
+static const char *script;
+static long long script_t0;
+
+static int button_named(const char *name, size_t n) {
+    static const struct { const char *name; logical_button_t b; } names[] = {
+        {"UP", LB_UP}, {"DOWN", LB_DOWN}, {"LEFT", LB_LEFT}, {"RIGHT", LB_RIGHT}, {"A", LB_A}, {"B", LB_B},
+        {"X", LB_X}, {"Y", LB_Y}, {"L1", LB_L1}, {"R1", LB_R1}, {"L2", LB_L2}, {"R2", LB_R2}, {"L3", LB_L3},
+        {"R3", LB_R3}, {"START", LB_START}, {"SELECT", LB_SELECT}, {"MENU", LB_MENU},
+    };
+    for (size_t i = 0; i < sizeof names / sizeof names[0]; i++)
+        if (strlen(names[i].name) == n && strncmp(names[i].name, name, n) == 0) return names[i].b;
+    return -1;
+}
+
+static void script_tick(long long now) {
+    while (script && *script) {
+        while (*script == ';' || *script == ' ') script++;
+        if (!*script) break;
+        char *end;
+        long ms = strtol(script, &end, 10);
+        if (end == script) { script = NULL; break; }
+        if (now - script_t0 < ms) break;
+        const char *p = end;
+        while (*p == ' ') p++;
+        const char *name = p;
+        while (*p && *p != ' ') p++;
+        int b = button_named(name, (size_t)(p - name));
+        int pressed = (int)strtol(p, &end, 10);
+        script = end;
+        if (b >= 0) logical((logical_button_t)b, pressed);
+    }
+}
+
 /* PC keyboard (development): plain keys go to the program; F11 opens the picker; F12 is MENU;
    the keypad 8/2/4/6 and 5 drive the mouse (hold 5 = left click, 0 = right click). */
 static void sdl_key(const SDL_KeyboardEvent *e, int down) {
@@ -466,6 +568,15 @@ int main(int argc, char **argv) {
         return 2;
     }
 
+    {
+        const char *lp = getenv("REDUX_TERM_LOG");
+#ifdef REDUX_PLATFORM_STOCK
+        if (!lp) lp = "/tmp/redux-term.log";
+#endif
+        if (lp) evlog = fopen(lp, "w");
+        evlog_t0 = now_ms();
+        logf_("start %s %s", REDUX_BUILD, cmd[0]);
+    }
     font_load();   /* the font the user chose in Settings > UI */
     vt_init(&vt);
     osk_init(&osk);
@@ -493,6 +604,8 @@ int main(int argc, char **argv) {
 
     if (spawn(cmd) != 0) return 1;
     long long started = now_ms();
+    script = getenv("REDUX_TERM_SCRIPT");
+    script_t0 = started;
 #ifdef REDUX_PLATFORM_STOCK
     keys_fd = open("/dev/input/event1", O_RDONLY | O_NONBLOCK);
     if (keys_fd < 0) fprintf(stderr, "redux-term: warning: could not open /dev/input/event1\n");
@@ -510,7 +623,7 @@ int main(int argc, char **argv) {
 #ifdef REDUX_PLATFORM_STOCK
         if (keys_fd >= 0) { p[n].fd = keys_fd; p[n].events = POLLIN; n++; }
 #endif
-        int timeout = (held_btn >= 0 || mouse_active()) ? MOUSE_TICK_MS : (vt.dirty || dirty_input) ? 0 : 30;
+        int timeout = (held_btn >= 0 || mouse_active() || script) ? MOUSE_TICK_MS : (vt.dirty || dirty_input) ? 0 : 30;
         if (n) poll(p, (nfds_t)n, timeout); else SDL_Delay((Uint32)timeout);
 
         /* Program output. */
@@ -561,11 +674,14 @@ int main(int argc, char **argv) {
             else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) vt.dirty = 1;
         }
         repeat_tick();
+        script_tick(now_ms());
         mouse_tick(now_ms());
         if (vt.dirty || dirty_input) { present(ren, pty_fd < 0 ? footer : NULL); dirty_input = 0; }
     }
 
     stop_child();
+    logf_("exit status=%d quit=%d", exit_status, quit_requested);
+    if (evlog) fclose(evlog);
     if (raw) fclose(raw);
     const char *shot = getenv("REDUX_TERM_SHOT");
     if (shot) {
@@ -588,6 +704,7 @@ int main(int argc, char **argv) {
             fclose(f);
         }
     }
+    if (cjk_atlas) SDL_DestroyTexture(cjk_atlas);
     SDL_DestroyTexture(atlas);
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
