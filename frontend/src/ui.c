@@ -60,7 +60,7 @@ static int system_selectable(int i) {
 static const char *internet_items[] = {
     "YouTube (if feasible)", "Web browser (text)"
 };
-static const char *eng_tabs[] = { "CPU", "GPU", "Battery", "Thermal", "Display", "Storage", "Logs", "System" };
+static const char *eng_tabs[] = { "CPU", "GPU", "Battery", "Thermal", "Display", "Input", "Storage", "Logs", "System" };
 #define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
 
 static screen_t screen;
@@ -70,6 +70,28 @@ static char eng_msg[GRID_COLS];   /* result of the last X/Y on Engineering */
 enum { ENG_ROW_GOV = 0, ENG_ROW_MIN, ENG_ROW_MAX, ENG_ROW_CPU1, ENG_ROW_CPU2, ENG_ROW_CPU3, ENG_ROW_COUNT };
 static int eng_row, eng_editing, eng_pick;   /* eng_pick: index into the governor or OPP list */
 static int eng_log_src;                      /* Logs tab: 0 redux.log, 1 eng-writes.log, 2 dmesg */
+/* Input tab (F5 step 5b): which logical buttons are held, and the last events. */
+#define IN_LOG 8
+static uint8_t in_held[LB_VOL_DOWN + 1];
+static char in_log[IN_LOG][32];
+static int in_log_n;
+/* Storage tab: last fsck -n result per mount (F5 Q3 A: check only, never repairs). */
+static int fsck_rc[ENG_MAX_MOUNTS], fsck_done;
+
+static const char *lb_name(logical_button_t b) {
+    static const char *n[] = { "?", "Up", "Down", "Left", "Right", "A", "B", "X", "Y", "L1", "R1",
+                               "Menu", "Start", "Select", "Vol+", "Vol-" };
+    return (b > 0 && b <= LB_VOL_DOWN) ? n[b] : "?";
+}
+
+static void input_record(logical_button_t btn, int pressed, uint32_t now_ms) {
+    if (btn <= LB_NONE || btn > LB_VOL_DOWN) return;
+    in_held[btn] = pressed ? 1 : 0;
+    memmove(in_log[1], in_log[0], sizeof in_log[0] * (IN_LOG - 1));
+    snprintf(in_log[0], sizeof in_log[0], "%-6s %-4s  t=%u ms", lb_name(btn), pressed ? "down" : "up",
+             (unsigned)now_ms);
+    if (in_log_n < IN_LOG) in_log_n++;
+}
 static int selected;
 static int scroll;
 static int sys_index;
@@ -696,6 +718,12 @@ static void eng_cpu_button(logical_button_t btn) {
 }
 
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
+    /* Input tab: every button is shown; only L1/R1 (tab), B (exit) and M (Main) keep their jobs. */
+    if (screen == SCREEN_ENG && eng_tab == ENG_INPUT) {
+        input_record(btn, pressed, now_ms);
+        dirty = 1;
+        if (btn != LB_L1 && btn != LB_R1 && btn != LB_B && btn != LB_MENU) return;
+    }
     if ((btn == LB_VOL_UP || btn == LB_VOL_DOWN) && pressed) {
         volume_step(btn == LB_VOL_UP ? +1 : -1);
         vol_until = (now_ms ? now_ms : 1) + 1500;
@@ -753,6 +781,17 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (screen == SCREEN_ENG && eng_tab == ENG_LOGS && btn == LB_A) { eng_log_src = (eng_log_src + 1) % 3; dirty = 1; return; }
+    if (screen == SCREEN_ENG && eng_tab == ENG_STORAGE && btn == LB_A) {
+        eng_mount_t m[ENG_MAX_MOUNTS];
+        platform_mounts(m);
+        ui_busy("Checking filesystems", "fsck -n: read-only, never repairs.\nThis can take a minute on a large card.");
+        remove("/tmp/redux-fsck.txt");   /* the log of this check only (RAM) */
+        for (int k = 0; k < ENG_MAX_MOUNTS; k++)
+            fsck_rc[k] = m[k].found ? platform_fsck(m[k].dev) : -1;
+        fsck_done = 1;
+        dirty = 1;
+        return;
+    }
     if (screen == SCREEN_ENG && (btn == LB_L1 || btn == LB_LEFT))  { switch_eng_tab(-1); return; }
     if (screen == SCREEN_ENG && (btn == LB_R1 || btn == LB_RIGHT)) { switch_eng_tab(+1); return; }
     if (screen == SCREEN_ENG && btn == LB_X) {
@@ -1166,6 +1205,27 @@ static void draw_eng_tab_body(void) {
             len += snprintf(t + len, sizeof t - (size_t)len, "%s%d", k ? " / " : "", g.freqs_mhz[k]);
         body(7, g.n_freqs ? t : "    unknown");
         body(9, "  Read-only. Pinning the GPU speed waits for a test on the device.");
+    } else if (eng_tab == ENG_INPUT) {
+        body(2, "  Press any button: it lights up while held. L1/R1 change tab, B exits, M goes to Main.");
+        static const logical_button_t grid_rows[4][4] = {
+            { LB_UP, LB_DOWN, LB_LEFT, LB_RIGHT }, { LB_A, LB_B, LB_X, LB_Y },
+            { LB_L1, LB_R1, LB_START, LB_SELECT }, { LB_MENU, LB_VOL_UP, LB_VOL_DOWN, LB_NONE } };
+        for (int r = 0; r < 4; r++)
+            for (int c = 0; c < 4; c++) {
+                logical_button_t b = grid_rows[r][c];
+                if (b == LB_NONE) continue;
+                int col = 4 + c * 12, line = 4 + r * 2;
+                char cell[16];
+                snprintf(cell, sizeof cell, "[ %-6s ]", lb_name(b));
+                grid_puts(1 + col, ROW_BODY0 + line, cell, 0);
+                if (in_held[b]) grid_invert(ROW_BODY0 + line, 1 + col, 1 + col + 9);
+            }
+        body(13, "  Last events (newest first):");
+        for (int k = 0; k < in_log_n; k++) {
+            snprintf(t, sizeof t, "    %.31s", in_log[k]);
+            body(14 + k, t);
+        }
+        body(23, "  Raw key codes: Apps > Input Test (evtest).");
     } else if (eng_tab == ENG_STORAGE) {
         eng_mount_t m[ENG_MAX_MOUNTS];
         platform_mounts(m);
@@ -1177,7 +1237,17 @@ static void draw_eng_tab_body(void) {
                           m[k].fstype, m[k].ro ? "ro" : "rw", m[k].size_mb, m[k].free_mb);
             body(3 + k, t);
         }
-        body(10, "  Read-only. A filesystem check (fsck -n, never repairs) comes in a later step.");
+        body(9, "  A: check all (fsck -n: read-only, never repairs; mounted, so results are a hint)");
+        if (fsck_done) {
+            body(11, "  Last check:");
+            for (int k = 0; k < ENG_MAX_MOUNTS; k++) {
+                int rc = fsck_rc[k];
+                const char *r = rc == -1 ? "not mounted" : rc == 0 ? "clean" : rc == 4 ? "problems found (nothing changed)"
+                              : rc == 8 ? "fsck could not check it" : rc == 127 ? "fsck not installed" : "see /tmp/redux-fsck.txt";
+                snprintf(t, sizeof t, "    %-13.13s %s (exit %d)", m[k].mount, r, rc);
+                body(12 + k, t);
+            }
+        }
     } else if (eng_tab == ENG_LOGS) {
         static const char *src[3] = { "redux.log", "eng-writes.log", "dmesg" };
         char lines[18][ENG_LOG_COLS];

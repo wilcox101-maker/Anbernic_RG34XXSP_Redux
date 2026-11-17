@@ -40,6 +40,10 @@ void platform_mounts(eng_mount_t *m);                  /* ENG_MAX_MOUNTS entries
 /* which: 0 redux.log, 1 eng-writes.log, 2 dmesg. Last up to max lines, oldest first. */
 int  platform_log_tail(int which, char lines[][ENG_LOG_COLS], int max);
 
+/* fsck -n on one device (read-only, never repairs; output to /tmp/redux-fsck.txt). Exit code:
+   0 clean, 4 problems found, 8 could not check, 127 fsck missing. */
+int  platform_fsck(const char *dev);
+
 /* 1 while the heat guard has the CPU capped (F5 step 4). */
 int  platform_hot(void);
 

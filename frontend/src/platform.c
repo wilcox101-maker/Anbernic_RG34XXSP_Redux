@@ -80,6 +80,7 @@ int platform_eng_profile_save(void)  { fake_profile = 1; return 0; }
 int platform_eng_profile_clear(void) { fake_profile = 0; return 0; }
 
 int platform_hot(void) { return 0; }
+int platform_fsck(const char *dev) { (void)dev; return 0; }
 
 /* F5 step 5 fakes: Dale's unit (hw-result 2026-11-16). */
 int platform_gpu_info(eng_gpu_t *g) {
