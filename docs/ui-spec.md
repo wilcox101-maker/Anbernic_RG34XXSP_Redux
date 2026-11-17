@@ -325,40 +325,41 @@ A:Enter  B:Back
 
 ## 7b. Mock-up 7 — Loading ROM
 
-Wait screen drawn by `ui_busy` before a blocking action. The title bar uses the pointer colour.
-No progress bar. The same window is used for the Wi-Fi scan, connect, ROM scan, and stock restore.
+Wait screen drawn by `ui_busy_full` before a game or app starts: the window fills the screen (Dale,
+2026-11-17), with the text centred. The title bar uses the pointer colour. No progress bar. The Wi-Fi
+scan, connect, ROM scan and stock restore use the same window as a centred box (`ui_busy`).
 
 ```
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                  ┌▓▓───────────────────Loading ROM────────────────────┐                  
-                  │ Game    Super Mario World                          │                  
-                  │ System  SNES                                       │                  
-                  │ Engine  RetroArch / snes9x                         │                  
-                  │ Card    TF1                                        │                  
-                  │────────────────────────────────────────────────────│                  
-                  │ Starting emulator, please wait...                  │                  
-                  │ Tip: press MENU in-game to open the RetroArch menu │                  
-                  └────────────────────────────────────────────────────┘                  
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
-                                                                                          
+┌▓▓─────────────────────────────────────Loading ROM──────────────────────────────────────┐
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                   Game    Super Mario World                                            │
+│                   System  SNES                                                         │
+│                   Engine  RetroArch / snes9x                                           │
+│                   Card    TF1                                                          │
+│                   ──────────────────────────────────────────────────                   │
+│                   Starting emulator, please wait...                                    │
+│                   Tip: press MENU in-game to open the RetroArch menu                   │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+│                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---

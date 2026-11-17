@@ -68,7 +68,7 @@ static int dump_screens(void) {
         grid_dump(buf, sizeof buf);
         printf("=== %s ===\n%s", shots[i].name, buf);
     }
-    ui_busy("Loading ROM",
+    ui_busy_full("Loading ROM",
             "Game    Super Mario World\n"
             "System  SNES\n"
             "Engine  RetroArch / snes9x\n"

@@ -62,6 +62,8 @@ int ui_should_exit(void);
    detail may be several lines separated by '\n'. No progress bar. */
 void ui_set_present(void (*present_one)(void));
 void ui_busy(const char *title, const char *detail);
+/* The same window filling the whole screen: game and app launches (Dale 2026-11-17). */
+void ui_busy_full(const char *title, const char *detail);
 const char *ui_last_busy(void);
 
 /* For tests: the highlighted row, and how far a long list has scrolled. */
