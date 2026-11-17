@@ -397,7 +397,7 @@ hdmi_ignore_lid = 1       ; stock power.hdmi=1: lid/timeout do nothing on HDMI
 
 [network]
 wifi_enabled = 1
-bluetooth_enabled = 0
+bluetooth_enabled = 1     ; Dale 2026-11-17 A: on, as stock's menu starts the chip at boot (was 0)
 samba = 0                 ; stock global.samba=0
 ssh = 0                   ; stock global.ssh=0
 webui = 0
