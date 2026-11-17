@@ -72,20 +72,20 @@ static int eng_row, eng_editing, eng_pick;   /* eng_pick: index into the governo
 static int eng_log_src;                      /* Logs tab: 0 redux.log, 1 eng-writes.log, 2 dmesg */
 /* Input tab (F5 step 5b): which logical buttons are held, and the last events. */
 #define IN_LOG 8
-static uint8_t in_held[LB_VOL_DOWN + 1];
+static uint8_t in_held[LB_COUNT];
 static char in_log[IN_LOG][32];
 static int in_log_n;
 /* Storage tab: last fsck -n result per mount (F5 Q3 A: check only, never repairs). */
 static int fsck_rc[ENG_MAX_MOUNTS], fsck_done;
 
 static const char *lb_name(logical_button_t b) {
-    static const char *n[] = { "?", "Up", "Down", "Left", "Right", "A", "B", "X", "Y", "L1", "R1",
-                               "Menu", "Start", "Select", "Vol+", "Vol-" };
-    return (b > 0 && b <= LB_VOL_DOWN) ? n[b] : "?";
+    static const char *n[LB_COUNT] = { "?", "Up", "Down", "Left", "Right", "A", "B", "X", "Y", "L1", "R1",
+                                       "Menu", "Start", "Select", "Vol+", "Vol-", "L2", "R2", "L3", "R3" };
+    return (b > 0 && b < LB_COUNT) ? n[b] : "?";
 }
 
 static void input_record(logical_button_t btn, int pressed, uint32_t now_ms) {
-    if (btn <= LB_NONE || btn > LB_VOL_DOWN) return;
+    if (btn <= LB_NONE || btn >= LB_COUNT) return;
     in_held[btn] = pressed ? 1 : 0;
     memmove(in_log[1], in_log[0], sizeof in_log[0] * (IN_LOG - 1));
     snprintf(in_log[0], sizeof in_log[0], "%-6s %-4s  t=%u ms", lb_name(btn), pressed ? "down" : "up",
@@ -483,6 +483,7 @@ static int resume_load(void) {
 static void switch_eng_tab(int delta) {
     eng_editing = 0;
     eng_tab = (eng_tab_t)((eng_tab + delta + ENG_TAB_COUNT) % ENG_TAB_COUNT);
+    if (eng_tab == ENG_INPUT) memset(in_held, 0, sizeof in_held);   /* nothing is lit on arrival */
     dirty = 1;
 }
 
@@ -719,6 +720,8 @@ static void eng_cpu_button(logical_button_t btn) {
 
 void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     /* Input tab: every button is shown; only L1/R1 (tab), B (exit) and M (Main) keep their jobs. */
+    /* A release always clears its light: R1, B and M leave the tab before they are let go. */
+    if (!pressed && btn > LB_NONE && btn < LB_COUNT) in_held[btn] = 0;
     if (screen == SCREEN_ENG && eng_tab == ENG_INPUT) {
         input_record(btn, pressed, now_ms);
         dirty = 1;
@@ -1207,10 +1210,11 @@ static void draw_eng_tab_body(void) {
         body(9, "  Read-only. Pinning the GPU speed waits for a test on the device.");
     } else if (eng_tab == ENG_INPUT) {
         body(2, "  Press any button: it lights up while held. L1/R1 change tab, B exits, M goes to Main.");
-        static const logical_button_t grid_rows[4][4] = {
+        static const logical_button_t grid_rows[5][4] = {
             { LB_UP, LB_DOWN, LB_LEFT, LB_RIGHT }, { LB_A, LB_B, LB_X, LB_Y },
-            { LB_L1, LB_R1, LB_START, LB_SELECT }, { LB_MENU, LB_VOL_UP, LB_VOL_DOWN, LB_NONE } };
-        for (int r = 0; r < 4; r++)
+            { LB_L1, LB_R1, LB_L2, LB_R2 }, { LB_L3, LB_R3, LB_START, LB_SELECT },
+            { LB_MENU, LB_VOL_UP, LB_VOL_DOWN, LB_NONE } };
+        for (int r = 0; r < 5; r++)
             for (int c = 0; c < 4; c++) {
                 logical_button_t b = grid_rows[r][c];
                 if (b == LB_NONE) continue;
@@ -1220,10 +1224,10 @@ static void draw_eng_tab_body(void) {
                 grid_puts(1 + col, ROW_BODY0 + line, cell, 0);
                 if (in_held[b]) grid_invert(ROW_BODY0 + line, 1 + col, 1 + col + 9);
             }
-        body(13, "  Last events (newest first):");
+        body(14, "  Last events (newest first). The sticks show as Up/Down/Left/Right:");
         for (int k = 0; k < in_log_n; k++) {
             snprintf(t, sizeof t, "    %.31s", in_log[k]);
-            body(14 + k, t);
+            body(15 + k, t);
         }
         body(23, "  Raw key codes: Apps > Input Test (evtest).");
     } else if (eng_tab == ENG_STORAGE) {
@@ -1242,7 +1246,9 @@ static void draw_eng_tab_body(void) {
             body(11, "  Last check:");
             for (int k = 0; k < ENG_MAX_MOUNTS; k++) {
                 int rc = fsck_rc[k];
-                const char *r = rc == -1 ? "not mounted" : rc == 0 ? "clean" : rc == 4 ? "problems found (nothing changed)"
+                const char *r = rc == -1 ? "not mounted" : rc == 0 ? "clean"
+                              : rc == 1 ? "issues reported (nothing changed; FAT: often the in-use flag)"
+                              : rc == 4 ? "problems found (nothing changed)"
                               : rc == 8 ? "fsck could not check it" : rc == 127 ? "fsck not installed" : "see /tmp/redux-fsck.txt";
                 snprintf(t, sizeof t, "    %-13.13s %s (exit %d)", m[k].mount, r, rc);
                 body(12 + k, t);

@@ -214,6 +214,32 @@ int main(void) {
         grid_dump(dump, sizeof dump);
         expect(strstr(dump, "A      up") != NULL && strstr(dump, "Left   down") != NULL, "Input lists the last events");
     }
+    ui_button(LB_L3, 1, 10); ui_button(LB_L3, 0, 20);
+    expect(ui_eng_tab() == ENG_INPUT && ui_screen() == SCREEN_ENG, "L3 is shown and does nothing else");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "L3     up") != NULL && strstr(dump, "[ R3     ]") != NULL, "Input lists L3 and shows R3");
+    }
+    /* R1 held off the tab, released elsewhere, then back: no stuck light. */
+    ui_button(LB_R1, 1, 30);                          /* to Storage */
+    ui_button(LB_R1, 0, 40);
+    press(LB_L1);                                     /* back to Input */
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "[▓R1") == NULL, "R1 is not left lit after leaving and coming back");
+    }
+    ui_button(LB_A, 1, 50);
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "[▓A▓") != NULL, "a held button is lit");
+    }
+    ui_button(LB_A, 0, 60);
     /* Storage tab: A runs the read-only check (desktop fake: clean). */
     press(LB_R1);
     expect(ui_eng_tab() == ENG_STORAGE, "R1 from Input reaches Storage");

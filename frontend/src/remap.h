@@ -18,7 +18,13 @@ typedef enum {
     LB_START,
     LB_SELECT,
     LB_VOL_UP,
-    LB_VOL_DOWN
+    LB_VOL_DOWN,
+    /* No menu action; shown on the Engineering Input tab (Dale 2026-11-17). */
+    LB_L2,
+    LB_R2,
+    LB_L3,
+    LB_R3,
+    LB_COUNT
 } logical_button_t;
 
 /* Map a raw SDL keycode to a logical button. Returns LB_NONE if unmapped. */
