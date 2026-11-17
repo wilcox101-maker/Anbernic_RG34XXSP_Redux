@@ -79,7 +79,7 @@ RG34XXSP Redux
 **Claude review flags incorporated**:
 1. Deliberate removals recorded above.
 2. YouTube marked "if feasible", no earlier than F6.
-3. Engineering Mode requires deliberate confirm (hold A for 2 s or brief combo).
+3. Engineering Mode requires deliberate confirm (hold A for 3 s, like every other hold; Dale 2026-11-17).
 4. SSH / Samba / WebUI default Off. First enable requires password. No default credentials. WebUI local-network only while On.
 5. ~~Top-level Network and Settings → Network open the same screen.~~ Settings → Network removed as redundant (Dale, 2026-11-12); Network is on the main menu only.
 

@@ -151,8 +151,10 @@ int main(void) {
     ui_button(LB_A, 1, 100); ui_tick(1000); ui_button(LB_A, 0, 1000);
     expect(ui_screen() == SCREEN_ENG_CONFIRM, "releasing A early cancels");
     ui_button(LB_A, 1, 2000); ui_tick(4100);
-    expect(ui_screen() == SCREEN_ENG, "holding A 2 s enters Engineering");
-    ui_button(LB_A, 0, 4200);
+    expect(ui_screen() == SCREEN_ENG_CONFIRM, "2.1 s is not enough (the hold is 3 s)");
+    ui_tick(5000);
+    expect(ui_screen() == SCREEN_ENG, "holding A 3 s enters Engineering");
+    ui_button(LB_A, 0, 5100);
     expect(ui_eng_tab() == ENG_CPU, "Engineering opens on the CPU tab");
     press(LB_R1);
     expect(ui_eng_tab() == ENG_GPU, "R1 moves to GPU");
