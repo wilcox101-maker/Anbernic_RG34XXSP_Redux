@@ -14,7 +14,9 @@ typedef enum {
 } app_id_t;
 
 /* Rows in the Apps list (File Manager is on Main only), the app id on a row, and the row of an
-   app id (-1 if not listed). */
+   app id (-1 if not listed). Ids from APP_COUNT up are catalog packages (tools/extras.ini `app =`
+   and `launch =`) that are installed; apps_rescan() rebuilds the list (call when Apps opens). */
+void apps_rescan(void);
 int apps_count(void);
 int apps_list_id(int row);
 int apps_row_of(int id);

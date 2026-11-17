@@ -492,6 +492,7 @@ static int resume_load(void) {
     key[strcspn(key, "\r\n")] = 0;
     if (strcmp(screen_tok, "apps") == 0) {
         int row = -1, scr = 0;
+        apps_rescan();
         if (sscanf(rowb, "%d", &row) != 1 || row < 0 || row >= apps_count()) return 0;
         sscanf(scrb, "%d", &scr);
         push_back(SCREEN_MAIN);   /* B goes back to Main, as when Apps was opened from it */
@@ -991,7 +992,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         if (selected == MAIN_SETTINGS)    { apps_msg[0] = '\0'; go(SCREEN_SETTINGS); }
         if (selected == MAIN_ENGINEERING) go(SCREEN_ENG_CONFIRM);
         if (selected == MAIN_NETWORK)     { go(SCREEN_WIFI); wifi_rescan(); }
-        if (selected == MAIN_APPS)        { apps_msg[0] = '\0'; go(SCREEN_APPS); }
+        if (selected == MAIN_APPS)        { apps_msg[0] = '\0'; apps_rescan(); go(SCREEN_APPS); }
         if (selected == MAIN_MUSIC)       app_start(APP_MUSIC);
         if (selected == MAIN_VIDEO)       app_start(APP_VIDEO);
         if (selected == MAIN_DOCUMENTS)   app_start(APP_EBOOK_TF1);

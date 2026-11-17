@@ -74,6 +74,18 @@ int main(void) {
     pkgs_set_catalog("[ok-pkg]\ndesc = one\n[stock]\nbinaries = x\n[Bad;Name]\ndesc = no\n[two]\n");
     expect(pkgs_count() == 2 && !strcmp(pkgs_name(1), "two") && !strcmp(pkgs_desc(0), "one"), "custom catalog parsed, bad names skipped");
 
+    /* Apps rows from the catalog (Dale 2026-11-17 A): app, launch and binary; a launch line with
+       shell characters is dropped. */
+    pkgs_set_catalog("[btop]\nbinary = btop\napp = BTop Monitor\nlaunch = -e btop\n"
+                     "[evil]\nbinary = evil\napp = Evil\nlaunch = -e sh -c 'rm -rf /'\n"
+                     "[plain]\nbinary = plain\n");
+    expect(!strcmp(pkgs_app(0), "BTop Monitor") && !strcmp(pkgs_launch(0), "-e btop") && !strcmp(pkgs_binary(0), "btop"),
+           "app, launch and binary are read");
+    expect(!strcmp(pkgs_app(1), "Evil") && pkgs_launch(1)[0] == '\0', "a launch line with shell characters is dropped");
+    expect(pkgs_app(2)[0] == '\0' && pkgs_launch(2)[0] == '\0', "a package without app/launch has none");
+    pkgs_set_catalog(NULL);
+    expect(pkgs_count() > 5 && !strcmp(pkgs_app(1), "BTop Monitor"), "the embedded catalog loads again, btop with its Apps row");
+
     printf("%s\n", fails ? "FAILED" : "all passed");
     return fails ? 1 : 0;
 }

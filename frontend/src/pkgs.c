@@ -16,7 +16,7 @@ extern const size_t redux_extras_ini_len;
 #endif
 #define APT_FLAGS "--no-upgrade --no-install-recommends"
 
-static char names[PKGS_MAX][40], descs[PKGS_MAX][80];
+static char names[PKGS_MAX][40], descs[PKGS_MAX][80], apps[PKGS_MAX][32], launches[PKGS_MAX][80], bins[PKGS_MAX][40];
 static int installed[PKGS_MAX];
 static int n_pkgs = -1;
 static const char *custom_ini;
@@ -68,13 +68,25 @@ static void load(void) {
             if (strcmp(line + 1, "stock") == 0 || !good_name(line + 1) || n_pkgs >= PKGS_MAX) continue;
             cur = n_pkgs++;
             snprintf(names[cur], sizeof names[0], "%.39s", line + 1);
-            descs[cur][0] = '\0';
+            descs[cur][0] = apps[cur][0] = launches[cur][0] = bins[cur][0] = '\0';
             installed[cur] = 0;
             continue;
         }
-        if (cur >= 0 && strncmp(line, "desc", 4) == 0) {
-            char *eq = strchr(line, '=');
-            if (eq) { eq++; while (*eq == ' ') eq++; snprintf(descs[cur], sizeof descs[0], "%.79s", eq); }
+        if (cur < 0) continue;
+        char *eq = strchr(line, '=');
+        if (!eq) continue;
+        char *val = eq + 1;
+        while (*val == ' ') val++;
+        if (strncmp(line, "desc", 4) == 0) snprintf(descs[cur], sizeof descs[0], "%.79s", val);
+        else if (strncmp(line, "app ", 4) == 0 || strncmp(line, "app=", 4) == 0) snprintf(apps[cur], sizeof apps[0], "%.31s", val);
+        else if (strncmp(line, "binary", 6) == 0 && good_name(val)) snprintf(bins[cur], sizeof bins[0], "%s", val);
+        else if (strncmp(line, "launch", 6) == 0) {
+            /* Arguments for redux-term, written verbatim into /tmp/.next: letters, digits and a few
+               safe punctuation marks only, so nothing a shell reads specially gets through. */
+            int ok = val[0] != '\0' && strlen(val) < 80;
+            for (const char *c = val; ok && *c; c++)
+                ok = isalnum((unsigned char)*c) || strchr(" -./_=", *c) != NULL;
+            if (ok) snprintf(launches[cur], sizeof launches[0], "%s", val);
         }
     }
 }
@@ -83,6 +95,9 @@ int pkgs_count(void) { load(); return n_pkgs; }
 const char *pkgs_name(int i) { load(); return i >= 0 && i < n_pkgs ? names[i] : ""; }
 const char *pkgs_desc(int i) { load(); return i >= 0 && i < n_pkgs ? descs[i] : ""; }
 int pkgs_installed(int i) { load(); return i >= 0 && i < n_pkgs ? installed[i] : 0; }
+const char *pkgs_app(int i) { load(); return i >= 0 && i < n_pkgs ? apps[i] : ""; }
+const char *pkgs_launch(int i) { load(); return i >= 0 && i < n_pkgs ? launches[i] : ""; }
+const char *pkgs_binary(int i) { load(); return i >= 0 && i < n_pkgs ? bins[i] : ""; }
 
 static int run(const char *cmd) {
     if (run_fn) return run_fn(cmd);
