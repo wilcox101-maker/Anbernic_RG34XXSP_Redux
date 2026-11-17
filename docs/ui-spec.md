@@ -2,7 +2,7 @@
 
 **Status**: Locked tree + draft for review  
 **Grid**: 90 columns × 30 rows (8×16 bitmap font at 720×480)  
-**Colours**: Background black, text white, one accent (default BIOS cyan).  
+**Colours**: Background black, text white, one accent (default BIOS cyan); Settings → UI can change the text, header/footer text and window colours and the text sizes (§8b).  
 Selected row = accent background bar with black text.  
 **Input**: Single remap table only. Stock event codes are never hard-coded.  
 **Battery temperature: no sensor.** `/sys/class/power_supply/axp2202-battery/temp` is a fixed dummy (stays 300 under load and charging; [hardware-map](hardware-map.md)). The UI shows "unknown".  
@@ -465,6 +465,24 @@ fonts and the whole screen redraws in the new one; a sample line and box preview
 is selected. Saved to `/mnt/data/redux/font` (one key, e.g. `spleen`). Generated tables are committed
 (`frontend/src/font_extra.c`); the sources are fetched when regenerating, not kept in the repo.
 Unifont lacks 16 CP437 glyphs, which come from VGA. **Not verified on the device.**
+
+## 8b. Text sizes and colours (Settings → UI, Dale 2026-11-17, plan A)
+
+The code and the mock-ups keep the 90 × 30 grid; only the renderer (`grid_present`) scales.
+
+| Setting | Values | Effect |
+|---|---|---|
+| Header Size, Footer Size | Default, Large | title / help row twice as tall, same width |
+| Window Size | Default, Large, Largest | body rows twice as tall; Largest also twice as wide (a line shows 44 characters, the rest is cut) |
+| Menu Text, Header/Footer Text, Window Color | 16 VGA colours | defaults White, White, Black; menu text never equals the window colour, header/footer text is never black |
+
+Body rows at each size: 26 (Default), 25 (one of header/footer Large), 24 (both), 13 or 12 (window
+Large/Largest). Scrolling lists show 20 rows at Default, otherwise body rows minus 3. A screen whose
+body content is taller than the window at the chosen sizes drops the window size first, then the
+footer, then the header, for that screen only. Pop-up windows (Loading, Scanning) always draw at
+Default. Saved in `/mnt/data/redux/uistyle` (`header 0`, `footer 0`, `window 0`, `text 15`,
+`hftext 15`, `wincolor 0`). Reset Fonts sets the three sizes to Default; Reset All also resets the
+colours. **Not verified on the device.**
 
 ## 9. F0 exit criteria
 - Dale approves the five mock-ups and the settings schema.

@@ -5,6 +5,9 @@
 static unsigned char cells[GRID_ROWS][GRID_COLS];
 static unsigned char invert[GRID_ROWS][GRID_COLS];
 static SDL_Color accent = { 0, 255, 255, 255 };
+static SDL_Color col_text = { 255, 255, 255, 255 }, col_hf = { 255, 255, 255, 255 }, col_win = { 0, 0, 0, 255 };
+static int size_h, size_f, size_w;   /* requested (grid_set_sizes) */
+static int plain;                    /* this frame at Default sizes */
 
 /* Glyph atlas: 256 glyphs side by side, white on transparent, built once per renderer. */
 static SDL_Texture *atlas;
@@ -22,6 +25,60 @@ static const struct { uint32_t cp; unsigned char cp437; } box_map[] = {
 void grid_clear(void) {
     memset(cells, ' ', sizeof cells);
     memset(invert, 0, sizeof invert);
+    plain = 0;
+}
+
+void grid_set_sizes(int header, int footer, int window) {
+    size_h = header == 1;
+    size_f = footer == 1;
+    size_w = window < 0 ? 0 : window > 2 ? 2 : window;
+}
+
+void grid_set_colors(uint8_t tr, uint8_t tg, uint8_t tb, uint8_t hr, uint8_t hg, uint8_t hb,
+                     uint8_t wr, uint8_t wg, uint8_t wb) {
+    col_text = (SDL_Color){ tr, tg, tb, 255 };
+    col_hf   = (SDL_Color){ hr, hg, hb, 255 };
+    col_win  = (SDL_Color){ wr, wg, wb, 255 };
+}
+
+void grid_plain_frame(void) { plain = 1; }
+
+/* Pixel layout of one set of sizes. */
+typedef struct { int th, fh, sy, sx, cap; } layout_t;
+
+static layout_t layout_of(int h, int f, int w) {
+    layout_t L;
+    L.th = FONT_H * (1 + h);
+    L.fh = FONT_H * (1 + f);
+    L.sy = w >= 1 ? 2 : 1;
+    L.sx = w == 2 ? 2 : 1;
+    int body_px = GRID_ROWS * FONT_H - L.th - L.fh - 2 * FONT_H;   /* minus the box's top and bottom */
+    L.cap = body_px / (FONT_H * L.sy);
+    if (L.cap > BODY_ROWS) L.cap = BODY_ROWS;
+    return L;
+}
+
+int grid_body_capacity(void) { return layout_of(size_h, size_f, size_w).cap; }
+
+/* Body rows the current cells use (last non-blank or inverted body row + 1). */
+static int body_used(void) {
+    for (int i = BODY_ROWS - 1; i >= 0; i--)
+        for (int c = 1; c < GRID_COLS - 1; c++)
+            if (cells[ROW_BODY0 + i][c] != ' ' || invert[ROW_BODY0 + i][c]) return i + 1;
+    return 0;
+}
+
+void grid_effective_sizes(int *header, int *footer, int *window) {
+    int h = size_h, f = size_f, w = size_w;
+    if (plain) h = f = w = 0;
+    int used = body_used();
+    while (used > layout_of(h, f, w).cap) {
+        if (w > 0) w--;
+        else if (f > 0) f--;
+        else if (h > 0) h--;
+        else break;
+    }
+    *header = h; *footer = f; *window = w;
 }
 
 /* Decode one UTF-8 character; returns its length (1 for invalid bytes). */
@@ -106,31 +163,86 @@ static int build_atlas(SDL_Renderer *ren) {
     return 0;
 }
 
+static void glyph(SDL_Renderer *ren, unsigned char ch, int x, int y, int w, int h, SDL_Color c) {
+    if (ch == ' ') return;
+    SDL_SetTextureColorMod(atlas, c.r, c.g, c.b);
+    SDL_Rect src = { ch * FONT_W, 0, FONT_W, FONT_H };
+    SDL_Rect dst = { x, y, w, h };
+    SDL_RenderCopy(ren, atlas, &src, &dst);
+}
+
+static void bar(SDL_Renderer *ren, int x, int y, int w, int h) {
+    SDL_SetRenderDrawColor(ren, accent.r, accent.g, accent.b, 255);
+    SDL_Rect r = { x, y, w, h };
+    SDL_RenderFillRect(ren, &r);
+}
+
+/* One full-width row (title, box edges, help) at height h, starting at pixel y. */
+static void plain_row(SDL_Renderer *ren, int r, int y, int h, SDL_Color c) {
+    static const SDL_Color black = { 0, 0, 0, 255 };
+    for (int col = 0; col < GRID_COLS; col++) {
+        if (invert[r][col]) bar(ren, col * FONT_W, y, FONT_W, h);
+        glyph(ren, cells[r][col], col * FONT_W, y, FONT_W, h, invert[r][col] ? black : c);
+    }
+}
+
 void grid_present(SDL_Renderer *ren) {
+    static const SDL_Color black = { 0, 0, 0, 255 };
     SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
     SDL_RenderClear(ren);
     if (build_atlas(ren) != 0) return;
 
-    /* Pass 1: accent bars. */
-    SDL_SetRenderDrawColor(ren, accent.r, accent.g, accent.b, 255);
-    for (int r = 0; r < GRID_ROWS; r++)
-        for (int c = 0; c < GRID_COLS; c++)
-            if (invert[r][c]) {
-                SDL_Rect bar = { c * FONT_W, r * FONT_H, FONT_W, FONT_H };
-                SDL_RenderFillRect(ren, &bar);
-            }
+    int h, f, w;
+    grid_effective_sizes(&h, &f, &w);
+    layout_t L = layout_of(h, f, w);
+    const int H = GRID_ROWS * FONT_H, W = GRID_COLS * FONT_W;
 
-    /* Pass 2: glyphs, white on black or black on the accent bar. */
-    for (int r = 0; r < GRID_ROWS; r++)
-        for (int c = 0; c < GRID_COLS; c++) {
-            unsigned char ch = cells[r][c];
-            if (ch == ' ') continue;
-            Uint8 v = invert[r][c] ? 0 : 255;
-            SDL_SetTextureColorMod(atlas, v, v, v);
-            SDL_Rect src = { ch * FONT_W, 0, FONT_W, FONT_H };
-            SDL_Rect dst = { c * FONT_W, r * FONT_H, FONT_W, FONT_H };
-            SDL_RenderCopy(ren, atlas, &src, &dst);
+    if (plain) {
+        /* Pop-up: every row at Default, title and help rows in the header/footer colour. */
+        for (int r = 0; r < GRID_ROWS; r++)
+            plain_row(ren, r, r * FONT_H, FONT_H, (r == ROW_TITLE || r == ROW_HELP) ? col_hf : col_text);
+        return;
+    }
+
+    int top = L.th, bot = H - L.fh - FONT_H;           /* pixel rows of the box's top and bottom edges */
+    int rh = FONT_H * L.sy, cw = FONT_W * L.sx;
+
+    /* Window background inside the box. */
+    SDL_SetRenderDrawColor(ren, col_win.r, col_win.g, col_win.b, 255);
+    SDL_Rect inside = { FONT_W, top + FONT_H, W - 2 * FONT_W, bot - top - FONT_H };
+    SDL_RenderFillRect(ren, &inside);
+
+    plain_row(ren, ROW_TITLE, 0, L.th, col_hf);
+    plain_row(ren, ROW_BOX_TOP, top, FONT_H, col_text);
+    plain_row(ren, ROW_BOX_BOT, bot, FONT_H, col_text);
+    plain_row(ren, ROW_HELP, H - L.fh, L.fh, col_hf);
+
+    /* Box sides: each visible row's own edge cells (a screen may mark them), at the row's height;
+       below the last row, plain edge glyphs down to the box bottom. */
+    for (int i = 0; i < L.cap; i++) {
+        int r = ROW_BODY0 + i, y = top + FONT_H + i * rh;
+        for (int k = 0; k < 2; k++) {
+            int c = k ? GRID_COLS - 1 : 0, x = k ? W - FONT_W : 0;
+            if (invert[r][c]) bar(ren, x, y, FONT_W, rh);
+            glyph(ren, cells[r][c], x, y, FONT_W, rh, invert[r][c] ? black : col_text);
         }
+    }
+    for (int y = top + FONT_H + L.cap * rh; y < bot; y += FONT_H) {
+        int gh = bot - y < FONT_H ? bot - y : FONT_H;
+        glyph(ren, 0xB3, 0, y, FONT_W, gh, col_text);
+        glyph(ren, 0xB3, W - FONT_W, y, FONT_W, gh, col_text);
+    }
+
+    /* Body cells 1..88 of each visible row, scaled; Largest clips at the right edge. */
+    for (int i = 0; i < L.cap; i++) {
+        int r = ROW_BODY0 + i, y = top + FONT_H + i * rh;
+        for (int c = 1; c < GRID_COLS - 1; c++) {
+            int x = FONT_W + (c - 1) * cw;
+            if (x + cw > W - FONT_W) break;
+            if (invert[r][c]) bar(ren, x, y, cw, rh);
+            glyph(ren, cells[r][c], x, y, cw, rh, invert[r][c] ? black : col_text);
+        }
+    }
 }
 
 static size_t put_utf8(char *buf, size_t len, size_t at, unsigned char cp437) {

@@ -22,3 +22,9 @@ window on the 90×30 grid, otherwise the screen falls back to the largest size t
 "Reset fonts" entry in Settings > UI puts all three back to Default (Reset All does too).
 To confirm with Dale in the item 5 plan, together with the three colour settings (menu text,
 header/footer text, window).
+
+## Plan chosen (Dale, 2026-11-17 11:15: "A")
+
+Large = twice as tall, same width; Largest (window only) = twice as tall and twice as wide. Colours:
+menu text, header/footer text, window colour from the 16 VGA colours, skipping a choice that hides
+text. Built in the item 6 PR; spec in `docs/ui-spec.md` §8b.

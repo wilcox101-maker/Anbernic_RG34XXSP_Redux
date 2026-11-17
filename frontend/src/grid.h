@@ -37,6 +37,26 @@ void grid_box(void);
 /* Accent colour for the selection bar. Default BIOS cyan (0, 255, 255). */
 void grid_set_accent(uint8_t r, uint8_t g, uint8_t b);
 
+/* Settings > UI sizes (uistyle.h): header and footer 0 Default / 1 Large (twice as tall); window
+ * 0 Default / 1 Large (twice as tall) / 2 Largest (twice as tall and wide). The grid stays 90 x 30
+ * for the code and the tests; only grid_present scales. Each frame falls back to the largest sizes
+ * the screen's body content fits (window first, then footer, then header). */
+void grid_set_sizes(int header, int footer, int window);
+
+/* Menu text (body and box), header/footer text, and the window (box interior) background. */
+void grid_set_colors(uint8_t tr, uint8_t tg, uint8_t tb, uint8_t hr, uint8_t hg, uint8_t hb,
+                     uint8_t wr, uint8_t wg, uint8_t wb);
+
+/* Body rows visible at the chosen sizes (26 at Default). Lists size their window from it. */
+int grid_body_capacity(void);
+
+/* This frame is drawn at Default sizes (pop-up windows that cover the whole grid).
+ * grid_clear ends it. */
+void grid_plain_frame(void);
+
+/* Sizes grid_present will use for the current cells, after the fallback (tests). */
+void grid_effective_sizes(int *header, int *footer, int *window);
+
 /* Render all cells. Glyphs are cached in one texture per renderer. */
 void grid_present(SDL_Renderer *ren);
 

@@ -15,7 +15,7 @@ typedef enum {
     SCREEN_ENG, SCREEN_INTERNET, SCREEN_SYSTEMS, SCREEN_WIFI, SCREEN_WIFI_KEY,
     SCREEN_WIFI_RESULT, SCREEN_SYSTEM_DEFAULTS, SCREEN_STOCK_CONFIRM, SCREEN_SYSINFO,
     SCREEN_UI_COLORS, SCREEN_RESTART_CONFIRM, SCREEN_POWEROFF_CONFIRM,
-    SCREEN_DISPLAY, SCREEN_APPS, SCREEN_BOOT_CONFIRM, SCREEN_RESET_CONFIRM, SCREEN_CARDS, SCREEN_UPDATE_CONFIRM
+    SCREEN_DISPLAY, SCREEN_APPS, SCREEN_BOOT_CONFIRM, SCREEN_RESET_CONFIRM, SCREEN_CARDS, SCREEN_UPDATE_CONFIRM, SCREEN_UI
 } screen_t;
 
 /* Engineering tabs. Only CPU and Battery have content now. */
@@ -70,5 +70,6 @@ const char *ui_last_busy(void);
 /* For tests: the highlighted row, and how far a long list has scrolled. */
 int ui_list_selected(void);
 int ui_list_scroll(void);
+int ui_list_window(void);   /* rows a scrolling list shows at the current text sizes */
 
 #endif
