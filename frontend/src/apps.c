@@ -3,10 +3,14 @@
 #include "launcher.h"
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 
-/* Every stock app is "not verified" until Dale runs it from Redux on the device.
-   PDF: the stock launch.sh exits without a file argument, so it waits for a file picker. */
+/* Status column: "verified" only where a device result note backs it (Dale, 2026-11-17: update it as
+   apps pass on the device). Music: notes/2026-11-13-dale-hw-result-app-center-ports-boot.md and
+   #185 check 13. Video: #185 check 9 (plays, no buttons). Ebook (TF1): #185 check 16. Terminal and
+   Task Monitor: 11-13 note and #185 check 13. The five Tools: notes/2026-11-13-dale-hw-result-143.md
+   (#150). PDF: the stock launch.sh exits without a file argument, so it waits for a file picker. */
 typedef struct {
     const char *name, *status;
     const char *dge;              /* .dge app (launch_target LAUNCH_DGE), or NULL */
@@ -18,46 +22,55 @@ typedef struct {
    2026-11-13 is htop for all, so Redux must supply it on units that lack it (queue item). */
 #define TERM_BIN "/mnt/mod/ctrl/SimpleTerminal" 
 static const app_t apps[APP_COUNT] = {
-    [APP_MUSIC]     = { "Music Player", "not verified", "/mnt/vendor/bin/music/ap.dge" },
-    [APP_VIDEO]     = { "Video Player", "not verified", "/mnt/vendor/bin/video/vp.dge" },
-    [APP_EBOOK_TF1] = { "Ebook Reader (TF1)", "not verified", "/mnt/vendor/bin/ebook/reader_mmc.dge" },
+    [APP_MUSIC]     = { "Music Player", "verified", "/mnt/vendor/bin/music/ap.dge" },
+    [APP_VIDEO]     = { "Video Player", "plays; no buttons", "/mnt/vendor/bin/video/vp.dge" },
+    [APP_EBOOK_TF1] = { "Ebook Reader (TF1)", "verified", "/mnt/vendor/bin/ebook/reader_mmc.dge" },
     [APP_EBOOK_TF2] = { "Ebook Reader (TF2)", "not verified", "/mnt/vendor/bin/ebook/reader_sdcard.dge" },
-    [APP_FILES]     = { "File Manager", "not verified", "/mnt/vendor/bin/fileM/dinguxCommand_en.dge" },
+    [APP_FILES]     = { "File Manager", "verified (tears)", "/mnt/vendor/bin/fileM/dinguxCommand_en.dge" },
     [APP_PDF]       = { "PDF Reader", "later (needs a file picker)", NULL },
-    [APP_TERMINAL]  = { "Terminal", "not verified", NULL, TERM_BIN, "HOME=/root", NULL },
-    [APP_TOP]       = { "Task Monitor (htop)", "not verified", NULL, TERM_BIN, "HOME=/root", "-e htop" },
+    [APP_TERMINAL]  = { "Terminal", "verified", NULL, TERM_BIN, "HOME=/root", NULL },
+    [APP_TOP]       = { "Task Monitor (htop)", "verified", NULL, TERM_BIN, "HOME=/root", "-e htop" },
     /* Tools: stock Ubuntu programs, each seen present with no missing libraries on Dale's unit
        (2026-11-13 check). The default ALSA card is the one Redux's volume (amixer) already uses.
        evtest reads the buttons device without grabbing it, so MENU still quits the terminal. */
-    [APP_MIXER]        = { "Audio Mixer", "not verified", NULL, TERM_BIN, "HOME=/root", "-e alsamixer" },
-    [APP_NETWORK]      = { "Network Setup", "not verified", NULL, TERM_BIN, "HOME=/root", "-e nmtui" },
-    [APP_BLUETOOTH]    = { "Bluetooth", "not verified", NULL, TERM_BIN, "HOME=/root", "-e bluetoothctl" },
-    [APP_INPUT_TEST]   = { "Input Test", "not verified", NULL, TERM_BIN, "HOME=/root", "-e evtest /dev/input/event1" },
-    [APP_SPEAKER_TEST] = { "Speaker Test", "not verified", NULL, TERM_BIN, "HOME=/root", "-e speaker-test -t wav -c 2 -l 1" },
+    [APP_MIXER]        = { "Audio Mixer", "verified", NULL, TERM_BIN, "HOME=/root", "-e alsamixer" },
+    [APP_NETWORK]      = { "Network Setup", "verified", NULL, TERM_BIN, "HOME=/root", "-e nmtui" },
+    [APP_BLUETOOTH]    = { "Bluetooth", "verified", NULL, TERM_BIN, "HOME=/root", "-e bluetoothctl" },
+    [APP_INPUT_TEST]   = { "Input Test", "verified", NULL, TERM_BIN, "HOME=/root", "-e evtest /dev/input/event1" },
+    [APP_SPEAKER_TEST] = { "Speaker Test", "verified", NULL, TERM_BIN, "HOME=/root", "-e speaker-test -t wav -c 2 -l 1" },
 };
 
 static const char *root = "";
 
-/* Rows of the Apps list. File Manager is left out: it is on Main (Dale, 2026-11-13, 12d: A). */
-static int listed(int i) { return i != APP_FILES; }
+/* Rows of the Apps list. File Manager, Music Player and Video Player are left out: they are on Main
+   (Dale, 2026-11-13 12d: A; 2026-11-17: Music and Video too). Rows are sorted by name (Dale, 2026-11-17). */
+static int listed(int i) { return i != APP_FILES && i != APP_MUSIC && i != APP_VIDEO; }
+
+static int order[APP_COUNT], n_order = -1;
+
+static void build_order(void) {
+    if (n_order >= 0) return;
+    n_order = 0;
+    for (int i = 0; i < APP_COUNT; i++) if (listed(i)) order[n_order++] = i;
+    for (int a = 1; a < n_order; a++)          /* insertion sort, case-insensitive by name */
+        for (int b = a; b > 0 && strcasecmp(apps[order[b - 1]].name, apps[order[b]].name) > 0; b--) {
+            int t = order[b]; order[b] = order[b - 1]; order[b - 1] = t;
+        }
+}
 
 int apps_count(void) {
-    int n = 0;
-    for (int i = 0; i < APP_COUNT; i++) n += listed(i);
-    return n;
+    build_order();
+    return n_order;
 }
 
 int apps_list_id(int row) {
-    for (int i = 0, r = 0; i < APP_COUNT; i++)
-        if (listed(i) && r++ == row) return i;
-    return -1;
+    build_order();
+    return (row >= 0 && row < n_order) ? order[row] : -1;
 }
 
 int apps_row_of(int id) {
-    for (int i = 0, r = 0; i < APP_COUNT; i++) {
-        if (i == id) return listed(i) ? r : -1;
-        r += listed(i);
-    }
+    build_order();
+    for (int r = 0; r < n_order; r++) if (order[r] == id) return r;
     return -1;
 }
 
