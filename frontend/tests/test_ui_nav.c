@@ -4,6 +4,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "ui.h"
 #include "uistyle.h"
+#include "netsvc.h"
 #include "platform.h"
 #include "launcher.h"
 #include "romscan.h"
@@ -928,6 +929,27 @@ int main(void) {
     expect(uistyle_get(UIS_TEXT) == UIS_WHITE && uistyle_get(UIS_WINCOLOR) == UIS_BLACK
            && uistyle_get(UIS_HFTEXT) == UIS_WHITE, "Reset All: colours back to white on black");
     remove("/tmp/redux.uistyle");
+
+    /* SSH / SMB rows (Dale 2026-11-17 A): A flips the stock system.cfg key (desktop: a /tmp copy;
+       systemctl is never run on desktop). */
+    {
+        FILE *f = fopen("/tmp/redux.system.cfg", "w");
+        if (f) { fputs("global.ssh=1\nglobal.samba=0\n", f); fclose(f); }
+        char dump[8192];
+        ui_init();
+        down(8); press(LB_A);              /* Settings */
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "SSH            On") && strstr(dump, "SMB (Samba)    Off"), "Settings shows SSH On, SMB Off");
+        down(10); press(LB_A);             /* SMB */
+        expect(netsvc_get(NETSVC_SMB) == 1 && ui_screen() == SCREEN_SETTINGS, "A on SMB switches it on, stays on Settings");
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "SMB (Samba)    On") && strstr(dump, "reachable from your network"), "SMB On with the network warning");
+        press(LB_UP); press(LB_A);         /* SSH */
+        expect(netsvc_get(NETSVC_SSH) == 0, "A on SSH switches it off");
+        remove("/tmp/redux.system.cfg");
+    }
 
     /* Brightness: Settings → UI row 0 (Display menu removed, Dale 2026-11-17 A); Left/Right steps 1-20. */
     remove("/tmp/redux.brightness");
