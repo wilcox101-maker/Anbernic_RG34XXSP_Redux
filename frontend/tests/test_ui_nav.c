@@ -661,7 +661,7 @@ int main(void) {
     press(LB_B);
 
     ui_init();
-    down(8); press(LB_A); down(3); press(LB_A);
+    down(8); press(LB_A); down(2); press(LB_A);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "Settings has no Network or Input; row 3 is System");
     press(LB_B);
     expect(ui_screen() == SCREEN_SETTINGS, "B from System returns to Settings");
@@ -714,7 +714,7 @@ int main(void) {
     stock_set_bak(0);
     stock_calls = 0;
     ui_init();
-    down(8); press(LB_A); down(3); press(LB_A);
+    down(8); press(LB_A); down(2); press(LB_A);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "Settings System opens System Defaults");
     {
         char dump[8192];
@@ -799,7 +799,7 @@ int main(void) {
     }
     sysinfo_set_root("/tmp/redux-sysinfo-nav");
     ui_init();
-    down(8); press(LB_A); down(3); press(LB_A); press(LB_A);
+    down(8); press(LB_A); down(2); press(LB_A); press(LB_A);
     expect(ui_screen() == SCREEN_SYSINFO, "System Tools opens from System Defaults");
     {
         char dump[8192];
@@ -822,9 +822,9 @@ int main(void) {
     remove("/tmp/redux.theme");
     ui_init();
     down(8); press(LB_A);          /* Settings */
-    down(5); press(LB_A);          /* UI (last row) */
+    down(4); press(LB_A);          /* UI (last row) */
     expect(ui_screen() == SCREEN_UI, "Settings → UI opens the UI page");
-    press(LB_A);                   /* Accent Color (row 0) */
+    down(3); press(LB_A);          /* Accent Color (row 3) */
     expect(ui_screen() == SCREEN_UI_COLORS, "UI → Accent Color opens the colour list");
     down(1); press(LB_A);          /* Amber */
     {
@@ -840,7 +840,7 @@ int main(void) {
     expect(ui_screen() == SCREEN_SETTINGS, "B from the UI page returns to Settings");
     /* reload confirms the save */
     ui_init();
-    down(8); press(LB_A); down(5); press(LB_A); press(LB_A);
+    down(8); press(LB_A); down(4); press(LB_A); down(3); press(LB_A);
     {
         char dump[8192];
         ui_draw();
@@ -851,7 +851,7 @@ int main(void) {
     }
     press(LB_UP); press(LB_A);     /* from the top row, Up wraps to the last row: VGA White */
     ui_init();
-    down(8); press(LB_A); down(5); press(LB_A); press(LB_A);
+    down(8); press(LB_A); down(4); press(LB_A); down(3); press(LB_A);
     {
         char dump[8192];
         ui_draw();
@@ -863,9 +863,9 @@ int main(void) {
     /* Settings > UI: sizes and colours (Dale 2026-11-17, plan A). */
     remove("/tmp/redux.uistyle");
     ui_init();
-    down(8); press(LB_A); down(5); press(LB_A);
+    down(8); press(LB_A); down(4); press(LB_A);
     expect(grid_body_capacity() == 26 && ui_list_window() == 20, "Default sizes: 26 body rows, 20-row lists");
-    press(LB_DOWN);                /* Menu Text */
+    down(4);                       /* Menu Text (row 4) */
     press(LB_LEFT);
     expect(uistyle_get(UIS_TEXT) == UIS_WHITE - 1, "Left steps the menu text colour (Yellow)");
     for (int i = 0; i < 16; i++) press(LB_LEFT);
@@ -896,8 +896,8 @@ int main(void) {
         grid_effective_sizes(&h, &f, &w);
         expect(h == 1 && f == 1 && w == 2, "Settings list keeps Largest");
     }
-    down(5); press(LB_A);            /* back into UI, then a tall screen: the colour list */
-    press(LB_A);
+    down(4); press(LB_A);            /* back into UI, then a tall screen: the colour list */
+    down(3); press(LB_A);
     expect(ui_screen() == SCREEN_UI_COLORS, "colour list opens at large sizes");
     {
         int h, f, w;
@@ -907,7 +907,7 @@ int main(void) {
     }
     ui_init();                       /* reload keeps the sizes */
     expect(uistyle_get(UIS_HEADER) == 1 && uistyle_get(UIS_WINDOW) == 2, "sizes saved and reloaded");
-    down(8); press(LB_A); down(5); press(LB_A);
+    down(8); press(LB_A); down(4); press(LB_A);
     press(LB_UP); press(LB_A);       /* Reset Fonts (row wraps to the last) */
     expect(uistyle_get(UIS_HEADER) == 0 && uistyle_get(UIS_FOOTER) == 0 && uistyle_get(UIS_WINDOW) == 0,
            "Reset Fonts: all three sizes Default");
@@ -923,12 +923,17 @@ int main(void) {
            && uistyle_get(UIS_HFTEXT) == UIS_WHITE, "Reset All: colours back to white on black");
     remove("/tmp/redux.uistyle");
 
-    /* Display: Settings → Display; Left/Right steps brightness 1-20 and saves; B returns. */
+    /* Brightness: Settings → UI row 0 (Display menu removed, Dale 2026-11-17 A); Left/Right steps 1-20. */
     remove("/tmp/redux.brightness");
     ui_init();
     down(8); press(LB_A);          /* Settings */
-    press(LB_A);                   /* Display (row 0) */
-    expect(ui_screen() == SCREEN_DISPLAY, "Settings → Display opens Display");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "   Display") == NULL && strstr(dump, "   UI") != NULL, "Settings has no Display row");
+    }
+    down(4); press(LB_A);          /* UI */
     {
         int start = brightness_get();
         press(LB_RIGHT);
@@ -939,11 +944,11 @@ int main(void) {
         char dump[8192];
         ui_draw();
         grid_dump(dump, sizeof dump);
-        expect(strstr(dump, " 3/20") != NULL, "Display shows the level out of 20");
-        expect(ui_screen() == SCREEN_DISPLAY, "Left/Right stay on Display");
+        expect(strstr(dump, " 3/20") != NULL, "UI shows the brightness level out of 20");
+        expect(ui_screen() == SCREEN_UI, "Left/Right stay on the UI page");
     }
     press(LB_B);
-    expect(ui_screen() == SCREEN_SETTINGS, "B from Display returns to Settings");
+    expect(ui_screen() == SCREEN_SETTINGS, "B from UI returns to Settings");
     ui_init();
     expect(brightness_get() == 3, "saved brightness reloads");
     remove("/tmp/redux.brightness");
@@ -951,19 +956,19 @@ int main(void) {
     /* Display row 2: Screen Timeout (Off..30 min, default 5), Down selects it, Left/Right change it. */
     remove("/tmp/redux.screen_timeout");
     ui_init();
-    down(8); press(LB_A); press(LB_A);             /* Settings > Display */
+    down(8); press(LB_A); down(4); press(LB_A);    /* Settings > UI */
     {
         int b = brightness_get();
         press(LB_DOWN); press(LB_RIGHT);
         char dump[8192];
         ui_draw();
         grid_dump(dump, sizeof dump);
-        expect(strstr(dump, "Screen Timeout  10 min") != NULL, "Down + Right: Screen Timeout 5 -> 10 min");
+        expect(strstr(dump, "< 10 min >") != NULL, "Down + Right: Screen Timeout 5 -> 10 min");
         expect(brightness_get() == b, "changing the timeout leaves brightness alone");
         for (int i = 0; i < 10; i++) press(LB_LEFT);
         ui_draw();
         grid_dump(dump, sizeof dump);
-        expect(strstr(dump, "Screen Timeout  Off") != NULL, "Left stops at Off");
+        expect(strstr(dump, "< Off >") != NULL, "Left stops at Off");
     }
     remove("/tmp/redux.screen_timeout");
 
@@ -972,19 +977,19 @@ int main(void) {
     remove("/tmp/redux.font");
     ui_init();
     expect(font_current() == FONT_VGA, "no saved font: VGA");
-    down(8); press(LB_A); press(LB_A);             /* Settings > Display */
+    down(8); press(LB_A); down(4); press(LB_A);    /* Settings > UI */
     {
         char dump[8192];
         press(LB_DOWN); press(LB_DOWN); press(LB_RIGHT);
         ui_draw();
         grid_dump(dump, sizeof dump);
-        expect(font_current() == FONT_SPLEEN && strstr(dump, "Font  < Spleen >") != NULL,
+        expect(font_current() == FONT_SPLEEN && strstr(dump, "< Spleen >") != NULL,
                "Down Down Right: Font VGA -> Spleen");
         expect(strstr(dump, "\u250c\u2500\u2500\u2500\u2510") != NULL, "Font row shows the box preview");
         expect(screentimeout_minutes() == SCREENTIMEOUT_DEFAULT, "changing the font leaves the timeout alone");
         ui_init();
         expect(font_current() == FONT_SPLEEN, "saved font reloads");
-        down(8); press(LB_A); press(LB_A); press(LB_DOWN); press(LB_DOWN);
+        down(8); press(LB_A); down(4); press(LB_A); press(LB_DOWN); press(LB_DOWN);
         press(LB_LEFT); press(LB_LEFT);
         expect(font_current() == FONT_CHUNKY, "Left from VGA wraps to Chunky");
         FILE *f = fopen("/tmp/redux.font", "w");
@@ -1022,7 +1027,7 @@ int main(void) {
         f = fopen("/tmp/redux-nav-keep", "w"); if (f) { fputs("x\n", f); fclose(f); }
         ui_init();
         expect(font_current() == FONT_SPLEEN && screentimeout_minutes() == 10, "settings set before Reset All");
-        down(8); press(LB_A); down(3); press(LB_A); press(LB_UP);
+        down(8); press(LB_A); down(2); press(LB_A); press(LB_UP);
         expect(ui_list_selected() == 8, "Up from System Tools: Reset All");
         press(LB_A);
         expect(ui_screen() == SCREEN_RESET_CONFIRM, "Reset All opens its confirm");
@@ -1054,7 +1059,7 @@ int main(void) {
     power_set_run(power_hook);
     power_calls = 0;
     ui_init();
-    down(8); press(LB_A); down(3); press(LB_A); press(LB_DOWN); press(LB_A);
+    down(8); press(LB_A); down(2); press(LB_A); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "Restart opens the confirm");
     press(LB_A);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "a short A stays on Restart confirm");
@@ -1077,7 +1082,7 @@ int main(void) {
 
     power_calls = 0;
     ui_init();
-    down(8); press(LB_A); down(3); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_A);
+    down(8); press(LB_A); down(2); press(LB_A); press(LB_DOWN); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_POWEROFF_CONFIRM, "Power Off opens the confirm");
     press(LB_A);
     expect(ui_screen() == SCREEN_POWEROFF_CONFIRM, "a short A stays on Power Off confirm");
@@ -1111,7 +1116,7 @@ int main(void) {
         expect(strstr(dump, "VOL ") == NULL, "VOL overlay clears after 1.5 s");
     }
     /* on a confirm screen, volume must not cancel */
-    down(8); press(LB_A); down(3); press(LB_A); press(LB_DOWN); press(LB_A);
+    down(8); press(LB_A); down(2); press(LB_A); press(LB_DOWN); press(LB_A);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "on Restart confirm");
     ui_button(LB_VOL_UP, 1, 3000);
     expect(ui_screen() == SCREEN_RESTART_CONFIRM, "volume does not leave the confirm");
@@ -1269,7 +1274,7 @@ int main(void) {
 
     /* Card Scripts switch removed (Dale A, 2026-11-16): no row for it any more. */
     ui_init();
-    down(8); press(LB_A); down(3); press(LB_A);       /* Settings > System */
+    down(8); press(LB_A); down(2); press(LB_A);       /* Settings > System */
     {
         char dump[8192];
         ui_draw();
@@ -1299,7 +1304,7 @@ int main(void) {
                              "/tmp/redux-nav-boot/marker");
         bootscreen_set_run(boot_hook);
         ui_init();
-        down(8); press(LB_A); down(3); press(LB_A);       /* Settings > System */
+        down(8); press(LB_A); down(2); press(LB_A);       /* Settings > System */
         down(3);
         expect(ui_list_selected() == 3, "Boot Screen is the row after Power Off");
         press(LB_A);
@@ -1334,13 +1339,13 @@ int main(void) {
 
     /* M (Menu) returns to Main from anywhere; on a confirm screen it cancels instead. */
     ui_init();
-    down(8); press(LB_A); press(LB_A);             /* Settings > Display */
-    expect(ui_screen() == SCREEN_DISPLAY, "Settings > Display is open");
+    down(8); press(LB_A); down(4); press(LB_A);    /* Settings > UI */
+    expect(ui_screen() == SCREEN_UI, "Settings > UI is open");
     press(LB_MENU);
-    expect(ui_screen() == SCREEN_MAIN && ui_list_selected() == 0, "M on Display goes to Main");
+    expect(ui_screen() == SCREEN_MAIN && ui_list_selected() == 0, "M on UI goes to Main");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B on Main after M stays on Main (back stack cleared)");
-    down(8); press(LB_A); down(3); press(LB_A); down(4); press(LB_A);   /* Stock Menu confirm */
+    down(8); press(LB_A); down(2); press(LB_A); down(4); press(LB_A);   /* Stock Menu confirm */
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "Stock Menu confirm is open");
     press(LB_MENU);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "M on a confirm screen cancels back one level");

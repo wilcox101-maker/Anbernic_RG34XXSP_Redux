@@ -38,10 +38,11 @@ enum { MAIN_GAME_ROOM = 0, MAIN_MUSIC = 1, MAIN_VIDEO = 2, MAIN_DOCUMENTS = 3, M
 /* ROM names come from romscan (read-only). The desktop fixture recreates the
    five F0 names so this screen still matches the mock-up. */
 static const char *settings_items[] = {
-    "Display", "Audio", "Power & Lid", "System", "Emulation", "UI"
+    "Audio", "Power & Lid", "System", "Emulation", "UI"
 };
 /* No Input row: button tests live on the Engineering Input tab (Dale, 2026-11-17). */
-enum { SETTINGS_DISPLAY = 0, SETTINGS_SYSTEM = 3, SETTINGS_UI = 5 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
+/* No Display row: Brightness, Screen Timeout and Font live in Settings > UI (Dale, 2026-11-17 A). */
+enum { SETTINGS_SYSTEM = 2, SETTINGS_UI = 4 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
 enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3, SYSTEM_BOOT = 5, SYSTEM_RESET = 6 };
 typedef struct { const char *label; int selectable; int action; } system_row_t;
 static const system_row_t system_rows[] = {
@@ -142,12 +143,15 @@ static const theme_preset_t presets[] = {
 #define N_PRESETS ((int)(sizeof(presets) / sizeof(presets[0])))
 static int theme_index;
 
-/* Settings > UI page (Dale 2026-11-17, plan A). Rows 1-6 are uistyle items. */
-enum { UI_ROW_ACCENT = 0, UI_ROW_RESET = 7, UI_ROWS = 8 };
-static const int ui_row_item[UI_ROWS] = { -1, UIS_TEXT, UIS_HFTEXT, UIS_WINCOLOR, UIS_HEADER, UIS_FOOTER, UIS_WINDOW, -1 };
+/* Settings > UI page (Dale 2026-11-17, plan A; Display folded in, Dale A 11:44).
+   Rows 4-9 are uistyle items. */
+enum { UI_ROW_BRIGHT = 0, UI_ROW_TIMEOUT = 1, UI_ROW_FONT = 2, UI_ROW_ACCENT = 3,
+       UI_ROW_STYLE0 = 4, UI_ROW_STYLE9 = 9, UI_ROW_RESET = 10, UI_ROWS = 11 };
+static const int ui_row_item[UI_ROWS] = { -1, -1, -1, -1, UIS_TEXT, UIS_HFTEXT, UIS_WINCOLOR,
+                                          UIS_HEADER, UIS_FOOTER, UIS_WINDOW, -1 };
 static const char *const ui_row_label[UI_ROWS] = {
-    "Accent Color", "Menu Text", "Header/Footer Text", "Window Color",
-    "Header Size", "Footer Size", "Window Size", "Reset Fonts" };
+    "Brightness", "Screen Timeout", "Font", "Accent Color", "Menu Text", "Header/Footer Text",
+    "Window Color", "Header Size", "Footer Size", "Window Size", "Reset Fonts" };
 static char ui_msg[80];
 
 static void theme_apply(int i) {
@@ -402,7 +406,6 @@ static int list_count(void) {
     case SCREEN_APPS:     return apps_count();
     case SCREEN_WIFI:     return wifi_count();
     case SCREEN_SYSTEM_DEFAULTS: return N_SYSTEM_ROWS;
-    case SCREEN_DISPLAY:  return 3;   /* Brightness, Screen Timeout, Font */
     default:              return 0;
     }
 }
@@ -893,8 +896,11 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
 
     if (screen == SCREEN_UI && (btn == LB_LEFT || btn == LB_RIGHT)) {
         int dir = btn == LB_RIGHT ? +1 : -1;
-        if (selected == UI_ROW_ACCENT) { theme_apply((theme_index + dir + N_PRESETS) % N_PRESETS); theme_save(); }
-        else if (selected >= 1 && selected <= 6) uistyle_step(ui_row_item[selected], dir);   /* live */
+        if (selected == UI_ROW_BRIGHT)       brightness_step(dir);
+        else if (selected == UI_ROW_TIMEOUT) screentimeout_step(dir);
+        else if (selected == UI_ROW_FONT)    font_step(dir);   /* the whole screen redraws in it */
+        else if (selected == UI_ROW_ACCENT) { theme_apply((theme_index + dir + N_PRESETS) % N_PRESETS); theme_save(); }
+        else if (selected >= UI_ROW_STYLE0 && selected <= UI_ROW_STYLE9) uistyle_step(ui_row_item[selected], dir);
         ui_msg[0] = '\0';
         clamp_scroll();
         dirty = 1;
@@ -907,15 +913,6 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             snprintf(ui_msg, sizeof ui_msg, "  Header, footer and window sizes are back to Default.");
             dirty = 1;
         }
-        return;
-    }
-
-    if (screen == SCREEN_DISPLAY && (btn == LB_LEFT || btn == LB_RIGHT)) {
-        int dir = btn == LB_RIGHT ? +1 : -1;
-        if (selected == 1)      screentimeout_step(dir);
-        else if (selected == 2) font_step(dir);   /* live preview: the whole screen redraws in it */
-        else                    brightness_step(dir);
-        dirty = 1;
         return;
     }
 
@@ -965,7 +962,6 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (btn == LB_A && screen == SCREEN_SETTINGS) {
-        if (selected == SETTINGS_DISPLAY) go(SCREEN_DISPLAY);
         if (selected == SETTINGS_SYSTEM)  go(SCREEN_SYSTEM_DEFAULTS);
         if (selected == SETTINGS_UI)      { ui_msg[0] = '\0'; go(SCREEN_UI); }
         return;
@@ -1489,42 +1485,33 @@ void ui_draw(void) {
         frame("Settings", "A:Enter  B:Back  M:Menu", 1, 0);
         list(0, settings_items, COUNT(settings_items));
         break;
-    case SCREEN_DISPLAY: {
-        frame("Settings > Display", "Up/Down:Select  Left/Right:Change  B:Back  M:Menu", 1, 0);
-        int lvl = brightness_get();
-        char bar[BRIGHTNESS_MAX + 1], line[80];
-        for (int i = 0; i < BRIGHTNESS_MAX; i++) bar[i] = i < lvl ? '#' : '.';
-        bar[BRIGHTNESS_MAX] = '\0';
-        snprintf(line, sizeof line, "  Brightness  [%s]  %2d/%d", bar, lvl, BRIGHTNESS_MAX);
-        body(0, line);
-        int mins = screentimeout_minutes();
-        if (mins) snprintf(line, sizeof line, "  Screen Timeout  %d min", mins);
-        else      snprintf(line, sizeof line, "  Screen Timeout  Off");
-        body(1, line);
-        snprintf(line, sizeof line, "  Font  < %s >", font_name(font_current()));
-        body(2, line);
-        grid_invert(ROW_BODY0 + selected, 1, GRID_COLS - 2);
-        body(4, selected == 1 ? "  Idle in this menu that long: sleep. Power wakes."
-              : selected == 2 ? "  Applies at once. Saved. Same layout in every font."
-                              : "  Applies at once. Saved. Never goes fully dark.");
-        if (selected == 2) {
-            body(6, "  ABCDEFGHIJKLMNOPQRSTUVWXYZ  abcdefghijklmnopqrstuvwxyz  0123456789");
-            body(7, "  \u250c\u2500\u2500\u2500\u2510  \u2593\u2593\u2593  Redux BIOS Setup Utility");
-            body(8, "  \u2514\u2500\u2500\u2500\u2518");
-        }
-        break;
-    }
     case SCREEN_UI: {
         frame("Settings > UI", "Up/Down:Select  Left/Right:Change  A:Open  B:Back  M:Menu", 1, 0);
         char line[GRID_COLS];
         for (int i = 0; i < UI_ROWS; i++) {
+            char val[40];
+            if (i == UI_ROW_BRIGHT) {
+                /* ten cells, two levels each: short enough for Largest (44 characters) */
+                int lvl = brightness_get(), n = 0;
+                val[n++] = '[';
+                for (int k = 0; k < BRIGHTNESS_MAX / 2; k++) val[n++] = k < (lvl + 1) / 2 ? '#' : '.';
+                snprintf(val + n, sizeof val - n, "] %2d/%d", lvl, BRIGHTNESS_MAX);
+            } else if (i == UI_ROW_TIMEOUT) {
+                int mins = screentimeout_minutes();
+                if (mins) snprintf(val, sizeof val, "%d min", mins);
+                else      snprintf(val, sizeof val, "Off");
+            } else if (i == UI_ROW_FONT)   snprintf(val, sizeof val, "%s", font_name(font_current()));
+            else if (i == UI_ROW_ACCENT)   snprintf(val, sizeof val, "%s", presets[theme_index].name);
+            else if (i != UI_ROW_RESET)    snprintf(val, sizeof val, "%s", uistyle_value_name(ui_row_item[i]));
             if (i == UI_ROW_RESET) snprintf(line, sizeof line, "  [ %s ]", ui_row_label[i]);
-            else snprintf(line, sizeof line, "  %-19s < %s >", ui_row_label[i],
-                          i == UI_ROW_ACCENT ? presets[theme_index].name : uistyle_value_name(ui_row_item[i]));
+            else snprintf(line, sizeof line, "  %-18s < %s >", ui_row_label[i], val);
             body(i, line);
         }
         grid_invert(ROW_BODY0 + selected, 1, GRID_COLS - 2);
         static const char *const help[UI_ROWS] = {
+            "  Saved. Never goes fully dark.",
+            "  Idle in this menu that long: sleep. Power wakes.",
+            "  Abc 123 \u250c\u2500\u2500\u2500\u2510 \u2593\u2593\u2593  Same layout in every font.",
             "  Selection bar colour. A: the full list.",
             "  Text inside the window. Skips the window colour.",
             "  Title and help lines. Skips black.",
@@ -1532,9 +1519,8 @@ void ui_draw(void) {
             "  Large: twice as tall.",
             "  Large: twice as tall.",
             "  Large: twice as tall. Largest: also twice as wide.",
-            "  A: all three sizes back to Default." };
-        body(9, ui_msg[0] ? ui_msg : help[selected]);
-        body(10, "  Saved. Too big for a screen: one size smaller there.");
+            "  A: all three sizes back to Default. Too big for a screen: one size smaller there." };
+        body(12, ui_msg[0] ? ui_msg : help[selected]);
         break;
     }
     case SCREEN_UI_COLORS: {
