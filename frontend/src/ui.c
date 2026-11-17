@@ -1554,7 +1554,7 @@ void ui_draw(void) {
         char id[32], title[GRID_COLS];
         snprintf(id, sizeof id, REDUX_ID_FMT, REDUX_BUILD);
         snprintf(title, sizeof title, "RG34XXSP Redux  %s", id);
-        frame(title, "A:Select  B:Back  M:Menu  Start:Search", 1, 0);
+        frame(title, "A:Select  M:Menu  Start:Search", 1, 0);   /* no B: nothing to go back to (Dale 2026-11-17) */
         list(0, main_items, COUNT(main_items));
         if (apps_msg[0]) body(COUNT(main_items) + 1, apps_msg);
         break;
