@@ -96,11 +96,21 @@ static char apps_msg[48];
 #define THEME_PATH "/tmp/redux.theme"
 #endif
 typedef struct { const char *name; uint8_t r, g, b; } theme_preset_t;
+/* The first four keep their saved index. Then the 16 standard VGA text-mode colours (Dale 2026-11-17),
+   without black: a black accent on the black background would hide the pointer and the bars. */
 static const theme_preset_t presets[] = {
     { "BIOS cyan", 0, 255, 255 },
     { "Amber",     255, 176, 0 },
     { "Green",     0, 255, 0 },
-    { "White",     255, 255, 255 }
+    { "White",     255, 255, 255 },
+    { "VGA Blue",          0,   0, 170 }, { "VGA Green",         0, 170,   0 },
+    { "VGA Cyan",          0, 170, 170 }, { "VGA Red",         170,   0,   0 },
+    { "VGA Magenta",     170,   0, 170 }, { "VGA Brown",       170,  85,   0 },
+    { "VGA Light Gray",  170, 170, 170 }, { "VGA Dark Gray",    85,  85,  85 },
+    { "VGA Light Blue",   85,  85, 255 }, { "VGA Light Green",  85, 255,  85 },
+    { "VGA Light Cyan",   85, 255, 255 }, { "VGA Light Red",   255,  85,  85 },
+    { "VGA Light Magenta", 255, 85, 255 }, { "VGA Yellow",      255, 255,  85 },
+    { "VGA White",       255, 255, 255 },
 };
 #define N_PRESETS ((int)(sizeof(presets) / sizeof(presets[0])))
 static int theme_index;
@@ -1303,7 +1313,8 @@ void ui_draw(void) {
             if (i == selected) grid_invert(ROW_BODY0 + i, 0, 1);
         }
         body(N_PRESETS + 1, "  Black background, white text, one accent.");
-        body(N_PRESETS + 2, "  Saved. Survives reboot on the device.");
+        body(N_PRESETS + 2, "  VGA: the 16 standard text colours, without black (it would hide the pointer).");
+        body(N_PRESETS + 3, "  Saved. Survives reboot on the device.");
         break;
     }
     case SCREEN_INTERNET:

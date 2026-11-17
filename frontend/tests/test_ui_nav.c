@@ -734,6 +734,17 @@ int main(void) {
         ui_draw();
         grid_dump(dump, sizeof dump);
         expect(strstr(dump, "Amber  (current)") != NULL, "saved accent reloads as current");
+        expect(strstr(dump, "VGA Light Magenta") != NULL && strstr(dump, "VGA Yellow") != NULL
+               && strstr(dump, "VGA Black") == NULL, "Colors lists the VGA colours, without black");
+    }
+    press(LB_UP); press(LB_A);     /* from the top row, Up wraps to the last row: VGA White */
+    ui_init();
+    down(8); press(LB_A); down(6); press(LB_A);
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "VGA White  (current)") != NULL, "a VGA colour saves and reloads");
     }
     remove("/tmp/redux.theme");
 

@@ -92,7 +92,7 @@ stock screen tearing **[not yet on device]**. File Manager can't use it and stil
 | **Display** | Brightness (1-20; never fully dark), **Screen Timeout** (Off, 1, 2, 3, 5, 10, 15, 30 min; default 5), **Font** (five fonts, same layout in each). Up/Down picks the row, Left/Right changes it, applies at once, saved. Brightness **[device-checked]**; Screen Timeout and Font **[not yet on device]** |
 | Audio, Input, Power & Lid, Emulation | **[placeholder]** (arrive with F3-F5) |
 | **System** | see below |
-| **UI** | Colours: BIOS cyan, Amber, Green, White. Saved. |
+| **UI** | Colours: BIOS cyan, Amber, Green, White, then the 16 standard VGA text colours except black (15). Saved. VGA colours **[not yet on device]** |
 
 Screen Timeout: after that long with no button press **in the Redux menu**, the handheld sleeps the
 way stock does; Power wakes it. Games and stock apps keep their own behaviour.
