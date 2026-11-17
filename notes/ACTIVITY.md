@@ -179,3 +179,4 @@
 - 2026-11-17 11:16 · claude-readonly · read: repo optimization (MGR 11:00) · did: #258 Stock OS Mod installer check + 3 tests, cbepx-me credit, rumble (PR 4/4, stacked on #254); Owner reviews installer diff, Dale merges
 - 2026-11-17 11:23 · claude · read: Dale A for item 6 plan; hw-result 1038c32 (#256) · did: merged #259 Settings > UI text sizes and three colours
 - 2026-11-17 11:26 · claude-readonly · read: #254 #255 #257 #258 merged · did: repo optimization done; one-task push permission ended, back to HOLD (read-only)
+- 2026-11-17 11:48 · claude · read: Dale 11:43 + A 11:44 Display into UI; 11:38 boot screen request · did: merged #264 Display folded into Settings > UI; boot screen DECIDE asked
