@@ -19,6 +19,7 @@
 #include "sysinfo.h"
 #include "apps.h"
 #include "bootscreen.h"
+#include "term.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -462,6 +463,15 @@ static void resume_save(void) {
     fclose(f);
 }
 
+/* Packages: come back to the list with the same row highlighted after apt ran in the terminal. */
+static int pkg_resume_row;
+static void resume_save_pkgs(void) {
+    FILE *f = fopen(UI_RESUME_PATH, "w");
+    if (!f) return;
+    fprintf(f, "pkgs\n-\n%d\n%d\n", pkg_resume_row, scroll);
+    fclose(f);
+}
+
 static void resume_clear(void) { remove(UI_RESUME_PATH); }
 
 static int resume_load(void) {
@@ -484,6 +494,23 @@ static int resume_load(void) {
         sscanf(scrb, "%d", &scr);
         push_back(SCREEN_MAIN);   /* B goes back to Main, as when Apps was opened from it */
         screen = SCREEN_APPS;
+        selected = row;
+        scroll = scr < 0 ? 0 : scr;
+        clamp_scroll();
+        dirty = 1;
+        return 1;
+    }
+    if (strcmp(screen_tok, "pkgs") == 0) {
+        int row = -1, scr = 0;
+        pkgs_refresh();
+        if (sscanf(rowb, "%d", &row) != 1 || row < 0 || row >= pkgs_count()) return 0;
+        sscanf(scrb, "%d", &scr);
+        /* Same path as Settings > System > Packages, so B walks back through them. */
+        push_back(SCREEN_MAIN);
+        push_back(SCREEN_SETTINGS);
+        push_back(SCREEN_SYSTEM_DEFAULTS);
+        screen = SCREEN_PACKAGES;
+        stock_msg[0] = '\0';
         selected = row;
         scroll = scr < 0 ? 0 : scr;
         clamp_scroll();
@@ -1147,13 +1174,26 @@ void ui_tick(uint32_t now_ms) {
                     snprintf(stock_msg, sizeof stock_msg, "Install failed: the running build stays.");
                 }
             } else if (screen == SCREEN_PKG_CONFIRM) {
-                char d[96];
-                snprintf(d, sizeof d, "%s %s. This can take a few minutes.",
-                         pkg_remove ? "Removing" : "Installing", pkgs_name(pkg_index));
-                ui_busy("Packages", d);
-                int rc = pkg_remove ? pkgs_remove(pkg_index) : pkgs_install(pkg_index);
-                stock_started = 1;
-                snprintf(stock_msg, sizeof stock_msg, "%s %s", pkgs_name(pkg_index), pkgs_message(rc));
+                /* apt runs in Redux Terminal so its progress is visible (Dale 2026-11-17 A); Redux
+                   restarts on this list afterwards (resume token "pkgs"). */
+                pkg_resume_row = pkg_index;
+                if (pkgs_write_script(pkg_index, pkg_remove, PKGS_SCRIPT) == 0) {
+                    resume_save_pkgs();
+                    if (launcher_start_app(term_path(), "HOME=/root", "--hold -e /bin/bash " PKGS_SCRIPT) == 0) {
+                        char d[160];
+                        snprintf(d, sizeof d, "Package %s\n\n%s in the terminal; press a button there when it is done.",
+                                 pkgs_name(pkg_index), pkg_remove ? "Removing" : "Installing");
+                        ui_busy_full("Packages", d);
+                        should_exit = 1;
+                    } else {
+                        resume_clear();
+                        stock_started = 1;
+                        snprintf(stock_msg, sizeof stock_msg, "Could not start the terminal.");
+                    }
+                } else {
+                    stock_started = 1;
+                    snprintf(stock_msg, sizeof stock_msg, "Could not write %s.", PKGS_SCRIPT);
+                }
             } else if (screen == SCREEN_RESET_CONFIRM) {
                 reset_all();
                 stock_started = 1;
