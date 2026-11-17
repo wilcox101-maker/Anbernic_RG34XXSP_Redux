@@ -17,8 +17,10 @@ int main(void) {
     check(remap_device_key(306) == LB_Y, "BTN_C -> Y (device, 2026-11-12)");
     check(remap_device_key(310) == LB_SELECT, "BTN_TL -> Select (device, 2026-11-12)");
     check(remap_device_key(311) == LB_START, "BTN_TR -> Start (device, 2026-11-12)");
-    check(remap_device_key(314) == LB_NONE, "BTN_SELECT is L2 -> none");
-    check(remap_device_key(315) == LB_NONE, "BTN_START is R2 -> none");
+    check(remap_device_key(314) == LB_L2, "BTN_SELECT is L2 (no menu action)");
+    check(remap_device_key(315) == LB_R2, "BTN_START is R2 (no menu action)");
+    check(remap_device_key(313) == LB_L3, "BTN_TR2 is L3 (device, 2026-11-12)");
+    check(remap_device_key(316) == LB_R3, "BTN_MODE is R3 (device, 2026-11-12)");
     check(remap_device_key(115) == LB_VOL_UP, "KEY_VOLUMEUP 115 -> vol up");
     check(remap_device_key(114) == LB_VOL_DOWN, "KEY_VOLUMEDOWN 114 -> vol down");
     check(remap_device_key(999) == LB_NONE, "unknown key");
