@@ -77,7 +77,7 @@ it stays frozen when opened again (Dale 2026-11-17; a Redux network page is plan
 | Ebook Reader (TF1) / (TF2) | stock reader (Pixel Reader) for each card; M quits | TF1 device-checked; TF2 not yet |
 | PDF Reader | later (needs a file picker) | placeholder |
 | NeoFetch | system summary (`neofetch`, no logo so it fits); needs `neofetch` installed; M quits | device-checked (before the no-logo change) |
-| Redux Terminal | Redux's own terminal with a `bash` shell: sharp 8x16 text in the font chosen in Settings > UI, 90 x 30. Buttons: D-pad / left stick = arrows, A = Enter, B = Esc, X = Tab, Y = Backspace, L1 / R1 = Page Up / Down, L2 / R2 = Home / End, Start = F10, **M quits**. Right-stick mouse and the Select on-screen keys come next; the other terminal apps move onto it after that | **[not yet on device]** |
+| Redux Terminal | Redux's own terminal with a `bash` shell: sharp 8x16 text in the font chosen in Settings > UI, 90 x 30. Buttons: D-pad / left stick = arrows, A = Enter, B = Esc, X = Tab, Y = Backspace, L1 / R1 = Page Up / Down, L2 / R2 = Home / End, Start = F10, **M quits**. **Right stick** moves a mouse pointer (yellow frame; hides after 4 s), **L3** left click, **R3** right click, for programs that take the mouse (mc, htop, alsamixer). **Select** opens the on-screen keys over the bottom rows: D-pad moves, A types, Shift stays on, Ctrl applies to the next key, B or Select closes. The other terminal apps move onto it next | **[not yet on device]** |
 | Terminal | stock SimpleTerminal | device-checked |
 
 On Main: **Music Player** (stock `ap.dge`, device-checked), **Video Player** (stock `vp.dge`: plays,

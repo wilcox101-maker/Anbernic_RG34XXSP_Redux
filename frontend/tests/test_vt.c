@@ -1,5 +1,6 @@
 /* Redux Terminal screen model tests (no SDL, no pty). Exit 0 = pass. */
 #include "vt.h"
+#include "osk.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -177,6 +178,58 @@ int main(void) {
     static char dump[VT_ROWS * (VT_COLS + 1) + 1];
     size_t len = vt_dump(&t, dump, sizeof dump);
     expect(len == (size_t)VT_ROWS * (VT_COLS + 1) && dump[VT_COLS] == '\n', "dump is 30 lines of 90 characters");
+
+    /* Mouse reports (PR 2): nothing unless the program asked; X10 and SGR encodings. */
+    vt_init(&t);
+    expect(vt_mouse_bytes(&t, 0, 0, 0, 5, 5, out, sizeof out) == 0, "no mouse report when the program did not ask");
+    feed("\x1b[?1000h");
+    n = vt_mouse_bytes(&t, 0, 0, 0, 10, 3, out, sizeof out);
+    expect(n == 6 && out[2] == 'M' && out[3] == 32 && out[4] == 32 + 11 && out[5] == 32 + 4, "X10 left press at column 11, row 4");
+    n = vt_mouse_bytes(&t, 0, 1, 0, 10, 3, out, sizeof out);
+    expect(n == 6 && out[3] == 32 + 3, "X10 release is button 3");
+    expect(vt_mouse_bytes(&t, 0, 0, 1, 10, 3, out, sizeof out) == 0, "mode 1000 sends no motion");
+    feed("\x1b[?1002h\x1b[?1006h");
+    n = vt_mouse_bytes(&t, 2, 0, 0, 89, 29, out, sizeof out); out[n] = 0;
+    expect(!strcmp(out, "\x1b[<2;90;30M"), "SGR right press at the last cell");
+    n = vt_mouse_bytes(&t, 0, 0, 1, 0, 0, out, sizeof out); out[n] = 0;
+    expect(!strcmp(out, "\x1b[<32;1;1M"), "SGR drag with the left button held");
+    n = vt_mouse_bytes(&t, 0, 1, 0, 0, 0, out, sizeof out); out[n] = 0;
+    expect(!strcmp(out, "\x1b[<0;1;1m"), "SGR release ends in m");
+    expect(vt_mouse_bytes(&t, -1, 0, 1, 0, 0, out, sizeof out) == 0, "mode 1002 sends no motion without a button");
+    feed("\x1b[?1003h");
+    n = vt_mouse_bytes(&t, -1, 0, 1, 4, 4, out, sizeof out); out[n] = 0;
+    expect(!strcmp(out, "\x1b[<35;5;5M"), "mode 1003 reports plain motion");
+    feed("\x1b[?1000l");
+    expect(t.mouse_mode == 0 && vt_mouse_bytes(&t, 0, 0, 0, 0, 0, out, sizeof out) == 0, "?1000l switches reports off");
+
+    /* On-screen keys (PR 2). */
+    osk_t k;
+    osk_init(&k);
+    expect(!k.open && osk_key(k.row, k.col) && !strcmp(osk_key(k.row, k.col)->label, "q"), "the picker starts on q, closed");
+    for (int r = 0; r < OSK_ROWS; r++) {
+        int last = osk_cols(r) - 1;
+        if (osk_key_x(r, last) + osk_key(r, last)->width + 1 > VT_COLS - 1) { expect(0, "a keyboard row is wider than the box"); break; }
+    }
+    expect(osk_press(&k, out, sizeof out) == 1 && out[0] == 'q', "A on q types q");
+    osk_move(&k, 1, 0);   /* down: lands on the key under q, which is the wide Shift */
+    expect(k.row == 3 && !strcmp(osk_key(k.row, k.col)->label, "Shift"), "moving down lands on the key below");
+    expect(osk_press(&k, out, sizeof out) == 0 && k.shift, "pressing Shift sets Shift and types nothing");
+    osk_move(&k, 0, 1);
+    expect(!strcmp(osk_key(k.row, k.col)->label, "a") && osk_press(&k, out, sizeof out) == 1 && out[0] == 'A' && k.shift,
+           "Shift types upper-case and stays on");
+    osk_move(&k, -2, 0);
+    expect(k.row == 1 && osk_press(&k, out, sizeof out) == 1 && out[0] == '@', "Shift on the digit row types the symbol");
+    k.shift = 0;
+    k.row = 4; k.col = 0;
+    expect(!strcmp(osk_key(k.row, k.col)->label, "Ctrl") && osk_press(&k, out, sizeof out) == 0 && k.ctrl, "Ctrl is one-shot");
+    osk_move(&k, 0, 3);   /* c */
+    expect(osk_press(&k, out, sizeof out) == 1 && out[0] == 3 && !k.ctrl, "Ctrl-C sends byte 3 and clears Ctrl");
+    osk_move(&k, -4, 0); k.col = 0;
+    expect(osk_press(&k, out, sizeof out) == 3 && out[0] == 0x1B && out[2] == 'P', "F1 sends SS3 P");
+    osk_move(&k, 0, -1);
+    expect(!strcmp(osk_key(k.row, k.col)->label, "PgDn"), "left from the first key wraps to the last");
+    osk_move(&k, -1, 0);
+    expect(k.row == OSK_ROWS - 1, "up from the first row wraps to the last");
 
     printf("%s\n", fails ? "test_vt: FAILED" : "test_vt: all passed");
     return fails ? 1 : 0;
