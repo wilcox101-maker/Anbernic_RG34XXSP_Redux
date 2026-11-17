@@ -1,6 +1,7 @@
 /* Screens and navigation. Engineering is one screen with a tab bar.
    B goes back one level via a small stack. Internet is a sub-menu. */
 #include "ui.h"
+#include "uistyle.h"
 #include "grid.h"
 #include "platform.h"
 #include "launcher.h"
@@ -141,6 +142,14 @@ static const theme_preset_t presets[] = {
 #define N_PRESETS ((int)(sizeof(presets) / sizeof(presets[0])))
 static int theme_index;
 
+/* Settings > UI page (Dale 2026-11-17, plan A). Rows 1-6 are uistyle items. */
+enum { UI_ROW_ACCENT = 0, UI_ROW_RESET = 7, UI_ROWS = 8 };
+static const int ui_row_item[UI_ROWS] = { -1, UIS_TEXT, UIS_HFTEXT, UIS_WINCOLOR, UIS_HEADER, UIS_FOOTER, UIS_WINDOW, -1 };
+static const char *const ui_row_label[UI_ROWS] = {
+    "Accent Color", "Menu Text", "Header/Footer Text", "Window Color",
+    "Header Size", "Footer Size", "Window Size", "Reset Fonts" };
+static char ui_msg[80];
+
 static void theme_apply(int i) {
     if (i < 0 || i >= N_PRESETS) i = 0;
     theme_index = i;
@@ -174,6 +183,7 @@ static void theme_load(void) {
 static void reset_all(void) {
     remove(THEME_PATH);
     theme_apply(0);
+    uistyle_reset();         /* text sizes and the three colours */
     brightness_reset();      /* back to the default level, applied: never dark */
     volume_reset();          /* saved level forgotten; current level kept until restart */
     screentimeout_reset();
@@ -209,6 +219,15 @@ static void go_replace(screen_t s) {
 }
 
 static void clamp_scroll(void);
+
+/* Rows a scrolling list shows: 20 at Default sizes, fewer when Settings > UI makes text taller,
+   leaving room for the lines above and below the list (search line, "...", messages). */
+static int list_window(void) {
+    int cap = grid_body_capacity();
+    int w = cap >= BODY_ROWS ? ROM_LIST_WINDOW : cap - 3;
+    if (w > ROM_LIST_WINDOW) w = ROM_LIST_WINDOW;
+    return w < 3 ? 3 : w;
+}
 static int resume_load(void);
 
 static void (*present_one)(void);
@@ -292,6 +311,7 @@ static void busy_draw(const char *title, const char *detail, int full) {
     for (int c = 1; c < box_w - 1; c++) box_char(left + c, bot, "─");
     box_char(left + box_w - 1, bot, "┘");
 
+    grid_plain_frame();   /* pop-ups are drawn at Default sizes */
     dirty = 0;
     if (present_one)
         for (int i = 0; i < PRESENT_BUFFERS; i++) present_one();
@@ -343,6 +363,7 @@ static void show_loading(const system_entry_t *sys, const char *path) {
 void ui_init(void) {
     should_exit = 0; apps_msg[0] = '\0'; back_top = 0; eng_tab = ENG_CPU; sys_index = 0; screen = SCREEN_MAIN;
     theme_load();
+    uistyle_load();
     volume_load();
     brightness_load();   /* no saved file: leave the hardware level as stock set it */
     screentimeout_load();
@@ -360,6 +381,7 @@ screen_t ui_screen(void) { return screen; }
 eng_tab_t ui_eng_tab(void) { return eng_tab; }
 int ui_list_selected(void) { return selected; }
 int ui_list_scroll(void) { return scroll; }
+int ui_list_window(void) { return list_window(); }
 void ui_show(screen_t s) {
     back_top = 0; screen = s; selected = 0; scroll = 0; dirty = 1;
     if (s == SCREEN_ROMS) sys_index = romscan_index_of("GBA");
@@ -375,6 +397,7 @@ static int list_count(void) {
     case SCREEN_ROMS:     return romscan_roms(sys_index);
     case SCREEN_SETTINGS: return COUNT(settings_items);
     case SCREEN_UI_COLORS: return N_PRESETS;
+    case SCREEN_UI:       return UI_ROWS;
     case SCREEN_INTERNET: return COUNT(internet_items);
     case SCREEN_APPS:     return apps_count();
     case SCREEN_WIFI:     return wifi_count();
@@ -386,7 +409,7 @@ static int list_count(void) {
 
 static void clamp_scroll(void) {
     int n = list_count();
-    int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+    int window = n < list_window() ? n : list_window();
     if (window < 1) { scroll = 0; return; }
     if (selected < 0) selected = 0;
     if (selected >= n) selected = n - 1;
@@ -399,7 +422,7 @@ static void clamp_scroll(void) {
 static void page(int dir) {
     int n = list_count();
     if (n < 1) return;
-    int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+    int window = n < list_window() ? n : list_window();
     int last_top = n - window;
     selected += dir * window;
     scroll += dir * window;
@@ -868,6 +891,25 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
 
     if (screen == SCREEN_WIFI && btn == LB_Y) { wifi_rescan(); return; }
 
+    if (screen == SCREEN_UI && (btn == LB_LEFT || btn == LB_RIGHT)) {
+        int dir = btn == LB_RIGHT ? +1 : -1;
+        if (selected == UI_ROW_ACCENT) { theme_apply((theme_index + dir + N_PRESETS) % N_PRESETS); theme_save(); }
+        else if (selected >= 1 && selected <= 6) uistyle_step(ui_row_item[selected], dir);   /* live */
+        ui_msg[0] = '\0';
+        clamp_scroll();
+        dirty = 1;
+        return;
+    }
+    if (screen == SCREEN_UI && btn == LB_A) {
+        if (selected == UI_ROW_ACCENT) go(SCREEN_UI_COLORS);
+        else if (selected == UI_ROW_RESET) {
+            uistyle_reset_fonts();
+            snprintf(ui_msg, sizeof ui_msg, "  Header, footer and window sizes are back to Default.");
+            dirty = 1;
+        }
+        return;
+    }
+
     if (screen == SCREEN_DISPLAY && (btn == LB_LEFT || btn == LB_RIGHT)) {
         int dir = btn == LB_RIGHT ? +1 : -1;
         if (selected == 1)      screentimeout_step(dir);
@@ -891,6 +933,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             if (screen != SCREEN_SYSTEM_DEFAULTS || system_selectable(next)) break;
         }
         selected = next;
+        if (screen == SCREEN_UI) ui_msg[0] = '\0';
         clamp_scroll();
         dirty = 1;
     }
@@ -924,7 +967,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (btn == LB_A && screen == SCREEN_SETTINGS) {
         if (selected == SETTINGS_DISPLAY) go(SCREEN_DISPLAY);
         if (selected == SETTINGS_SYSTEM)  go(SCREEN_SYSTEM_DEFAULTS);
-        if (selected == SETTINGS_UI)      go(SCREEN_UI_COLORS);
+        if (selected == SETTINGS_UI)      { ui_msg[0] = '\0'; go(SCREEN_UI); }
         return;
     }
     if (btn == LB_A && screen == SCREEN_UI_COLORS) {
@@ -1135,7 +1178,7 @@ static void draw_hold_bar(int line, uint32_t total_ms) {
 }
 
 static void list(int first_line, const char *const *items, int n) {
-    int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+    int window = n < list_window() ? n : list_window();
     for (int i = 0; i < window; i++) {
         int idx = scroll + i;
         char line[GRID_COLS];
@@ -1148,7 +1191,7 @@ static void list(int first_line, const char *const *items, int n) {
 /* Same bar, but the strings come from the scanner (systems or one system's ROMs). */
 static void list_scanned(int first_line, int systems) {
     int n = systems ? romscan_systems() : romscan_roms(sys_index);
-    int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+    int window = n < list_window() ? n : list_window();
     for (int i = 0; i < window; i++) {
         int idx = scroll + i;
         const char *text = systems ? romscan_title(idx) : romscan_rom_name(sys_index, idx);
@@ -1409,7 +1452,7 @@ void ui_draw(void) {
         list_scanned(2, 0);
         {
             int n = romscan_roms(sys_index);
-            int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+            int window = n < list_window() ? n : list_window();
             body(2 + window, "   ...");
         }
         break;
@@ -1471,8 +1514,31 @@ void ui_draw(void) {
         }
         break;
     }
+    case SCREEN_UI: {
+        frame("Settings > UI", "Up/Down:Select  Left/Right:Change  A:Open  B:Back  M:Menu", 1, 0);
+        char line[GRID_COLS];
+        for (int i = 0; i < UI_ROWS; i++) {
+            if (i == UI_ROW_RESET) snprintf(line, sizeof line, "  [ %s ]", ui_row_label[i]);
+            else snprintf(line, sizeof line, "  %-19s < %s >", ui_row_label[i],
+                          i == UI_ROW_ACCENT ? presets[theme_index].name : uistyle_value_name(ui_row_item[i]));
+            body(i, line);
+        }
+        grid_invert(ROW_BODY0 + selected, 1, GRID_COLS - 2);
+        static const char *const help[UI_ROWS] = {
+            "  Selection bar colour. A: the full list.",
+            "  Text inside the window. Skips the window colour.",
+            "  Title and help lines. Skips black.",
+            "  Window background. Skips the menu text colour.",
+            "  Large: twice as tall.",
+            "  Large: twice as tall.",
+            "  Large: twice as tall. Largest: also twice as wide.",
+            "  A: all three sizes back to Default." };
+        body(9, ui_msg[0] ? ui_msg : help[selected]);
+        body(10, "  Saved. Too big for a screen: one size smaller there.");
+        break;
+    }
     case SCREEN_UI_COLORS: {
-        frame("Colors", "A:Select  B:Back  M:Menu", 1, 0);
+        frame("Settings > UI > Accent Color", "A:Select  B:Back  M:Menu", 1, 0);
         for (int i = 0; i < N_PRESETS; i++) {
             char line[80];
             snprintf(line, sizeof line, "  %s%s", presets[i].name,
@@ -1509,7 +1575,7 @@ void ui_draw(void) {
     case SCREEN_WIFI: {
         frame("Wi-Fi", "A:Select  B:Back  Y:Scan", 1, 0);
         int n = wifi_count();
-        int window = n < ROM_LIST_WINDOW ? n : ROM_LIST_WINDOW;
+        int window = n < list_window() ? n : list_window();
         for (int i = 0; i < window; i++) {
             int idx = scroll + i;
             const wifi_ap_t *ap = wifi_ap(idx);

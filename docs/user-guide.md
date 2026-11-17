@@ -92,7 +92,7 @@ stock screen tearing **[not yet on device]**. File Manager can't use it and stil
 | **Display** | Brightness (1-20; never fully dark), **Screen Timeout** (Off, 1, 2, 3, 5, 10, 15, 30 min; default 5), **Font** (five fonts, same layout in each). Up/Down picks the row, Left/Right changes it, applies at once, saved. Brightness **[device-checked]**; Screen Timeout and Font **[not yet on device]** |
 | Audio, Input, Power & Lid, Emulation | **[placeholder]** (arrive with F3-F5) |
 | **System** | see below |
-| **UI** | Colours: BIOS cyan, Amber, Green, White, then the 16 standard VGA text colours except black (15). Saved. VGA colours **[not yet on device]** |
+| **UI** | **Accent Color** (selection bar: BIOS cyan, Amber, Green, White, then the 16 standard VGA text colours except black; A opens the list). **Menu Text**, **Header/Footer Text**, **Window Color** (any of the 16 VGA colours; a choice that would hide text is skipped). **Header Size**, **Footer Size** (Default, Large = twice as tall), **Window Size** (Default, Large = twice as tall, Largest = also twice as wide). A screen whose content doesn't fit drops a size there. **Reset Fonts** puts the three sizes back to Default. Left/Right changes a row, applies at once, saved. Sizes and the three colours **[not yet on device]** |
 
 Screen Timeout: after that long with no button press **in the Redux menu**, the handheld sleeps the
 way stock does; Power wakes it. Games and stock apps keep their own behaviour.
@@ -109,7 +109,7 @@ RetroArch write the game's in-game save to the card, then the handheld sleeps as
 | Restart / Power Off | `sync`, then reboot / power off (hold A 3 s) **[device-checked]** |
 | Boot Screen (Stock/Redux) | Swaps the picture shown at power-on. The stock picture is saved first and can be put back here. Writes to the boot partition: keep the handheld on until it says Done. Install **[device-checked]**, restore **[not yet on device]** |
 | Stock Menu | Puts the stock launcher back (from `dmenu_ln.bak`) and reboots. Refuses if the backup is missing |
-| Reset All | Redux's own settings back to defaults: colours, brightness, screen timeout, font, saved volume. Never touches games, saves, BIOS, Wi-Fi networks, the boot screen or stock settings **[not yet on device]** |
+| Reset All | Redux's own settings back to defaults: colours, text sizes, brightness, screen timeout, font, saved volume. Never touches games, saves, BIOS, Wi-Fi networks, the boot screen or stock settings **[not yet on device]** |
 
 ## Network (Wi-Fi)
 Main > Network scans; **Y** rescans. Pick a network, type the password on the on-screen keyboard

@@ -3,6 +3,7 @@
    Exit code 0 = pass. Uses the desktop platform layer (no window is opened). */
 #define _POSIX_C_SOURCE 200809L
 #include "ui.h"
+#include "uistyle.h"
 #include "platform.h"
 #include "launcher.h"
 #include "romscan.h"
@@ -817,12 +818,14 @@ int main(void) {
     expect(presents == PRESENT_BUFFERS, "startup scan is presented 3 times");
     expect(strcmp(ui_last_busy(), "Scanning for ROMs") == 0, "startup scan shows Scanning for ROMs");
 
-    /* Colour presets: Settings → UI opens Colors; A selects and saves. */
+    /* Colour presets: Settings → UI → Accent Color opens the list; A selects and saves. */
     remove("/tmp/redux.theme");
     ui_init();
     down(8); press(LB_A);          /* Settings */
     down(5); press(LB_A);          /* UI (last row) */
-    expect(ui_screen() == SCREEN_UI_COLORS, "Settings → UI opens Colors");
+    expect(ui_screen() == SCREEN_UI, "Settings → UI opens the UI page");
+    press(LB_A);                   /* Accent Color (row 0) */
+    expect(ui_screen() == SCREEN_UI_COLORS, "UI → Accent Color opens the colour list");
     down(1); press(LB_A);          /* Amber */
     {
         char dump[8192];
@@ -832,10 +835,12 @@ int main(void) {
         expect(strstr(dump, "(current)") != NULL, "selected preset is marked current");
     }
     press(LB_B);
-    expect(ui_screen() == SCREEN_SETTINGS, "B from Colors returns to Settings");
+    expect(ui_screen() == SCREEN_UI, "B from the colour list returns to the UI page");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_SETTINGS, "B from the UI page returns to Settings");
     /* reload confirms the save */
     ui_init();
-    down(8); press(LB_A); down(5); press(LB_A);
+    down(8); press(LB_A); down(5); press(LB_A); press(LB_A);
     {
         char dump[8192];
         ui_draw();
@@ -846,7 +851,7 @@ int main(void) {
     }
     press(LB_UP); press(LB_A);     /* from the top row, Up wraps to the last row: VGA White */
     ui_init();
-    down(8); press(LB_A); down(5); press(LB_A);
+    down(8); press(LB_A); down(5); press(LB_A); press(LB_A);
     {
         char dump[8192];
         ui_draw();
@@ -854,6 +859,69 @@ int main(void) {
         expect(strstr(dump, "VGA White  (current)") != NULL, "a VGA colour saves and reloads");
     }
     remove("/tmp/redux.theme");
+
+    /* Settings > UI: sizes and colours (Dale 2026-11-17, plan A). */
+    remove("/tmp/redux.uistyle");
+    ui_init();
+    down(8); press(LB_A); down(5); press(LB_A);
+    expect(grid_body_capacity() == 26 && ui_list_window() == 20, "Default sizes: 26 body rows, 20-row lists");
+    press(LB_DOWN);                /* Menu Text */
+    press(LB_LEFT);
+    expect(uistyle_get(UIS_TEXT) == UIS_WHITE - 1, "Left steps the menu text colour (Yellow)");
+    for (int i = 0; i < 16; i++) press(LB_LEFT);
+    expect(uistyle_get(UIS_TEXT) != uistyle_get(UIS_WINCOLOR), "menu text never equals the window colour");
+    press(LB_DOWN);                /* Header/Footer Text */
+    for (int i = 0; i < 20; i++) { press(LB_RIGHT);
+        if (uistyle_get(UIS_HFTEXT) == UIS_BLACK) break; }
+    expect(uistyle_get(UIS_HFTEXT) != UIS_BLACK, "header/footer text skips black");
+    down(4);                       /* Window Size */
+    press(LB_RIGHT);
+    expect(uistyle_get(UIS_WINDOW) == 1, "Right: window Large");
+    {
+        int h, f, w;
+        ui_draw();
+        grid_effective_sizes(&h, &f, &w);
+        expect(w == 1, "the UI page itself fits at Large");
+        expect(grid_body_capacity() == 13, "window Large: 13 body rows");
+    }
+    press(LB_RIGHT); press(LB_RIGHT);
+    expect(uistyle_get(UIS_WINDOW) == 2, "window size stops at Largest");
+    press(LB_UP); press(LB_RIGHT);   /* Footer Large */
+    press(LB_UP); press(LB_RIGHT);   /* Header Large */
+    expect(grid_body_capacity() == 12, "header, footer and window large: 12 body rows");
+    press(LB_B);                     /* Settings: a short list, fits at Largest */
+    {
+        int h, f, w;
+        ui_draw();
+        grid_effective_sizes(&h, &f, &w);
+        expect(h == 1 && f == 1 && w == 2, "Settings list keeps Largest");
+    }
+    down(5); press(LB_A);            /* back into UI, then a tall screen: the colour list */
+    press(LB_A);
+    expect(ui_screen() == SCREEN_UI_COLORS, "colour list opens at large sizes");
+    {
+        int h, f, w;
+        ui_draw();
+        grid_effective_sizes(&h, &f, &w);
+        expect(w == 0 && f == 1 && h == 1, "a 23-line screen drops the window size, keeps header and footer (24 rows)");
+    }
+    ui_init();                       /* reload keeps the sizes */
+    expect(uistyle_get(UIS_HEADER) == 1 && uistyle_get(UIS_WINDOW) == 2, "sizes saved and reloaded");
+    down(8); press(LB_A); down(5); press(LB_A);
+    press(LB_UP); press(LB_A);       /* Reset Fonts (row wraps to the last) */
+    expect(uistyle_get(UIS_HEADER) == 0 && uistyle_get(UIS_FOOTER) == 0 && uistyle_get(UIS_WINDOW) == 0,
+           "Reset Fonts: all three sizes Default");
+    expect(uistyle_get(UIS_TEXT) != UIS_WHITE, "Reset Fonts keeps the colours");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "back to Default") != NULL, "Reset Fonts says so");
+    }
+    uistyle_reset();
+    expect(uistyle_get(UIS_TEXT) == UIS_WHITE && uistyle_get(UIS_WINCOLOR) == UIS_BLACK
+           && uistyle_get(UIS_HFTEXT) == UIS_WHITE, "Reset All: colours back to white on black");
+    remove("/tmp/redux.uistyle");
 
     /* Display: Settings → Display; Left/Right steps brightness 1-20 and saves; B returns. */
     remove("/tmp/redux.brightness");
