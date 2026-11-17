@@ -173,3 +173,4 @@
 - 2026-11-17 10:44 · claude · read: Dale GO (10:33) analog values; A A A (10:39) Update plan · did: #248 Input tab analog values merged. #249 Update plan answers merged. #250 Engineering > Update step 1 (read-only build history) opened, CI green: waiting for Dale to merge (update path).
 - 2026-11-17 10:51 · claude · read: Dale merged #250 (Update step 1) · did: #251 Engineering > Update step 2 (download HTTPS + checksum, hold-A install, reboot; BUILD.txt in dev release) opened, CI green: waiting for Dale to merge.
 - 2026-11-17 10:59 · claude · read: #252 merged by Dale · did: opened #253 run.sh fallback to last working build (Update step 4), CI green, Dale merges
+- 2026-11-17 11:06 · claude-readonly · read: MGR for DALE 11:00: repo optimization (FROM-REDUX-MANAGER-2026-11-17-b), Dale's one-task push permission · did: #254 README split, compatibility, FAQ, third-party notices, capture_demo.py (PR 1/4); for the Manager to merge
