@@ -9,6 +9,10 @@
 # 10 s of start. After 3 in a row, run.sh starts the stock menu (/mnt/vendor/bin/dmenu.bin) instead,
 # for the rest of this boot. The counter and the switch live in /tmp (RAM), so the next boot tries
 # Redux again. dmenu_ln is not changed. Exit 0 (a game or app chosen) always resets the counter.
+# Engineering > Update (Dale Q1 A, 2026-11-17): before the stock menu, run.sh first goes back ONCE per
+# boot to the last known working build: the newest line of builds/history marked "menu" whose
+# builds/<sha>/dmenu.bin is kept and differs from the failing dmenu.bin. It is copied over dmenu.bin
+# (.new + mv), logged, and recorded as "autoback". If that one fails 3 times too, the stock menu runs.
 #
 # REDUX_ROMS is not set here: Redux scans TF1 and TF2 by itself (#104). Set it in the
 # environment only to override (one folder, or several separated by ':').
@@ -31,6 +35,19 @@ if [ -f "$LOG" ]; then
     fi
 fi
 
+# Newest build that reached the menu, is kept, and is not the current dmenu.bin. Prints its sha.
+last_good() {
+    [ -f "$D/builds/history" ] || return 1
+    sed -n '1!G;h;$p' "$D/builds/history" | while read -r sha day hm menu how; do
+        case "$sha" in ''|*[!0-9a-f]*) continue ;; esac
+        [ "$menu" = menu ] || continue
+        [ -s "$D/builds/$sha/dmenu.bin" ] || continue
+        cmp -s "$D/builds/$sha/dmenu.bin" "$D/dmenu.bin" && continue
+        echo "$sha"
+        break
+    done
+}
+
 if [ -f "$GUARD.stock" ]; then
     echo "=== stock menu $(date '+%Y-%m-%d %H:%M:%S') (Redux failed to start $MAX_FAILS times this boot)" >> "$LOG"
     exec "$STOCK" "$@"
@@ -48,6 +65,18 @@ if [ "$rc" -ne 0 ] && [ $((t1 - t0)) -lt "$QUICK_SECS" ]; then
     case "$n" in ''|*[!0-9]*) n=0 ;; esac
     n=$((n + 1))
     echo "$n" > "$GUARD.fails"
+    if [ "$n" -ge "$MAX_FAILS" ] && [ ! -f "$GUARD.rolledback" ]; then
+        good=$(last_good)
+        if [ -n "$good" ] && cp "$D/builds/$good/dmenu.bin" "$D/dmenu.bin.new" 2>/dev/null \
+           && chmod 755 "$D/dmenu.bin.new" && sync && mv -f "$D/dmenu.bin.new" "$D/dmenu.bin"; then
+            : > "$GUARD.rolledback"
+            rm -f "$GUARD.fails"
+            echo "$good $(date '+%Y-%m-%d %H:%M') nomenu autoback" >> "$D/builds/history"
+            echo "=== $n quick failures in a row: back to the last known working build $good" >> "$LOG"
+            exit $rc
+        fi
+        rm -f "$D/dmenu.bin.new"
+    fi
     if [ "$n" -ge "$MAX_FAILS" ]; then
         : > "$GUARD.stock"
         echo "=== $n quick failures in a row: stock menu for the rest of this boot" >> "$LOG"
