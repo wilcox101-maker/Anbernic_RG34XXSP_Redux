@@ -69,7 +69,15 @@ add_custom_command(
 
 # Redux Terminal (Dale 2026-11-17 A): a pty + VT100/xterm subset drawn with Redux's fonts. Built for
 # the same machine as dmenu.bin and embedded in it; Redux writes it to /tmp at start (src/term.c).
-add_executable(redux_term term/redux_term.c term/vt.c term/osk.c src/font.c src/font_extra.c src/remap_device.c)
+# 16x16 CJK glyphs (Unifont via tools/cjkconv.py), embedded in redux-term only.
+set(REDUX_CJK_BLOB ${CMAKE_CURRENT_BINARY_DIR}/cjk_blob.c)
+add_custom_command(
+    OUTPUT ${REDUX_CJK_BLOB}
+    COMMAND ${CMAKE_COMMAND} -DIN=${CMAKE_CURRENT_SOURCE_DIR}/term/cjk.bin -DOUT=${REDUX_CJK_BLOB}
+            -DNAME=redux_cjk_bin -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/term/cjk.bin ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    COMMENT "Embedding the CJK glyphs")
+add_executable(redux_term term/redux_term.c term/vt.c term/osk.c term/cjk.c ${REDUX_CJK_BLOB} src/font.c src/font_extra.c src/remap_device.c)
 target_include_directories(redux_term PRIVATE src term)
 target_compile_options(redux_term PRIVATE -Wall -Wextra)
 set(REDUX_TERM_BLOB ${CMAKE_CURRENT_BINARY_DIR}/term_blob.c)
@@ -178,7 +186,7 @@ else()
 endif()
 
 # Terminal screen model (no SDL, no pty): ./test_vt, exit code 0 = pass.
-add_executable(test_vt tests/test_vt.c term/vt.c term/osk.c)
+add_executable(test_vt tests/test_vt.c term/vt.c term/osk.c term/cjk.c ${REDUX_CJK_BLOB})
 target_include_directories(test_vt PRIVATE term)
 
 # Boot Screen manager against a temp folder (no SDL, no device): ./test_bootscreen.

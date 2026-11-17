@@ -37,6 +37,7 @@
 #include "vt.h"
 #include "font.h"
 #include "osk.h"
+#include "cjk.h"
 #include "remap.h"
 #ifdef REDUX_PLATFORM_STOCK
 #include <linux/input.h>
@@ -158,6 +159,38 @@ static int build_atlas(SDL_Renderer *ren) {
     return 0;
 }
 
+/* 16x16 CJK glyphs: uploaded into a 1024 x 1024 atlas (4096 slots, more than a screen can show)
+   the first time each one is drawn; when the atlas is full it starts over. */
+#define CJK_ATLAS_PX 1024
+#define CJK_SLOTS ((CJK_ATLAS_PX / 16) * (CJK_ATLAS_PX / 16))
+static SDL_Texture *cjk_atlas;
+static uint32_t cjk_slot_cp[CJK_SLOTS];   /* code point in each slot, 0 = free */
+static int cjk_used;
+
+static int cjk_slot(SDL_Renderer *ren, uint32_t cp, const uint8_t *glyph) {
+    if (!cjk_atlas) {
+        cjk_atlas = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, CJK_ATLAS_PX, CJK_ATLAS_PX);
+        if (!cjk_atlas) return -1;
+        SDL_SetTextureBlendMode(cjk_atlas, SDL_BLENDMODE_BLEND);
+    }
+    unsigned h = (cp * 2654435761u) % CJK_SLOTS;
+    for (int probe = 0; probe < CJK_SLOTS; probe++, h = (h + 1) % CJK_SLOTS) {
+        if (cjk_slot_cp[h] == cp) return (int)h;
+        if (cjk_slot_cp[h] == 0) break;
+    }
+    if (cjk_used >= CJK_SLOTS - 1) { memset(cjk_slot_cp, 0, sizeof cjk_slot_cp); cjk_used = 0; h = (cp * 2654435761u) % CJK_SLOTS; }
+    static Uint32 px[16 * 16];
+    for (int y = 0; y < 16; y++) {
+        unsigned bits = ((unsigned)glyph[y * 2] << 8) | glyph[y * 2 + 1];
+        for (int x = 0; x < 16; x++) px[y * 16 + x] = (bits & (0x8000u >> x)) ? 0xFFFFFFFFu : 0u;
+    }
+    SDL_Rect r = { (int)(h % (CJK_ATLAS_PX / 16)) * 16, (int)(h / (CJK_ATLAS_PX / 16)) * 16, 16, 16 };
+    if (SDL_UpdateTexture(cjk_atlas, &r, px, 16 * 4) != 0) return -1;
+    cjk_slot_cp[h] = cp;
+    cjk_used++;
+    return (int)h;
+}
+
 static SDL_Color dim(SDL_Color c) { c.r /= 2; c.g /= 2; c.b /= 2; return c; }
 
 /* The key picker as cells over the bottom rows: light grey box, black text, the chosen key yellow,
@@ -197,6 +230,8 @@ static void draw(SDL_Renderer *ren, const char *footer) {
     for (int r = 0; r < VT_ROWS; r++) {
         for (int c = 0; c < VT_COLS; c++) {
             vt_cell_t cell = r >= ov_top ? overlay[r - ov_top][c] : vt.cells[r][c];
+            if (cell.wide == 2 && r < ov_top && c > 0 && vt.cells[r][c - 1].wide == 1 && cjk_glyph(vt.cells[r][c - 1].cp))
+                continue;   /* drawn with its first half, background included */
             int fgi = cell.fg, bgi = cell.bg;
             if ((cell.attr & VT_BOLD) && fgi < 8) fgi += 8;   /* bold as bright, the console way */
             SDL_Color fg = palette[fgi & 15], bg = palette[bgi & 15];
@@ -209,9 +244,24 @@ static void draw(SDL_Renderer *ren, const char *footer) {
                 SDL_SetRenderDrawColor(ren, bg.r, bg.g, bg.b, 255);
                 SDL_RenderFillRect(ren, &dst);
             }
-            /* A wide (CJK) glyph has no 8x16 bitmap yet: both of its cells show '?' so the columns
-               still line up with what the program laid out (16x16 glyphs come next). */
+            /* A wide (CJK) glyph: 16x16 from Unifont over both cells; "??" when the table lacks it,
+               so the columns still line up with what the program laid out. */
             unsigned char ch = cell.wide ? '?' : cell.ch;
+            if (cell.wide == 1 && c + 1 < VT_COLS && vt.cells[r][c + 1].wide == 2 && r < ov_top) {
+                const uint8_t *g = cjk_glyph(cell.cp);
+                int slot = g ? cjk_slot(ren, cell.cp, g) : -1;
+                if (slot >= 0) {
+                    SDL_SetTextureColorMod(cjk_atlas, fg.r, fg.g, fg.b);
+                    SDL_Rect src = { (slot % (CJK_ATLAS_PX / 16)) * 16, (slot / (CJK_ATLAS_PX / 16)) * 16, 16, 16 };
+                    SDL_Rect wd = { dst.x, dst.y, 16, 16 };
+                    /* The second cell's background first, so the glyph's right half sits on it. */
+                    vt_cell_t c2 = vt.cells[r][c + 1];
+                    SDL_Color bg2 = palette[((c2.attr & VT_INVERSE) ? c2.fg : c2.bg) & 15];
+                    if (bg2.r || bg2.g || bg2.b) { SDL_SetRenderDrawColor(ren, bg2.r, bg2.g, bg2.b, 255); SDL_Rect d2 = { dst.x + FONT_W, dst.y, FONT_W, FONT_H }; SDL_RenderFillRect(ren, &d2); }
+                    SDL_RenderCopy(ren, cjk_atlas, &src, &wd);
+                    ch = ' ';
+                }
+            }
             if (ch != ' ') {
                 SDL_SetTextureColorMod(atlas, fg.r, fg.g, fg.b);
                 SDL_Rect src = { ch * FONT_W, 0, FONT_W, FONT_H };
@@ -591,6 +641,7 @@ int main(int argc, char **argv) {
             fclose(f);
         }
     }
+    if (cjk_atlas) SDL_DestroyTexture(cjk_atlas);
     SDL_DestroyTexture(atlas);
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
