@@ -50,6 +50,26 @@ int main(void) {
     next_rc = 100; expect(pkgs_install(0) == PKGS_E_FAIL, "apt error");
     expect(pkgs_install(99) == PKGS_E_BAD, "out of range: not in the catalog");
 
+    /* The terminal script (Dale 2026-11-17 A: apt runs in Redux Terminal): same safety steps, output
+       to the screen and the log, exit code kept through tee. */
+    {
+        const char *path = "/tmp/redux-pkg-test.sh";
+        expect(pkgs_write_script(0, 0, path) == 0, "install script written");
+        FILE *f = fopen(path, "r");
+        static char text[4096]; size_t n = f ? fread(text, 1, sizeof text - 1, f) : 0; if (f) fclose(f);
+        text[n] = '\0';
+        expect(strstr(text, "#!/bin/bash") == text && strstr(text, "apt-get update -qq || exit 2")
+               && strstr(text, "apt-get -s install") && strstr(text, "REFUSED") && strstr(text, "exit 3")
+               && strstr(text, "apt-get install -y --no-upgrade --no-install-recommends") && strstr(text, "| tee -a '")
+               && strstr(text, "rc=${PIPESTATUS[0]}") && strstr(text, "exit $rc"), "install script has the safety steps, tee and the exit code");
+        expect(pkgs_write_script(mc, 1, path) == 0, "remove script written");
+        f = fopen(path, "r"); n = f ? fread(text, 1, sizeof text - 1, f) : 0; if (f) fclose(f); text[n] = '\0';
+        expect(strstr(text, "apt-get -s remove mc") && strstr(text, "grep -v \"^Remv mc[ :]\"") && strstr(text, "apt-get remove -y mc"),
+               "remove script simulates first and removes only mc");
+        expect(pkgs_write_script(99, 0, path) != 0, "out of range: no script");
+        remove(path);
+    }
+
     /* A custom catalog: bad names are skipped. */
     pkgs_set_catalog("[ok-pkg]\ndesc = one\n[stock]\nbinaries = x\n[Bad;Name]\ndesc = no\n[two]\n");
     expect(pkgs_count() == 2 && !strcmp(pkgs_name(1), "two") && !strcmp(pkgs_desc(0), "one"), "custom catalog parsed, bad names skipped");

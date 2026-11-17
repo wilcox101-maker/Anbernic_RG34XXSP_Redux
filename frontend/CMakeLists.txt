@@ -278,7 +278,7 @@ add_executable(test_sysinfo tests/test_sysinfo.c src/sysinfo.c)
 target_include_directories(test_sysinfo PRIVATE src)
 
 # Navigation test (back stack, Engineering tabs). Links the UI with the desktop platform; no window.
-add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/uistyle.c src/netsvc.c src/btchip.c src/pkgs.c ${REDUX_EXTRAS_BLOB} src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/powerkeys.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c)
+add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/uistyle.c src/netsvc.c src/btchip.c src/pkgs.c ${REDUX_EXTRAS_BLOB} src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/powerkeys.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c src/term.c ${REDUX_TERM_BLOB})
 target_include_directories(test_ui_nav PRIVATE src)
 if(TARGET SDL2::SDL2)
     target_link_libraries(test_ui_nav PRIVATE SDL2::SDL2)

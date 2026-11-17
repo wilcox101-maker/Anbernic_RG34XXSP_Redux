@@ -31,6 +31,12 @@ typedef int (*pkgs_run_fn)(const char *cmd);
 void pkgs_set_run(pkgs_run_fn fn);
 void pkgs_set_log(const char *path);
 
+/* Install or remove in Redux Terminal (Dale 2026-11-17 A): write a bash script with the same safety
+   steps whose output goes to the screen and to packages.log, for `redux-term --hold -e /bin/bash
+   <path>`. Exit 0 done, 2 no package list, 3 refused, else apt failed. */
+#define PKGS_SCRIPT "/tmp/redux-pkg.sh"
+int pkgs_write_script(int i, int remove_it, const char *path);
+
 /* The exact shell text used (tests check the safety steps). */
 int pkgs_install_cmd(const char *pkg, char *out, size_t n);
 int pkgs_remove_cmd(const char *pkg, char *out, size_t n);

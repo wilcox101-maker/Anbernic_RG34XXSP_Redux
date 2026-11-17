@@ -130,6 +130,41 @@ int pkgs_remove_cmd(const char *pkg, char *out, size_t n) {
     return 0;
 }
 
+int pkgs_write_script(int i, int remove_it, const char *path) {
+    load();
+    if (i < 0 || i >= n_pkgs) return -1;
+    const char *pkg = names[i];
+    FILE *f = fopen(path, "w");
+    if (!f) return -1;
+    fprintf(f, "#!/bin/bash\n# Written by Redux for Settings > System > Packages; runs in Redux Terminal.\n"
+               "export LC_ALL=C DEBIAN_FRONTEND=noninteractive\n"
+               "{\n");
+    if (remove_it)
+        fprintf(f, "  echo \"=== remove %s $(date)\"\n"
+                   "  other=$(apt-get -s remove %s | grep \"^Remv \" | grep -v \"^Remv %s[ :]\")\n"
+                   "  if [ -n \"$other\" ]; then echo \"REFUSED, this would also remove:\"; echo \"$other\"; exit 3; fi\n"
+                   "  apt-get remove -y %s\n", pkg, pkg, pkg, pkg);
+    else
+        fprintf(f, "  echo \"=== install %s $(date)\"\n"
+                   "  echo \"Reading the package lists...\"\n"
+                   "  apt-get update -qq || exit 2\n"
+                   "  up=$(apt-get -s install " APT_FLAGS " %s | grep \"^Inst [^ ]* \\[\")\n"
+                   "  if [ -n \"$up\" ]; then echo \"REFUSED, this would upgrade installed packages:\"; echo \"$up\"; exit 3; fi\n"
+                   "  apt-get install -y " APT_FLAGS " %s\n", pkg, pkg, pkg);
+    fprintf(f, "} 2>&1 | tee -a '%s'\n"
+               "rc=${PIPESTATUS[0]}\n"
+               "echo\n"
+               "case $rc in\n"
+               "  0) echo \"%s %s: done.\";;\n"
+               "  2) echo \"No package list: is Wi-Fi connected to the internet?\";;\n"
+               "  3) echo \"Refused: it would change other packages. Nothing done.\";;\n"
+               "  *) echo \"apt failed (exit $rc). Log: %s\";;\n"
+               "esac\n"
+               "exit $rc\n", log_path, remove_it ? "Removed" : "Installed", pkg, log_path);
+    if (fclose(f) != 0) return -1;
+    return 0;
+}
+
 static int act(int i, int remove_it) {
     load();
     if (i < 0 || i >= n_pkgs) return PKGS_E_BAD;

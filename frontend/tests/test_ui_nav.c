@@ -17,6 +17,7 @@
 #include "brightness.h"
 #include "sysinfo.h"
 #include "apps.h"
+#include "pkgs.h"
 #include "bootscreen.h"
 #include "screentimeout.h"
 #include "font.h"
@@ -1423,7 +1424,30 @@ int main(void) {
     expect(ui_screen() == SCREEN_PKG_CONFIRM, "A on a missing package asks for the 3 s hold");
     press(LB_B);
     expect(ui_screen() == SCREEN_PACKAGES, "B cancels back to the list");
-    press(LB_B); press(LB_B); press(LB_B);
+    /* Hold A 3 s: apt runs in Redux Terminal (Dale 2026-11-17 A); Redux resumes on this row. */
+    launcher_set_next_path("/tmp/redux-next-apps");
+    remove("/tmp/redux-next-apps");
+    down(2); press(LB_A);
+    expect(ui_screen() == SCREEN_PKG_CONFIRM, "A on the third package asks for the hold");
+    ui_button(LB_A, 1, 10000); ui_tick(13100);
+    expect(ui_should_exit() == 1, "the hold hands apt to the terminal and exits the menu");
+    {
+        char line[256] = "";
+        FILE *f = fopen("/tmp/redux-next-apps", "r");
+        if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
+        expect(strcmp(line, "cd '/tmp' && HOME=/root ./'redux-term' --hold -e /bin/bash /tmp/redux-pkg.sh\n") == 0,
+               "the launch line runs the package script in Redux Terminal with --hold");
+        f = fopen(PKGS_SCRIPT, "r");
+        expect(f != NULL, "the package script exists");
+        if (f) fclose(f);
+        remove(PKGS_SCRIPT);
+    }
+    remove("/tmp/redux-next-apps");
+    ui_init();
+    expect(ui_screen() == SCREEN_PACKAGES && ui_list_selected() == 2, "after apt, Redux restarts on Packages at the same row");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "B from the resumed Packages list goes to System");
+    press(LB_B); press(LB_B);
     down(8); press(LB_A); down(2); press(LB_A); down(5); press(LB_A);   /* Stock Menu confirm (Packages is above it) */
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "Stock Menu confirm is open");
     press(LB_MENU);
