@@ -17,6 +17,13 @@ int  pkgs_count(void);
 const char *pkgs_name(int i);
 const char *pkgs_desc(int i);
 
+/* Apps row for a catalog package (Dale 2026-11-17 A): `app = <row name>` and `launch = <redux-term
+   arguments>` in extras.ini; empty when the package has none. `binary` is the program the
+   functional check runs; Apps uses it to see whether the package is installed. */
+const char *pkgs_app(int i);
+const char *pkgs_launch(int i);
+const char *pkgs_binary(int i);
+
 /* Installed state from dpkg-query, refreshed by pkgs_refresh (one command per package). */
 void pkgs_refresh(void);
 int  pkgs_installed(int i);

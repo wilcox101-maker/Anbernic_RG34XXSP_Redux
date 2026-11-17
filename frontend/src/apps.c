@@ -1,5 +1,6 @@
 #include "apps.h"
 #include "launcher.h"
+#include "pkgs.h"
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
@@ -63,14 +64,42 @@ static int listed(int i) {
     }
 }
 
-static int order[APP_COUNT], n_order = -1;
+/* Rows: the hand-written apps above plus every catalog package (tools/extras.ini) that has an
+   `app =` name and a `launch =` line and whose binary is installed (Dale 2026-11-17 A). Those get
+   ids APP_COUNT + catalog index. The list is rebuilt when Apps opens (apps_rescan). */
+#define MAX_ROWS (APP_COUNT + PKGS_MAX)
+static int order[MAX_ROWS], n_order = -1;
+
+static int catalog_installed(int k) {
+    static const char *dirs[] = { "/usr/bin", "/usr/local/bin", "/bin", "/usr/games" };
+    const char *bin = pkgs_binary(k);
+    if (!bin[0]) return 0;
+    char path[512];
+    struct stat st;
+    for (size_t d = 0; d < sizeof dirs / sizeof dirs[0]; d++) {
+        snprintf(path, sizeof path, "%s%s/%s", root, dirs[d], bin);
+        if (stat(path, &st) == 0 && S_ISREG(st.st_mode)) return 1;
+    }
+    return 0;
+}
+
+static int catalog_row(int id) { return id >= APP_COUNT && id < APP_COUNT + pkgs_count() ? id - APP_COUNT : -1; }
+
+static const char *name_of(int id) {
+    int k = catalog_row(id);
+    return k >= 0 ? pkgs_app(k) : (id >= 0 && id < APP_COUNT) ? apps[id].name : "";
+}
+
+void apps_rescan(void) { n_order = -1; }
 
 static void build_order(void) {
     if (n_order >= 0) return;
     n_order = 0;
     for (int i = 0; i < APP_COUNT; i++) if (listed(i)) order[n_order++] = i;
+    for (int k = 0; k < pkgs_count() && n_order < MAX_ROWS; k++)
+        if (pkgs_app(k)[0] && pkgs_launch(k)[0] && catalog_installed(k)) order[n_order++] = APP_COUNT + k;
     for (int a = 1; a < n_order; a++)          /* insertion sort, case-insensitive by name */
-        for (int b = a; b > 0 && strcasecmp(apps[order[b - 1]].name, apps[order[b]].name) > 0; b--) {
+        for (int b = a; b > 0 && strcasecmp(name_of(order[b - 1]), name_of(order[b])) > 0; b--) {
             int t = order[b]; order[b] = order[b - 1]; order[b - 1] = t;
         }
 }
@@ -91,29 +120,31 @@ int apps_row_of(int id) {
     return -1;
 }
 
-const char *apps_name(int i) {
-    return (i >= 0 && i < APP_COUNT) ? apps[i].name : "";
-}
+const char *apps_name(int i) { return name_of(i); }
 
 const char *apps_status(int i) {
+    if (catalog_row(i) >= 0) return "from Packages";
     return (i >= 0 && i < APP_COUNT) ? apps[i].status : "";
 }
 
 int apps_launchable(int i) {
+    if (catalog_row(i) >= 0) return 1;
     return i >= 0 && i < APP_COUNT && (apps[i].dge != NULL || apps[i].bin != NULL);
 }
 
-void apps_set_root(const char *r) { root = r ? r : ""; }
+void apps_set_root(const char *r) { root = r ? r : ""; n_order = -1; }
 
 int apps_launch(int i) {
     if (!apps_launchable(i)) return -1;
     char path[512];
     struct stat st;
-    const char *bin = apps[i].dge ? apps[i].dge : apps[i].bin;
+    int k = catalog_row(i);
+    const char *bin = k >= 0 ? TERM_BIN : apps[i].dge ? apps[i].dge : apps[i].bin;
     snprintf(path, sizeof path, "%s%s", root, bin);
     if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return -2;
     /* The video player hands playback back through /tmp/.next (launcher_start_video). */
     if (i == APP_VIDEO) return launcher_start_video(apps[i].dge) == 0 ? 0 : -1;
+    if (k >= 0) return launcher_start_app(TERM_BIN, "HOME=/root", pkgs_launch(k)) == 0 ? 0 : -1;
     int rc = apps[i].dge ? launcher_start(LAUNCH_DGE, apps[i].dge, NULL)
                          : launcher_start_app(apps[i].bin, apps[i].env, apps[i].args);
     return rc == 0 ? 0 : -1;
