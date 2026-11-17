@@ -208,7 +208,7 @@ A:Enter  B:Back  M:Menu
 ## 6. Mock-up 4 — Engineering Mode, CPU tab
 
 Engineering Mode is one screen with an AMI/Phoenix-style tab bar (decision 2026-11-10): CPU, GPU,
-Battery, Thermal, Display, Input, Storage, Logs, System (F5). **Only L1/R1 switch tabs** (they wrap);
+Battery, Thermal, Display, Input, Storage, Logs, System (F5), Update (build history; download and roll back to come). **Only L1/R1 switch tabs** (they wrap);
 A never changes tab (Dale, 2026-11-17). The active tab is inverted in the accent colour (shown here as
 `▓CPU▓`). B exits to the main menu. On the CPU tab, Up/Down pick a row and A edits it (F5 step 3); on
 Logs, Left/Right pick redux.log, eng-writes.log or dmesg. Button tests are on the Input tab; Settings
@@ -217,7 +217,7 @@ has no Input row.
 ```
 [ENGINEERING]                                                    BAT 87% CHG CPU 54C 12:34
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ ▓CPU▓ GPU  Battery  Thermal  Display  Input  Storage  Logs  System                     │
+│ ▓CPU▓ GPU  Battery  Thermal  Display  Input  Storage  Logs  System  Update             │
 │────────────────────────────────────────────────────────────────────────────────────────│
 │▓▓Governor:     schedutil                                                               │
 │  Min freq:     480 MHz                                                                 │
@@ -252,7 +252,7 @@ Up/Down:Row  A:Edit  L1/R1:Tab  B:Exit  X:Save profile  Y:Remove
 ```
 [ENGINEERING]                                                    BAT 87% CHG CPU 54C 12:34
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  CPU  GPU ▓Battery▓ Thermal  Display  Input  Storage  Logs  System                     │
+│  CPU  GPU ▓Battery▓ Thermal  Display  Input  Storage  Logs  System  Update             │
 │────────────────────────────────────────────────────────────────────────────────────────│
 │  Capacity:     87 %                                                                    │
 │  Voltage:      3.92 V                                                                  │

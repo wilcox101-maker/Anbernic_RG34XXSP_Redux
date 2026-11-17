@@ -162,7 +162,7 @@ int main(void) {
     press(LB_LEFT);
     expect(ui_eng_tab() == ENG_GPU, "Left does not change tab (L1/R1 only)");
     press(LB_L1); press(LB_L1);
-    expect(ui_eng_tab() == ENG_SYSTEM, "L1 wraps from CPU to System");
+    expect(ui_eng_tab() == ENG_UPDATE, "L1 wraps from CPU to Update (the last tab)");
     press(LB_X);
     expect(platform_eng_profile_state() == 1, "X on Engineering saves the profile");
     press(LB_Y);
@@ -171,7 +171,7 @@ int main(void) {
 
     /* CPU tab controls (F5 step 3), against the desktop fakes. */
     press(LB_R1);
-    expect(ui_eng_tab() == ENG_CPU, "R1 wraps from System to CPU");
+    expect(ui_eng_tab() == ENG_CPU, "R1 wraps from Update to CPU");
     eng_cpu_t c;
     press(LB_A); press(LB_RIGHT); press(LB_A);          /* governor: schedutil -> next (wraps) */
     platform_cpu_info(&c);
@@ -254,7 +254,7 @@ int main(void) {
         grid_dump(dump, sizeof dump);
         expect(strstr(dump, "clean (exit 0)") != NULL, "Storage A shows the fsck -n results");
     }
-    for (int i = 0; i < 3; i++) press(LB_R1);           /* Logs, System, CPU */
+    for (int i = 0; i < 4; i++) press(LB_R1);           /* Logs, System, Update, CPU */
     expect(ui_eng_tab() == ENG_CPU, "tabs wrap back to CPU");
     for (int i = 0; i < 4; i++) press(LB_R1);           /* Display */
     expect(ui_eng_tab() == ENG_DISPLAY, "R1 x4 from CPU reaches Display");
@@ -266,7 +266,16 @@ int main(void) {
         expect(strstr(dump, "LED and rumble test done") != NULL && ui_last_busy()
                && strcmp(ui_last_busy(), "LED and rumble test") == 0, "Display A runs the LED/rumble test");
     }
-    for (int i = 0; i < 5; i++) press(LB_R1);           /* back to CPU */
+    for (int i = 0; i < 5; i++) press(LB_R1);           /* Input .. Update */
+    expect(ui_eng_tab() == ENG_UPDATE, "R1 x5 from Display reaches Update");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Last known working:  070427e") != NULL && strstr(dump, "2917a5c") != NULL
+               && strstr(dump, "Current build:") != NULL, "Update shows current, last known working and history");
+    }
+    press(LB_R1);                                       /* back to CPU */
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Engineering exits to Main, not the confirm screen");
 

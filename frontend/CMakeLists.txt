@@ -9,7 +9,7 @@ find_package(SDL2 REQUIRED)
 # Platform layer: "desktop" (fake values, default) or "stock" (real sysfs on the RG34XXSP).
 set(REDUX_PLATFORM desktop CACHE STRING "desktop or stock")
 if(REDUX_PLATFORM STREQUAL "stock")
-    set(REDUX_PLATFORM_SRC src/platform_stock.c src/engread.c src/engprofile.c src/remap_device.c src/evdev_reader.c)
+    set(REDUX_PLATFORM_SRC src/platform_stock.c src/engread.c src/engprofile.c src/buildhist.c src/remap_device.c src/evdev_reader.c)
 else()
     set(REDUX_PLATFORM_SRC src/platform.c)
 endif()
@@ -184,6 +184,10 @@ target_include_directories(test_lidwatch PRIVATE src)
 
 add_executable(test_brightness tests/test_brightness.c src/brightness.c)
 target_include_directories(test_brightness PRIVATE src)
+
+# Build history for Engineering > Update (no SDL, no device): ./test_buildhist.
+add_executable(test_buildhist tests/test_buildhist.c src/buildhist.c)
+target_include_directories(test_buildhist PRIVATE src)
 
 # Heat guard decision logic (no SDL, no device): ./test_heatguard.
 add_executable(test_heatguard tests/test_heatguard.c src/heatguard.c)
