@@ -1030,6 +1030,7 @@ void ui_tick(uint32_t now_ms) {
 
 uint32_t ui_wait_ms(void) {
     if (vol_until) return 100;
+    if (screen == SCREEN_ENG && eng_tab == ENG_INPUT) return 100;   /* live stick values */
     if (a_down_at && (screen == SCREEN_ENG_CONFIRM || screen == SCREEN_STOCK_CONFIRM
         || screen == SCREEN_RESTART_CONFIRM || screen == SCREEN_POWEROFF_CONFIRM
         || screen == SCREEN_BOOT_CONFIRM
@@ -1237,7 +1238,12 @@ static void draw_eng_tab_body(void) {
                 grid_puts(1 + col, ROW_BODY0 + line, cell, 0);
                 if (in_held[b]) grid_invert(ROW_BODY0 + line, 1 + col, 1 + col + 9);
             }
-        body(14, "  Last events (newest first). The sticks show as Up/Down/Left/Right:");
+        int st[4];
+        platform_sticks(st);
+        snprintf(t, sizeof t, "  Left stick   X %+5d  Y %+5d      Right stick   X %+5d  Y %+5d   (-4096..+4096)",
+                 st[0], st[1], st[2], st[3]);
+        body(13, t);
+        body(14, "  Last events (newest first). The sticks also show as Up/Down/Left/Right:");
         for (int k = 0; k < in_log_n; k++) {
             snprintf(t, sizeof t, "    %.31s", in_log[k]);
             body(15 + k, t);

@@ -1,5 +1,6 @@
 /* Stock platform: reads real sysfs on the RG34XXSP. UI never touches /sys. */
 #include "platform.h"
+#include "evdev_reader.h"
 #include "engprofile.h"
 #include "govrestore.h"
 #include <stdio.h>
@@ -94,6 +95,7 @@ int platform_fsck(const char *dev) {
     return WEXITSTATUS(st);
 }
 int platform_led_rumble_test(void) { return eng_led_rumble_test(); }
+void platform_sticks(int out[4]) { for (int i = 0; i < 4; i++) out[i] = evdev_axis(i); }
 int platform_hot(void) {
     FILE *f = fopen("/tmp/redux-hot", "r");   /* HG_FLAG */
     if (!f) return 0;

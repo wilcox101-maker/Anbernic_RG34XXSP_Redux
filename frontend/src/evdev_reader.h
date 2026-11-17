@@ -16,6 +16,10 @@ int evdev_wait(int timeout_ms);
    Sticks use edge detection with hysteresis. */
 int evdev_poll(void (*cb)(logical_button_t btn, int pressed));
 
+/* Last raw value of a stick axis (0 left X, 1 left Y, 2 right X, 3 right Y; about -4096..+4096).
+   For the Engineering Input tab only; menus use the edge-detected directions. */
+int evdev_axis(int i);
+
 /* Screen timeout reached: run stock `pwr_new.sh auto` (suspend; shutdown with power.lock=1;
    nothing on HDMI), then drop the queued wake events like a power-key press. */
 void evdev_auto_sleep(void);
