@@ -90,6 +90,21 @@ int buildhist_menu_reached(const char *sha, time_t now) {
     return write_all(all, n);
 }
 
+int buildhist_installed(const char *sha, time_t now, const char *how) {
+    if (!sha || !sha_ok(sha)) return -1;
+    buildhist_entry_t all[BUILDHIST_MAX + 1];
+    int n = read_all(all, BUILDHIST_MAX);
+    buildhist_entry_t x;
+    memset(&x, 0, sizeof x);
+    snprintf(x.sha, sizeof x.sha, "%s", sha);
+    struct tm tmv;
+    if (localtime_r(&now, &tmv)) strftime(x.when, sizeof x.when, "%Y-%m-%d %H:%M", &tmv);
+    else snprintf(x.when, sizeof x.when, "0000-00-00 00:00");
+    snprintf(x.how, sizeof x.how, "%.11s", how && how[0] ? how : "update");
+    all[n++] = x;
+    return write_all(all, n);
+}
+
 int buildhist_last_good(buildhist_entry_t *out) {
     buildhist_entry_t e[BUILDHIST_MAX];
     int n = buildhist_load(e, BUILDHIST_MAX);

@@ -56,7 +56,8 @@ jobs:
         if: steps.latest.outputs.skip != '1'
         run: |
           short=${SHA:0:7}
-          sha256sum dmenu.bin bootlogo.bmp install.py redux_install.sh run.sh > SHA256SUMS.txt
+          echo "$short" > BUILD.txt   # read by Engineering > Update to name the downloaded build
+          sha256sum dmenu.bin bootlogo.bmp install.py redux_install.sh run.sh BUILD.txt > SHA256SUMS.txt
           cat > notes.md <<NOTES
           Rolling build of **main** at \`$short\`. The Redux title bar shows \`v0.1-dev - $short\`.
 
@@ -72,4 +73,4 @@ jobs:
             gh release create dev --repo "$REPO" --target "$SHA" --prerelease \
               --title "Dev build $short" --notes-file notes.md
           fi
-          gh release upload dev dmenu.bin bootlogo.bmp install.py redux_install.sh run.sh SHA256SUMS.txt --repo "$REPO" --clobber
+          gh release upload dev dmenu.bin bootlogo.bmp install.py redux_install.sh run.sh BUILD.txt SHA256SUMS.txt --repo "$REPO" --clobber

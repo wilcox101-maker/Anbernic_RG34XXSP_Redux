@@ -29,6 +29,9 @@ int buildhist_load(buildhist_entry_t *e, int max);
    0 ok. */
 int buildhist_menu_reached(const char *sha, time_t now);
 
+/* Record an install (update or roll-back) before the reboot: "<sha> <now> nomenu <how>". 0 ok. */
+int buildhist_installed(const char *sha, time_t now, const char *how);
+
 /* The newest entry that reached the menu: its sha into out (empty if none). 0 found, -1 none. */
 int buildhist_last_good(buildhist_entry_t *out);
 

@@ -70,6 +70,7 @@ static char eng_msg[GRID_COLS];   /* result of the last X/Y on Engineering */
 /* CPU tab controls (F5 step 3): rows Governor, Min, Max, cpu1, cpu2, cpu3. */
 enum { ENG_ROW_GOV = 0, ENG_ROW_MIN, ENG_ROW_MAX, ENG_ROW_CPU1, ENG_ROW_CPU2, ENG_ROW_CPU3, ENG_ROW_COUNT };
 static int eng_row, eng_editing, eng_pick;   /* eng_pick: index into the governor or OPP list */
+static char upd_sha[16];                     /* Update: the downloaded build waiting to be installed */
 static int eng_log_src;                      /* Logs tab: 0 redux.log, 1 eng-writes.log, 2 dmesg */
 /* Input tab (F5 step 5b): which logical buttons are held, and the last events. */
 #define IN_LOG 8
@@ -745,7 +746,8 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
        button, leaves the screen without running it. */
     if (screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
         || screen == SCREEN_POWEROFF_CONFIRM
-        || screen == SCREEN_BOOT_CONFIRM || screen == SCREEN_RESET_CONFIRM) {
+        || screen == SCREEN_BOOT_CONFIRM || screen == SCREEN_RESET_CONFIRM
+        || screen == SCREEN_UPDATE_CONFIRM) {
         if (btn == LB_A) {
             if (pressed) {
                 if (!a_down_at && !stock_started)
@@ -795,6 +797,19 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         snprintf(eng_msg, sizeof eng_msg, "%s", platform_led_rumble_test() == 0
                  ? "LED and rumble test done. Logged." : "LED/rumble test: a write failed. See eng-writes.log.");
         dirty = 1;
+        return;
+    }
+    if (screen == SCREEN_ENG && eng_tab == ENG_UPDATE && btn == LB_A) {
+        ui_busy("Checking for an update", "Newest dev build from the repo over HTTPS,\nthen a checksum check. Needs Wi-Fi.");
+        int rc = platform_update_download(REDUX_BUILD, upd_sha, sizeof upd_sha);
+        static const char *why[] = { "Downloaded and checked.", "Already running the newest dev build.",
+                                     "Download failed. Is Wi-Fi connected?",
+                                     "Checksum mismatch: nothing kept, nothing installed.",
+                                     "The release data looks wrong: nothing kept." };
+        int i = rc == 0 ? 0 : rc == 1 ? 1 : rc == -1 ? 2 : rc == -2 ? 3 : 4;
+        snprintf(eng_msg, sizeof eng_msg, "%s", why[i]);
+        if (rc == 0) { stock_started = 0; stock_msg[0] = '\0'; go(SCREEN_UPDATE_CONFIRM); }
+        else dirty = 1;
         return;
     }
     if (screen == SCREEN_ENG && eng_tab == ENG_STORAGE && btn == LB_A) {
@@ -984,7 +999,7 @@ void ui_tick(uint32_t now_ms) {
     }
     if ((screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
          || screen == SCREEN_POWEROFF_CONFIRM
-         || screen == SCREEN_BOOT_CONFIRM || screen == SCREEN_RESET_CONFIRM)
+         || screen == SCREEN_BOOT_CONFIRM || screen == SCREEN_RESET_CONFIRM || screen == SCREEN_UPDATE_CONFIRM)
         && a_down_at && !stock_started) {
         hold_ms = now_ms - a_down_at;
         if (hold_ms >= HOLD_DESTRUCT_MS) {
@@ -997,6 +1012,16 @@ void ui_tick(uint32_t now_ms) {
                 int rc = to_stock ? bootscreen_restore() : bootscreen_install();
                 stock_started = 1;
                 snprintf(stock_msg, sizeof stock_msg, "%s", bootscreen_message(rc));
+            } else if (screen == SCREEN_UPDATE_CONFIRM) {
+                ui_busy("Installing", "Copying the new build, then reboot.");
+                int rc = platform_update_install(upd_sha, REDUX_BUILD, "update");
+                stock_started = 1;
+                if (rc == 0) {
+                    snprintf(stock_msg, sizeof stock_msg, "Installed %s: rebooting", upd_sha);
+                    if (power_reboot() != 0) snprintf(stock_msg, sizeof stock_msg, "Installed %s. Restart to use it.", upd_sha);
+                } else {
+                    snprintf(stock_msg, sizeof stock_msg, "Install failed: the running build stays.");
+                }
             } else if (screen == SCREEN_RESET_CONFIRM) {
                 reset_all();
                 stock_started = 1;
@@ -1034,7 +1059,7 @@ uint32_t ui_wait_ms(void) {
     if (a_down_at && (screen == SCREEN_ENG_CONFIRM || screen == SCREEN_STOCK_CONFIRM
         || screen == SCREEN_RESTART_CONFIRM || screen == SCREEN_POWEROFF_CONFIRM
         || screen == SCREEN_BOOT_CONFIRM
-        || screen == SCREEN_RESET_CONFIRM))
+        || screen == SCREEN_RESET_CONFIRM || screen == SCREEN_UPDATE_CONFIRM))
         return HOLD_WAIT_MS;
     return IDLE_WAIT_MS;
 }
@@ -1263,7 +1288,8 @@ static void draw_eng_tab_body(void) {
                      h[k].menu ? "yes" : "no", h[k].how);
             body(6 + k, t);
         }
-        body(18, "  Read-only for now. Download, install and roll back come in the next steps.");
+        body(18, "  A: check for the newest dev build (Wi-Fi), then hold A 3 s to install and reboot.");
+        body(19, "  Roll back comes in the next step.");
     } else if (eng_tab == ENG_STORAGE) {
         eng_mount_t m[ENG_MAX_MOUNTS];
         platform_mounts(m);
@@ -1526,6 +1552,17 @@ void ui_draw(void) {
             body(8, line);
         }
         break;
+    case SCREEN_UPDATE_CONFIRM: {
+        frame("Install update", stock_started ? "B:Back" : "Hold A 3s:Install and reboot  B:Cancel", 1, 0);
+        char line[GRID_COLS];
+        snprintf(line, sizeof line, "  New build:      %s   (downloaded, checksum OK)", upd_sha); body(0, line);
+        snprintf(line, sizeof line, "  Running build:  %s   (kept for roll-back)", REDUX_BUILD); body(1, line);
+        body(3, "  Installs it as dmenu.bin.new, then renames it, then reboots.");
+        body(4, "  Hold A for 3 seconds. Release, or any other button, cancels.");
+        draw_hold_bar(6, HOLD_DESTRUCT_MS);
+        if (stock_msg[0]) { snprintf(line, sizeof line, "  %s", stock_msg); body(8, line); }
+        break;
+    }
     case SCREEN_RESTART_CONFIRM:
         frame("Restart", "Hold A 3s:Restart  B:Cancel", 1, 0);
         body(0, "  Runs sync, then reboot.");

@@ -51,6 +51,8 @@ jobs:
         run: ./build/test_heatguard
       - name: Build history tests
         run: ./build/test_buildhist
+      - name: Updater tests
+        run: ./build/test_updater
       - name: Back-to-stock command test
         run: ./build/test_stockmenu
       - name: Volume tests
@@ -153,6 +155,7 @@ jobs:
           ./build-arm64/test_engprofile
           ./build-arm64/test_heatguard
           ./build-arm64/test_buildhist
+          ./build-arm64/test_updater
           ./build-arm64/test_stockmenu
           ./build-arm64/test_volume
           ./build-arm64/test_brightness
