@@ -39,6 +39,10 @@ jobs:
           cmake --build build-stock
       - name: Launcher tests
         run: ./build/test_launcher
+      - name: Terminal screen model tests
+        run: ./build/test_vt
+      - name: Terminal smoke test (headless SDL, real pty)
+        run: python3 frontend/tests/check_term.py ./build/redux_term
       - name: Wi-Fi tests
         run: ./build/test_wifi
       - name: System Tools tests
@@ -152,6 +156,8 @@ jobs:
             -DREDUX_VSYNC_EMBED="$PWD/build-armhf/redux_vsync.so"
           cmake --build build-arm64
           ./build-arm64/test_launcher
+          ./build-arm64/test_vt
+          python3 frontend/tests/check_term.py ./build-arm64/redux_term
           ./build-arm64/test_remap_device
           ./build-arm64/test_wifi
           ./build-arm64/test_sysinfo

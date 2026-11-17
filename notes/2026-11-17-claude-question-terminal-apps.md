@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-17
 re: Dale 12:54-12:57: terminal replacement (fuzzy fonts) and terminal versions of Music, Video, Bluetooth, Documents
-status: acknowledged (Dale 13:06: terminal A; apt installer A)
+status: acknowledged (Dale 13:06: terminal A; apt installer A; 13:57: PR split A, three PRs)
 ---
 
 # Plan: a Redux terminal, then terminal apps
@@ -20,7 +20,12 @@ fits), File Manager = `mc`.
   L1/R1 = PgUp/PgDn, Select = an on-screen key picker), and M quits. **Mouse** (Dale 12:59): the
   right stick moves a cursor, L3 = left click, R3 = right click, sent to the app as xterm mouse
   events (mc, htop and alsamixer take mouse clicks). mc, htop, alsamixer, nmtui,
-  neofetch and the apps below then run in it. Several PRs; nothing writes to the device's boot chain.
+  neofetch and the apps below then run in it. Nothing writes to the device's boot chain.
+  **PR split (Dale A, 13:57):** 1. the terminal with a shell as a new Apps row (`frontend/term`,
+  embedded in dmenu.bin like the heat guard; D-pad/left stick arrows, A Enter, B Esc, X Tab, Y
+  Backspace, L1/R1 PgUp/PgDn, L2/R2 Home/End, Start F10, M quits); 2. the mouse and the Select
+  on-screen keys; 3. the apps move onto it and SimpleTerminal retires. Y, L2/R2 and Start are
+  Claude's additions to Dale's list (they clash with nothing); Dale can veto them in the PR-1 test.
 - **B:** keep SimpleTerminal and only tune what can be tuned from outside (it is a stock binary).
   Likely little gain on the font.
 - **C:** run the apps on the Linux text console with a sharp console font. Needs a key mapper for

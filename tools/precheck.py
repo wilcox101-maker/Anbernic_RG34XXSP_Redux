@@ -9,7 +9,7 @@ It mirrors .github/workflows/ci.yml and notes-lint.yml:
   always            tools/check_rules.py, tools/check_notes.py
   frontend/ (C, CMake), branding/, tests
                     desktop + stock CMake builds with -Werror, every build/test_*,
-                    the boot-logo render and check, the mock-up exit test
+                    the boot-logo render and check, the mock-up exit test, the terminal smoke test
   tools/            the Python unit tests (bench, extras, install) and a compile of tools/
   installer/        the install tests
 Python 3 standard library only; runs on Windows (the C builds need CMake and SDL2, so on Windows
@@ -66,6 +66,9 @@ def plan(files, everything):
             steps.append(("boot logo check", [PY, "tools/make_bootlogo.py", "--check", "build/bootlogo.bmp"], "."))
             steps.append(("mock-up exit test", [PY, "frontend/tests/check_mockups.py",
                                                 "./build/rg34xxsp-redux"], "."))
+            if os.name != "nt":
+                steps.append(("terminal smoke test", [PY, "frontend/tests/check_term.py",
+                                                      "./build/redux_term"], "."))
     if touched("tools/", "installer/", "phase1-stock-tweaks/"):
         steps.append(("tools compile", [PY, "-m", "compileall", "-q", "tools", "phase1-stock-tweaks"], "."))
         for d, what in PY_TESTS:

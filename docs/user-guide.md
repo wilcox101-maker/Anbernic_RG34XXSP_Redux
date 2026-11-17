@@ -77,6 +77,7 @@ it stays frozen when opened again (Dale 2026-11-17; a Redux network page is plan
 | Ebook Reader (TF1) / (TF2) | stock reader (Pixel Reader) for each card; M quits | TF1 device-checked; TF2 not yet |
 | PDF Reader | later (needs a file picker) | placeholder |
 | NeoFetch | system summary (`neofetch`, no logo so it fits); needs `neofetch` installed; M quits | device-checked (before the no-logo change) |
+| Redux Terminal | Redux's own terminal with a `bash` shell: sharp 8x16 text in the font chosen in Settings > UI, 90 x 30. Buttons: D-pad / left stick = arrows, A = Enter, B = Esc, X = Tab, Y = Backspace, L1 / R1 = Page Up / Down, L2 / R2 = Home / End, Start = F10, **M quits**. Right-stick mouse and the Select on-screen keys come next; the other terminal apps move onto it after that | **[not yet on device]** |
 | Terminal | stock SimpleTerminal | device-checked |
 
 On Main: **Music Player** (stock `ap.dge`, device-checked), **Video Player** (stock `vp.dge`: plays,
@@ -191,5 +192,6 @@ launcher plus its own folder ([what changes](install.md#what-exactly-changes-on-
 ## Known problems (2026-11-14)
 - Video Player crashes when you play a video (12a).
 - Terminal tears when the screen changes (stock graphics library has no vsync); the vsync helper
-  is not yet tested. Terminal text looks soft (Dale 2026-11-17); a sharper terminal is planned.
+  is not yet tested. Terminal text looks soft (Dale 2026-11-17); Redux Terminal (Apps) is the sharp
+  replacement, in progress.
 - Placeholders listed above.

@@ -20,7 +20,10 @@ typedef struct {
    HOME=/root ./SimpleTerminal; it takes -e <command>, and MENU quits. Task Monitor runs htop
    (/usr/bin/htop, Ubuntu package htop). Not stock: Dale installed it with apt; Dale's decision
    2026-11-13 is htop for all, so Redux must supply it on units that lack it (queue item). */
-#define TERM_BIN "/mnt/mod/ctrl/SimpleTerminal" 
+#define TERM_BIN "/mnt/mod/ctrl/SimpleTerminal"
+/* Redux Terminal (frontend/term): written to /tmp by main at start (term.c). PR 1 of 3: the
+   terminal itself with a shell; SimpleTerminal stays until the apps move over (PR 3). */
+#define REDUX_TERM_BIN "/tmp/redux-term"
 static const app_t apps[APP_COUNT] = {
     [APP_MUSIC]     = { "Music Player", "verified", "/mnt/vendor/bin/music/ap.dge" },
     [APP_VIDEO]     = { "Video Player", "plays; no buttons", "/mnt/vendor/bin/video/vp.dge" },
@@ -43,6 +46,7 @@ static const app_t apps[APP_COUNT] = {
     /* --off: no logo, so the text fits the terminal width (Dale 12:56: the logo ran off the right).
        It stays on screen until MENU quits the terminal. */
     [APP_NEOFETCH]     = { "NeoFetch", "verified", NULL, TERM_BIN, "HOME=/root", "-e sh -c 'neofetch --off; exec sleep 86400'" },
+    [APP_REDUX_TERM]   = { "Redux Terminal", "not verified", NULL, REDUX_TERM_BIN, "HOME=/root", NULL },
 };
 
 static const char *root = "";
