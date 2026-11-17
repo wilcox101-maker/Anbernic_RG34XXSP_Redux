@@ -53,7 +53,6 @@ RG34XXSP Redux
 ├── Settings
 │   ├── Display
 │   ├── Audio
-│   ├── Input
 │   ├── Power & Lid
 │   ├── System               (System Tools, Restart, Power Off, Boot Screen*, blanks, Stock Menu, Reset All*)
 │   ├── Emulation
@@ -178,11 +177,11 @@ Settings                                                            BAT 87% CHG 
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │▓▓ Display                                                                              │
 │   Audio                                                                                │
-│   Input                                                                                │
 │   Power & Lid                                                                          │
 │   System                                                                               │
 │   Emulation                                                                            │
 │   UI                                                                                   │
+│                                                                                        │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │
@@ -209,10 +208,11 @@ A:Enter  B:Back  M:Menu
 ## 6. Mock-up 4 — Engineering Mode, CPU tab
 
 Engineering Mode is one screen with an AMI/Phoenix-style tab bar (decision 2026-11-10): CPU, GPU,
-Battery, Thermal, Display, Input, Storage, Logs, System (F5). L1/R1 or Left/Right switch tabs and wrap; the
-active tab is inverted in the accent colour (shown here as `▓CPU▓`). B exits to the main menu. On the
-CPU tab, Up/Down pick a row and A edits it (F5 step 3); on Logs, A switches between redux.log,
-eng-writes.log and dmesg.
+Battery, Thermal, Display, Input, Storage, Logs, System (F5). **Only L1/R1 switch tabs** (they wrap);
+A never changes tab (Dale, 2026-11-17). The active tab is inverted in the accent colour (shown here as
+`▓CPU▓`). B exits to the main menu. On the CPU tab, Up/Down pick a row and A edits it (F5 step 3); on
+Logs, Left/Right pick redux.log, eng-writes.log or dmesg. Button tests are on the Input tab; Settings
+has no Input row.
 
 ```
 [ENGINEERING]                                                    BAT 87% CHG CPU 54C 12:34
