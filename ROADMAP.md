@@ -42,7 +42,7 @@ Runs alongside the kernel phases. The full plan, UI rules and exit tests are in 
 - [x] F1: desktop prototype (C + SDL2, `frontend/`), signed off 2026-11-10. Exit test: `frontend/tests/check_mockups.py`
 - [x] F2: launch parity on a copy of the stock card, signed off 2026-11-12
 - [x] F3 includes the UI font picker: vga / spleen / unifont / thin / chunky ([docs/ui-spec.md §8a](docs/ui-spec.md))
-- [x] F3 settings parity, signed off 2026-11-16 · [x] F4 power and lid, signed off 2026-11-16 · F5 Engineering Mode · F6 features stock left out · F7 mainline port · F8 release
+- [x] F3 settings parity, signed off 2026-11-16 · [x] F4 power and lid, signed off 2026-11-16 · [x] F5 Engineering Mode, signed off 2026-11-17 · F6 features stock left out · F7 mainline port · F8 release
 
 ## Release milestones
 Two targets. The phases above say *how* the work is done; these say *when it ships*. Each box is ticked
@@ -56,7 +56,7 @@ Dale. No mainline kernel is needed.
 - [x] F3 settings parity (signed off 2026-11-16), including from the queue: Wi-Fi Connecting/result screens, BIOS-style UI with
       colour presets, TF2 scan/hot-plug, Restart/Power Off with a 3 s hold
 - [x] F4 power and lid (signed off 2026-11-16): exit test 50 lid cycles mid-game, governor restored
-- [ ] F5 Engineering Mode inside the stock OPP tables (Expert Mode is **not** part of Beta)
+- [x] F5 Engineering Mode inside the stock OPP tables (signed off 2026-11-17; heat-guard cap and 30 min run move to the Beta exit test; Expert Mode is **not** part of Beta)
 - [ ] F6 features stock left out, including from the queue: System Tools (read-only), App Center,
       Ports/PortMaster, Terminal/htop
 - [ ] Phase 1 measurements, stock vs. Redux: boot time, idle drain, sustained-load temperature, button latency
@@ -91,7 +91,7 @@ hardware video decode for media, in-game HUD overlay, Wi-Fi idle scanning, featu
 earlier once Beta is out, if they don't put its exit test at risk.
 
 ### Progress estimate
-Rough, effort-weighted, as of 2026-11-17: **Beta ≈ 55%** (F3 and F4 signed off; weights in README "Project status"), **1.0 ≈ 20%** (research and design; nothing booted on mainline yet). Phase 2 is the biggest
+Rough, effort-weighted, as of 2026-11-17: **Beta ≈ 60%** (F3, F4 and F5 signed off; weights in README "Project status"), **1.0 ≈ 20%** (research and design; nothing booted on mainline yet). Phase 2 is the biggest
 unknown: it exists only as a design and nothing has booted yet. Update this line when a phase is signed off.
 
 ## Non-goals

@@ -10,7 +10,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 | Frontend | F0, F1, F2 | signed off (F2: 2026-11-12) |
 | Frontend | F3 settings parity | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f3-signed-off.md)) |
 | Frontend | F4 power and lid | signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)) |
-| Frontend | **F5 Engineering Mode** | all steps device-checked ([11-16](2026-11-16-dale-hw-result-f5-steps-1-2.md), [7ee31d1](2026-11-17-dale-hw-result-7ee31d1.md), [2917a5c](2026-11-17-dale-hw-result-2917a5c.md), [070427e](2026-11-17-dale-hw-result-070427e.md)); **waiting on Dale: sign-off**. Heat-guard cap and the 30 min run move to the Beta exit test (Dale 09:58) |
+| Frontend | F5 Engineering Mode | signed off 2026-11-17 ([note](2026-11-17-dale-phase-gate-f5-signed-off.md)); heat-guard cap and 30 min run in the Beta exit test |
 
 ## Handoff (2026-11-16-2, Claude): start here in a new chat
 - **Read [handoff-2026-11-16-2.md](handoff-2026-11-16-2.md) next**, then [handoff-2026-11-13.md](handoff-2026-11-13.md) for the lessons. New chats: `HELLO` in the Redux Project, started from the desktop app on DLN-DALEW2.
@@ -25,7 +25,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 ## Queue (in order; all Claude unless marked)
 1. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons (folded into item 4, the Redux video front-end); Wolfenstein 3D Y and X: not a bug, it is a GBA ROM (no X/Y). Done: `/tmp/.next` + amixer (#202), scan cache (#203). Game Room X = Favorites, not built yet (placeholder). Then a short device re-check.
 2. ~~Game Room card picker~~ #205, device-checked 2026-11-16 (with the #216 crash fix).
-3. **F5 Engineering Mode** (in progress: [plan](2026-11-16-claude-decision-f5-plan.md), steps 1-2 device-checked, steps 3-4 and 5a built; next input viewer, LED/rumble, `fsck -n`). F4 signed off 2026-11-16 ([note](2026-11-16-dale-phase-gate-f4-signed-off.md)).
+3. ~~F5 Engineering Mode~~ signed off 2026-11-17 ([note](2026-11-17-dale-phase-gate-f5-signed-off.md)). Follow-up: analog stick values on the Input tab.
 4. **Dale's requests 2026-11-17 08:40:** all six done (#231-#234), device-checked on 7ee31d1.
 5. **Engineering > Update** (right after F5 sign-off, Dale A 10:08, [decision](2026-11-17-dale-decision-eng-update.md)): pull dev builds from the repo (checksum-checked), current build, last known working, history, roll back. Security item: Dale merges.
 6. **UI after F5 sign-off** (Dale 2026-11-17 09:19): (a) font size settings for the common UI text elements; (b) three colour settings: menu text colour, header/footer window text colour, window colour. Sizes answered ([decision](2026-11-17-dale-decision-ui-text-sizes.md): header and footer Default/Large, window Default/Large/Largest, fitted to the grid; Reset fonts in Settings > UI). Plan to Dale first.

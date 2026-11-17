@@ -77,13 +77,13 @@ hardware yet. Live task list: [`notes/STATUS.md`](notes/STATUS.md). Full plan: [
 
 | Milestone | What it is | Progress (rough) |
 |---|---|---|
-| **Beta (v0.5)** | Redux frontend on the stock kernel, installable by anyone | ≈ 55% |
+| **Beta (v0.5)** | Redux frontend on the stock kernel, installable by anyone | ≈ 60% |
 | **1.0** | Purpose-built OS on a mainline kernel | ≈ 20% (research and design; nothing booted on mainline yet) |
 | **1.x** | After 1.0: ZRAM on mainline | not started |
 
 *How the Beta number is made: the Beta work is weighted by effort (F0-F2 25, F3 10, F4 10, F5 10, F6 15,
-installer 10, Phase 1 measurements 5, user docs 5, exit test and releases 10). Done: F0-F4, about 60% of
-F5, installer A, part of the docs. It was ≈ 40% on 2026-11-14, before F3 and F4 were signed off.*
+installer 10, Phase 1 measurements 5, user docs 5, exit test and releases 10). Done: F0-F5, installer A,
+part of the docs. It was ≈ 40% on 2026-11-14 and ≈ 55% on 2026-11-17 before F5 was signed off.*
 
 ### Latest (2026-11-16)
 
