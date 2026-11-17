@@ -51,11 +51,12 @@ RG34XXSP Redux
 │   └── ...
 │
 ├── Settings
-│   ├── Audio
+│   ├── Audio                  (Audio Mixer, Speaker Test)
 │   ├── Power & Lid
 │   ├── System               (System Tools, Restart, Power Off, Boot Screen*, blanks, Stock Menu, Reset All*)
 │   ├── Emulation
-│   └── UI                     (brightness, screen timeout, font, colours, text sizes; Display folded in 2026-11-17)
+│   ├── UI                     (brightness, screen timeout, font, colours, text sizes; Display folded in 2026-11-17)
+│   └── Bluetooth, Input Test, Network Setup, Task Monitor   (stock terminal tools, moved from Apps 2026-11-17)
 │
 └── Engineering Mode           (deliberate confirm required)
     ├── CPU
@@ -179,10 +180,10 @@ Settings                                                            BAT 87% CHG 
 │   System                                                                               │
 │   Emulation                                                                            │
 │   UI                                                                                   │
-│                                                                                        │
-│                                                                                        │
-│                                                                                        │
-│                                                                                        │
+│   Bluetooth                                                                            │
+│   Input Test                                                                           │
+│   Network Setup                                                                        │
+│   Task Monitor                                                                         │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │

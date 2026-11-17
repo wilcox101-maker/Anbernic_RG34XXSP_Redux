@@ -67,17 +67,15 @@ PortMaster where stock uses them.
 
 ## Apps
 Sorted by name. Music Player, Video Player and File Manager are on Main, not in this list.
+Audio Mixer (`alsamixer`) and Speaker Test are in **Settings > Audio**; Bluetooth (`bluetoothctl`),
+Input Test (`evtest`), Network Setup (`nmtui`) and Task Monitor (htop) are rows of **Settings**
+(moved 2026-11-17). All were device-checked from Apps. Network Setup: choosing Edit freezes it, and
+it stays frozen when opened again (Dale 2026-11-17; a Redux network page is planned).
 
 | App | What it is | Status |
 |---|---|---|
-| Audio Mixer | `alsamixer` | device-checked |
-| Bluetooth | `bluetoothctl` | device-checked |
 | Ebook Reader (TF1) / (TF2) | stock reader (Pixel Reader) for each card; M quits | TF1 device-checked; TF2 not yet |
-| Input Test | `evtest` on the buttons: every press prints | device-checked |
-| Network Setup | `nmtui`: hidden networks, static IP, forget a network | device-checked |
 | PDF Reader | later (needs a file picker) | placeholder |
-| Speaker Test | says "Front Left", "Front Right" | device-checked |
-| Task Monitor (htop) | htop in the terminal; needs htop (see Extras) | device-checked |
 | Terminal | stock SimpleTerminal | device-checked |
 
 On Main: **Music Player** (stock `ap.dge`, device-checked), **Video Player** (stock `vp.dge`: plays,
@@ -89,7 +87,8 @@ stock screen tearing **[not yet on device]**. File Manager can't use it and stil
 ## Settings
 | Item | Status |
 |---|---|
-| Audio, Input, Power & Lid, Emulation | **[placeholder]** (arrive with F3-F5) |
+| **Audio** | Audio Mixer, Speaker Test (stock terminal tools) |
+| Power & Lid, Emulation | **[placeholder]** |
 | **System** | see below |
 | **UI** | **Brightness** (1-20; never fully dark) **[device-checked]**, **Screen Timeout** (Off, 1, 2, 3, 5, 10, 15, 30 min; default 5), **Font** (five fonts, same layout in each) (these three were the Display menu). **Accent Color** (selection bar: BIOS cyan, Amber, Green, White, then the 16 standard VGA text colours except black; A opens the list). **Menu Text**, **Header/Footer Text**, **Window Color** (any of the 16 VGA colours; a choice that would hide text is skipped). **Header Size**, **Footer Size** (Default, Large = twice as tall), **Window Size** (Default, Large = twice as tall, Largest = also twice as wide). A screen whose content doesn't fit drops a size there. **Reset Fonts** puts the three sizes back to Default. Left/Right changes a row, applies at once, saved. Sizes and the three colours **[not yet on device]** |
 
