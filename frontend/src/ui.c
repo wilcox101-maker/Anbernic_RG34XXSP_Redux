@@ -586,7 +586,7 @@ static void wifi_open_key(void) {
 }
 
 /* App Center launch (menu option A: Music/Video/Documents/File Manager open the
-   stock app directly; Apps lists them all). */
+   stock app directly from Main; Apps lists the rest, sorted by name). */
 static void app_start(int app) {
     apps_msg[0] = '\0';
     if (!apps_launchable(app)) { snprintf(apps_msg, sizeof apps_msg, "Not available yet"); dirty = 1; return; }

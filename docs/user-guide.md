@@ -66,19 +66,22 @@ PortMaster where stock uses them.
   **[placeholder]**.
 
 ## Apps
+Sorted by name. Music Player, Video Player and File Manager are on Main, not in this list.
+
 | App | What it is | Status |
 |---|---|---|
-| Music Player | stock `ap.dge` | not yet on device |
-| Video Player | stock `vp.dge` | crashes on play (12a) |
-| Ebook Reader (TF1) / (TF2) | stock reader (Pixel Reader) for each card | not yet on device; M may be its normal quit |
-| PDF Reader | later (needs a file picker) | placeholder |
-| Terminal | stock SimpleTerminal | device-checked |
-| Task Monitor (htop) | htop in the terminal; needs htop (see Extras) | device-checked |
 | Audio Mixer | `alsamixer` | device-checked |
-| Network Setup | `nmtui`: hidden networks, static IP, forget a network | device-checked |
 | Bluetooth | `bluetoothctl` | device-checked |
+| Ebook Reader (TF1) / (TF2) | stock reader (Pixel Reader) for each card; M quits | TF1 device-checked; TF2 not yet |
 | Input Test | `evtest` on the buttons: every press prints | device-checked |
+| Network Setup | `nmtui`: hidden networks, static IP, forget a network | device-checked |
+| PDF Reader | later (needs a file picker) | placeholder |
 | Speaker Test | says "Front Left", "Front Right" | device-checked |
+| Task Monitor (htop) | htop in the terminal; needs htop (see Extras) | device-checked |
+| Terminal | stock SimpleTerminal | device-checked |
+
+On Main: **Music Player** (stock `ap.dge`, device-checked), **Video Player** (stock `vp.dge`: plays,
+but takes no buttons during playback; a Redux front-end is planned in F6).
 
 Terminal apps quit with **M**. The terminal apps start with a vsync helper meant to reduce the
 stock screen tearing **[not yet on device]**. File Manager can't use it and still tears (a stock bug).

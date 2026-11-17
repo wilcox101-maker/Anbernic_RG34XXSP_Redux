@@ -1,3 +1,4 @@
+#include <strings.h>
 /* Navigation test: B goes back one level, Engineering tabs wrap, B from Engineering exits to Main.
    Also the ROM scanner: systems list, launch, and scrolling a long list.
    Exit code 0 = pass. Uses the desktop platform layer (no window is opened). */
@@ -939,11 +940,17 @@ int main(void) {
         char dump[8192];
         ui_draw();
         grid_dump(dump, sizeof dump);
-        expect(strstr(dump, "Music Player") && strstr(dump, "not verified") && strstr(dump, "Terminal"),
-               "Apps lists stock apps as not verified, and Terminal");
-        expect(strstr(dump, "File Manager") == NULL, "File Manager is on Main only, not in Apps");
-        expect(apps_row_of(APP_FILES) == -1 && apps_count() == APP_COUNT - 1
-               && apps_list_id(apps_row_of(APP_PDF)) == APP_PDF, "Apps rows map to app ids without File Manager");
+        expect(strstr(dump, "Ebook Reader (TF2)") && strstr(dump, "not verified") && strstr(dump, "Terminal"),
+               "Apps lists apps with their status, and Terminal");
+        expect(strstr(dump, "File Manager") == NULL && strstr(dump, "Music Player") == NULL
+               && strstr(dump, "Video Player") == NULL, "File Manager, Music and Video are on Main only");
+        expect(apps_row_of(APP_FILES) == -1 && apps_row_of(APP_MUSIC) == -1 && apps_row_of(APP_VIDEO) == -1
+               && apps_count() == APP_COUNT - 3
+               && apps_list_id(apps_row_of(APP_PDF)) == APP_PDF, "Apps rows map to app ids without the Main apps");
+        int sorted = 1;
+        for (int r = 1; r < apps_count(); r++)
+            if (strcasecmp(apps_name(apps_list_id(r - 1)), apps_name(apps_list_id(r))) > 0) sorted = 0;
+        expect(sorted && apps_list_id(0) == APP_MIXER, "Apps rows are sorted by name (Audio Mixer first)");
     }
     press(LB_A);
     expect(ui_should_exit() == 0 && ui_screen() == SCREEN_APPS, "a missing app does not launch");
