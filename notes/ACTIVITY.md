@@ -196,3 +196,4 @@
 - 2026-11-17 15:46 · claude · read: Dale 15:35-15:42: Manager/Read Only Bluetooth finding + stock-script audit, Dale A (on by default + switch), #282 conflict · did: merged #286 Bluetooth chip init at start + Settings > Bluetooth Radio (not on device); fixed STATUS conflicts in #281/#282 (Dale merges); Read Only audit filed with three menu-action checks
 - 2026-11-17 15:53 · claude · read: Dale 15:48 conflicts; Dale merged #281 then #282 (into its stacked base) · did: re-merged main into #281/#282; #282's code missed main (merged into the base branch after #281 landed), so #287 carried it to main, merged b9a207d
 - 2026-11-17 15:59 · claude · read: Dale 15:57: remove B:Back from main menu · did: merged #288 main footer without B:Back
+- 2026-11-17 16:04 · claude · read: Dale 16:04: leaving work, Pause (no SWAP) · did: paused: nothing in flight, no open PRs; device pass on b9a207d pending (BT, CJK, picker log, Packages)
