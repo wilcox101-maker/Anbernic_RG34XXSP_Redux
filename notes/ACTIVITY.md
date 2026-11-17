@@ -181,3 +181,4 @@
 - 2026-11-17 11:26 · claude-readonly · read: #254 #255 #257 #258 merged · did: repo optimization done; one-task push permission ended, back to HOLD (read-only)
 - 2026-11-17 11:48 · claude · read: Dale 11:43 + A 11:44 Display into UI; 11:38 boot screen request · did: merged #264 Display folded into Settings > UI; boot screen DECIDE asked
 - 2026-11-17 12:08 · claude · read: Dale 11:49 apps move; 11:56 SSH/SMB + nmtui freeze · did: merged #265 tools moved to Settings and Settings > Audio; SSH/SMB DECIDE asked
+- 2026-11-17 12:13 · claude · read: Dale AA 12:09 (boot logo A, SSH/SMB A) · did: opened #266 boot logo follows the build (Dale merges), CI green; SSH/SMB needs autostart lines from device
