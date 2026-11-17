@@ -116,6 +116,13 @@ Main > Network scans; **Y** rescans. Pick a network, type the password on the on
 (`shift`, `sym`, `del`, `space`, `OK`), **Start** connects. A result screen says Connected or Not
 connected. **[not yet on device]** since the #88 fix.
 
+## Rumble
+Redux unlocks rumble, a hidden firmware feature: the stock launcher never offers it. The RG34XXSP
+has a vibration motor, and Redux's Engineering Mode LED/rumble test runs it
+**[device-checked]** ([result](../notes/2026-11-17-dale-hw-result-070427e.md) #2; by hand:
+[result](../notes/2026-11-17-dale-hw-result-2917a5c.md) #7). **[not yet on device]**: rumble inside
+games (RetroArch force feedback), and strength levels other than the ones tested.
+
 ## Engineering Mode
 Hold A for 3 seconds to enter. Tabs (L1/R1): CPU, GPU, Battery, Thermal, Display, Input, Storage, Logs,
 System, Update (build history), all live read-outs. On CPU, Up/Down picks a row and A edits the governor, min/max speed or
@@ -150,6 +157,7 @@ the handheld, it can break RetroArch. **[device-checked]** (htop).
 | Message | Means | Do |
 |---|---|---|
 | `ready to install` | stock launcher found, nothing installed | install |
+| `not ready: Stock OS Mod not found (currently required; …)` | the Stock OS Mod's scripts aren't on the handheld | install the Stock OS Mod first ([install.md](install.md#what-you-need)) |
 | `Redux is installed; install again to upgrade, or uninstall` | Redux is already the launcher | install again to upgrade |
 | `STOPPED: no …/dmenu_ln` | not a stock RG34XXSP card, or the system partition isn't mounted | check you are on the stock firmware |
 | `STOPPED: dmenu_ln has an unknown CMD= line` | the launcher was changed by hand or by another firmware | nothing was touched; restore stock first |

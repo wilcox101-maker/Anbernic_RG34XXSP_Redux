@@ -11,8 +11,14 @@ back.
 
 ## What you need
 - The handheld on the stock Anbernic firmware, on your Wi-Fi.
-- **SSH switched on** on the handheld (StockOS Mod setting; `global.ssh=1` in
-  `/mnt/mod/ctrl/configs/system.cfg`), and its root password.
+- **Redux currently requires the Stock OS Mod by cbepx-me**
+  ([Anbernic H700 StockOS Modification](https://github.com/cbepx-me/Anbernic-H700-RG-xx-StockOS-Modification)).
+  Redux's frontend starts every RetroArch game with the Mod's `/mnt/mod/ctrl/RA_launch.sh`, handles
+  the power key and sleep with its `pwr_new.sh`, and opens its `SimpleTerminal`. `install.py --check`
+  says "not ready" and the installer refuses when the Mod's scripts are missing. This is for Phase 1;
+  the Phase 2 ReduxOS image will not need the Mod.
+- **SSH switched on** on the handheld (the Mod's SSH switch: `global.ssh=1` in
+  `/mnt/mod/ctrl/configs/system.cfg`), and its root password. That is how the installer gets in.
 - A PC with Python 3 and the `ssh` command (built into Windows 10 and 11).
 - From the [dev release](https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux/releases/tag/dev)
   (the rolling test build; once Beta is near, tagged releases `v0.5-beta.N` follow and this guide will
@@ -27,6 +33,7 @@ Find the handheld's IP address in the stock Wi-Fi settings.
 |---|---|---|
 | Hardware | **Original revision, 2 GB LPDDR4** (Dale's unit; 1979 MB seen by Linux, [survey](../notes/2026-11-12-dale-hw-result-device-survey.md)) | Revised "Metallic Blue" units (512 MB / 1 GB LPDDR3, different panel) are **untested**; see [field-reports.md](field-reports.md) |
 | Stock firmware | `rg34xxsp-fw-sd_202505` for the Phase 1 boot test (2026-11-10). The firmware version on the card the Redux frontend was tested on is not recorded yet | V1.0.6 (2026-05-26) has been read on the PC only ([diff](../notes/2026-11-12-claude-message-stock-v106-diff.md)); not run with Redux |
+| Stock OS Mod | Required. The Mod version on Dale's unit is not recorded yet | Whether a factory-fresh Anbernic image has `/mnt/mod` at all: **not tested** |
 | SD cards | The stock card in TF1 (system plus the Roms partition); a FAT (vfat) ROM card in TF2 (117 GB on Dale's unit) | Redux's own code never writes to either ROM card. Other card sizes and formats are untested |
 
 ## Install

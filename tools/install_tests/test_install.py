@@ -33,6 +33,9 @@ class DeviceScript(unittest.TestCase):
         self.root = tempfile.mkdtemp()
         os.makedirs(os.path.join(self.root, "mnt/vendor/ctrl"))
         os.makedirs(os.path.join(self.root, "mnt/data"))
+        os.makedirs(os.path.join(self.root, "mnt/mod/ctrl"))                 # the Stock OS Mod
+        for f in ("RA_launch.sh", "pwr_new.sh"):
+            self.write(os.path.join(self.root, "mnt/mod/ctrl", f), "#!/bin/sh\n")
         self.ln = os.path.join(self.root, "mnt/vendor/ctrl/dmenu_ln")
         self.write(self.ln, STOCK_LN)
         os.chmod(self.ln, 0o755)
@@ -64,6 +67,30 @@ class DeviceScript(unittest.TestCase):
         self.assertIn("launcher (dmenu_ln): stock", out)
         self.assertFalse(self.exists("mnt/vendor/redux"))
         self.assertFalse(self.exists("mnt/data/redux"))
+
+    def test_check_without_stock_os_mod_is_not_ready(self):
+        os.remove(os.path.join(self.root, "mnt/mod/ctrl/pwr_new.sh"))
+        rc, out = self.run_mode("check")
+        self.assertNotEqual(rc, 0, out)
+        self.assertIn("not ready: Stock OS Mod not found (currently required; missing /mnt/mod/ctrl/pwr_new.sh)", out)
+        self.assertNotIn("ready to install", out)
+
+    def test_install_refuses_without_stock_os_mod_and_writes_nothing(self):
+        shutil.rmtree(os.path.join(self.root, "mnt/mod"))
+        rc, out = self.run_mode("install", FAKE_BIN)
+        self.assertNotEqual(rc, 0, out)
+        self.assertIn("Stock OS Mod not found", out)
+        self.assertIn("/mnt/mod/ctrl/RA_launch.sh /mnt/mod/ctrl/pwr_new.sh", out)
+        self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln").decode(), STOCK_LN)
+        self.assertFalse(self.exists("mnt/vendor/ctrl/dmenu_ln.bak"))
+        self.assertFalse(self.exists("mnt/vendor/redux"))
+
+    def test_uninstall_works_without_stock_os_mod(self):
+        self.assertEqual(self.run_mode("install", FAKE_BIN)[0], 0)
+        shutil.rmtree(os.path.join(self.root, "mnt/mod"))
+        rc, out = self.run_mode("uninstall")
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self.read("mnt/vendor/ctrl/dmenu_ln").decode(), STOCK_LN)
 
     def test_install_then_uninstall_round_trip(self):
         rc, out = self.run_mode("install", FAKE_BIN)
