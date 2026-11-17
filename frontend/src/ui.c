@@ -2,6 +2,7 @@
    B goes back one level via a small stack. Internet is a sub-menu. */
 #include "ui.h"
 #include "uistyle.h"
+#include "pkgs.h"
 #include "grid.h"
 #include "platform.h"
 #include "launcher.h"
@@ -48,7 +49,7 @@ static const int audio_app[] = { APP_MIXER, APP_SPEAKER_TEST };
 /* No Input row: button tests live on the Engineering Input tab (Dale, 2026-11-17). */
 /* No Display row: Brightness, Screen Timeout and Font live in Settings > UI (Dale, 2026-11-17 A). */
 enum { SETTINGS_AUDIO = 0, SETTINGS_SYSTEM = 2, SETTINGS_UI = 4 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
-enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3, SYSTEM_BOOT = 5, SYSTEM_RESET = 6 };
+enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3, SYSTEM_BOOT = 5, SYSTEM_RESET = 6, SYSTEM_PACKAGES = 7 };
 typedef struct { const char *label; int selectable; int action; } system_row_t;
 static const system_row_t system_rows[] = {
     { "System Tools",         1, SYSTEM_TOOLS },
@@ -57,7 +58,7 @@ static const system_row_t system_rows[] = {
     { "Boot Screen",          1, SYSTEM_BOOT },      /* label gets Stock/Redux when drawn */
     { "",                     0, -1 },               /* was Card Scripts (removed, Dale A 2026-11-16) */
     { "",                     0, -1 },
-    { "",                     0, -1 },
+    { "Packages",             1, SYSTEM_PACKAGES },  /* apt install/remove (Dale 2026-11-17 A) */
     { "Stock Menu",           1, SYSTEM_STOCK },
     { "Reset All",            1, SYSTEM_RESET }
 };
@@ -79,7 +80,8 @@ enum { ENG_ROW_GOV = 0, ENG_ROW_MIN, ENG_ROW_MAX, ENG_ROW_CPU1, ENG_ROW_CPU2, EN
 static int eng_row, eng_editing, eng_pick;   /* eng_pick: index into the governor or OPP list */
 static char upd_sha[16];                     /* Update: the build waiting to be installed */
 static int upd_row;                          /* Update tab: 0 = check for update, 1.. = history rows */
-static int upd_rollback;                     /* the confirm screen is a roll-back */
+static int upd_rollback;
+static int pkg_index, pkg_remove;            /* Packages: the package and action waiting for the hold */                     /* the confirm screen is a roll-back */
 static int eng_log_src;                      /* Logs tab: 0 redux.log, 1 eng-writes.log, 2 dmesg */
 /* Input tab (F5 step 5b): which logical buttons are held, and the last events. */
 #define IN_LOG 8
@@ -412,6 +414,7 @@ static int list_count(void) {
     case SCREEN_APPS:     return apps_count();
     case SCREEN_WIFI:     return wifi_count();
     case SCREEN_SYSTEM_DEFAULTS: return N_SYSTEM_ROWS;
+    case SCREEN_PACKAGES: return pkgs_count();
     default:              return 0;
     }
 }
@@ -781,7 +784,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
     if (screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
         || screen == SCREEN_POWEROFF_CONFIRM
         || screen == SCREEN_BOOT_CONFIRM || screen == SCREEN_RESET_CONFIRM
-        || screen == SCREEN_UPDATE_CONFIRM) {
+        || screen == SCREEN_UPDATE_CONFIRM || screen == SCREEN_PKG_CONFIRM) {
         if (btn == LB_A) {
             if (pressed) {
                 if (!a_down_at && !stock_started)
@@ -963,6 +966,17 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         if (selected == MAIN_FILES)       app_start(APP_FILES);
         return;
     }
+    if (screen == SCREEN_PACKAGES && (btn == LB_A || btn == LB_X) && pkgs_count() > 0) {
+        int inst = pkgs_installed(selected);
+        if ((btn == LB_A && !inst) || (btn == LB_X && inst)) {
+            pkg_index = selected;
+            pkg_remove = inst;
+            stock_msg[0] = '\0';
+            stock_started = 0;
+            go(SCREEN_PKG_CONFIRM);
+        }
+        return;
+    }
     if (btn == LB_A && screen == SCREEN_AUDIO) {
         app_start(audio_app[selected]);
         return;
@@ -1035,6 +1049,12 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             go(SCREEN_BOOT_CONFIRM);
             return;
         }
+        if (action == SYSTEM_PACKAGES) {
+            stock_msg[0] = '\0';
+            pkgs_refresh();
+            go(SCREEN_PACKAGES);
+            return;
+        }
         if (action == SYSTEM_RESET) {
             stock_msg[0] = '\0';
             stock_started = 0;
@@ -1079,7 +1099,8 @@ void ui_tick(uint32_t now_ms) {
     }
     if ((screen == SCREEN_STOCK_CONFIRM || screen == SCREEN_RESTART_CONFIRM
          || screen == SCREEN_POWEROFF_CONFIRM
-         || screen == SCREEN_BOOT_CONFIRM || screen == SCREEN_RESET_CONFIRM || screen == SCREEN_UPDATE_CONFIRM)
+         || screen == SCREEN_BOOT_CONFIRM || screen == SCREEN_RESET_CONFIRM || screen == SCREEN_UPDATE_CONFIRM
+         || screen == SCREEN_PKG_CONFIRM)
         && a_down_at && !stock_started) {
         hold_ms = now_ms - a_down_at;
         if (hold_ms >= HOLD_DESTRUCT_MS) {
@@ -1102,6 +1123,14 @@ void ui_tick(uint32_t now_ms) {
                 } else {
                     snprintf(stock_msg, sizeof stock_msg, "Install failed: the running build stays.");
                 }
+            } else if (screen == SCREEN_PKG_CONFIRM) {
+                char d[96];
+                snprintf(d, sizeof d, "%s %s. This can take a few minutes.",
+                         pkg_remove ? "Removing" : "Installing", pkgs_name(pkg_index));
+                ui_busy("Packages", d);
+                int rc = pkg_remove ? pkgs_remove(pkg_index) : pkgs_install(pkg_index);
+                stock_started = 1;
+                snprintf(stock_msg, sizeof stock_msg, "%s %s", pkgs_name(pkg_index), pkgs_message(rc));
             } else if (screen == SCREEN_RESET_CONFIRM) {
                 reset_all();
                 stock_started = 1;
@@ -1139,7 +1168,7 @@ uint32_t ui_wait_ms(void) {
     if (a_down_at && (screen == SCREEN_ENG_CONFIRM || screen == SCREEN_STOCK_CONFIRM
         || screen == SCREEN_RESTART_CONFIRM || screen == SCREEN_POWEROFF_CONFIRM
         || screen == SCREEN_BOOT_CONFIRM
-        || screen == SCREEN_RESET_CONFIRM || screen == SCREEN_UPDATE_CONFIRM))
+        || screen == SCREEN_RESET_CONFIRM || screen == SCREEN_UPDATE_CONFIRM || screen == SCREEN_PKG_CONFIRM))
         return HOLD_WAIT_MS;
     return IDLE_WAIT_MS;
 }
@@ -1630,6 +1659,34 @@ void ui_draw(void) {
             if (i == selected) grid_invert(ROW_BODY0 + i, 1, GRID_COLS - 2);
         }
         break;
+    case SCREEN_PACKAGES: {
+        frame("Settings > System > Packages", "A:Install  X:Remove  B:Back  M:Menu", 1, 0);
+        int n = pkgs_count(), win = n < list_window() ? n : list_window();
+        char line[GRID_COLS];
+        for (int i = 0; i < win; i++) {
+            int idx = scroll + i;
+            snprintf(line, sizeof line, "   %-10.10s %-13s %.56s", pkgs_name(idx),
+                     pkgs_installed(idx) ? "Installed" : "-", pkgs_desc(idx));
+            body(i, line);
+            if (idx == selected) grid_invert(ROW_BODY0 + i, 1, GRID_COLS - 2);
+        }
+        body(win + 1, "  Ubuntu packages from Redux's list, over Wi-Fi. Never upgrades what is installed;");
+        body(win + 2, "  refuses anything that would change other packages. Log: packages.log");
+        break;
+    }
+    case SCREEN_PKG_CONFIRM: {
+        frame(pkg_remove ? "Remove package" : "Install package",
+              stock_started ? "B:Back" : (pkg_remove ? "Hold A 3s:Remove  B:Cancel" : "Hold A 3s:Install  B:Cancel"), 1, 0);
+        char line[GRID_COLS];
+        snprintf(line, sizeof line, "  %s  %s", pkgs_name(pkg_index), pkgs_desc(pkg_index));
+        body(0, line);
+        body(2, pkg_remove ? "  apt-get remove, only if nothing else would be removed."
+                           : "  apt-get update, then install. Refused if any installed package would change.");
+        body(3, "  Hold A for 3 seconds. Release, or any other button, cancels.");
+        draw_hold_bar(5, HOLD_DESTRUCT_MS);
+        if (stock_msg[0]) { snprintf(line, sizeof line, "  %s", stock_msg); body(7, line); }
+        break;
+    }
     case SCREEN_SYSINFO: {
         frame("System Tools", "B:Back", 1, 0);
         sysinfo_row_t rows[SYSINFO_MAX_ROWS];

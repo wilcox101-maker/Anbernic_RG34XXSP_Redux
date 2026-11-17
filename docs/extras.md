@@ -3,6 +3,9 @@
 StockOS is a full Ubuntu 22.04 (arm64). Redux uses a few tools that aren't on every stock unit,
 htop first (Apps > Task Monitor). `tools/extras.py` installs them over SSH from your PC.
 
+On the device itself: **Settings > System > Packages** installs and removes the same list with
+the same safety rules (no PC needed, Wi-Fi with internet needed).
+
 ## What you need
 - SSH on the device (StockOS Mod setting; `global.ssh=1` in `/mnt/mod/ctrl/configs/system.cfg`).
 - The device on Wi-Fi with internet, and its address (Settings > Internet shows it).

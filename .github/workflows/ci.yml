@@ -49,6 +49,8 @@ jobs:
         run: ./build/test_engprofile
       - name: Heat guard tests
         run: ./build/test_heatguard
+      - name: Packages page tests
+        run: ./build/test_pkgs
       - name: Build history tests
         run: ./build/test_buildhist
       - name: Updater tests
@@ -154,6 +156,7 @@ jobs:
           ./build-arm64/test_engread
           ./build-arm64/test_engprofile
           ./build-arm64/test_heatguard
+          ./build-arm64/test_pkgs
           ./build-arm64/test_buildhist
           ./build-arm64/test_updater
           ./build-arm64/test_stockmenu

@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-17
 re: Dale 12:54-12:57: terminal replacement (fuzzy fonts) and terminal versions of Music, Video, Bluetooth, Documents
-status: open
+status: acknowledged (Dale 13:06: terminal A; apt installer A)
 ---
 
 # Plan: a Redux terminal, then terminal apps

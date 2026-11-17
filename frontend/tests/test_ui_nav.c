@@ -729,7 +729,9 @@ int main(void) {
     /* cursor skips the blanks; Reset All is the last selectable row */
     expect(ui_list_selected() == 0, "cursor starts on System Tools");
     press(LB_DOWN); press(LB_DOWN); press(LB_DOWN); press(LB_DOWN);
-    expect(ui_list_selected() == 7, "four downs land on Stock Menu (via Boot Screen)");
+    expect(ui_list_selected() == 6, "four downs land on Packages (via Boot Screen, skipping the blanks)");
+    press(LB_DOWN);
+    expect(ui_list_selected() == 7, "then Stock Menu");
     press(LB_DOWN);
     expect(ui_list_selected() == 8, "down from Stock Menu lands on Reset All");
     press(LB_DOWN);
@@ -1367,7 +1369,24 @@ int main(void) {
     expect(ui_screen() == SCREEN_MAIN && ui_list_selected() == 0, "M on UI goes to Main");
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B on Main after M stays on Main (back stack cleared)");
-    down(8); press(LB_A); down(2); press(LB_A); down(4); press(LB_A);   /* Stock Menu confirm */
+    /* Settings > System > Packages (Dale 2026-11-17 A): desktop builds never run apt. */
+    ui_init();
+    down(8); press(LB_A); down(2); press(LB_A); down(4); press(LB_A);
+    expect(ui_screen() == SCREEN_PACKAGES, "System > Packages opens the package list");
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "htop") && strstr(dump, "neofetch") && strstr(dump, "Never upgrades"), "Packages lists the catalog");
+    }
+    press(LB_X);
+    expect(ui_screen() == SCREEN_PACKAGES, "X on a package that is not installed does nothing");
+    press(LB_A);
+    expect(ui_screen() == SCREEN_PKG_CONFIRM, "A on a missing package asks for the 3 s hold");
+    press(LB_B);
+    expect(ui_screen() == SCREEN_PACKAGES, "B cancels back to the list");
+    press(LB_B); press(LB_B); press(LB_B);
+    down(8); press(LB_A); down(2); press(LB_A); down(5); press(LB_A);   /* Stock Menu confirm (Packages is above it) */
     expect(ui_screen() == SCREEN_STOCK_CONFIRM, "Stock Menu confirm is open");
     press(LB_MENU);
     expect(ui_screen() == SCREEN_SYSTEM_DEFAULTS, "M on a confirm screen cancels back one level");
