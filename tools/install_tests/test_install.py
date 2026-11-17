@@ -267,6 +267,54 @@ class RunWrapper(unittest.TestCase):
         self.assertNotIn(b"redux-ran", self.log())
         self.assertIn(b"failed to start 3 times this boot", self.log())
 
+    def keep_build(self, sha, body, menu="menu"):
+        bd = os.path.join(self.d, "builds", sha)
+        os.makedirs(bd, exist_ok=True)
+        p = os.path.join(bd, "dmenu.bin")
+        with open(p, "w", newline="\n") as f:
+            f.write("#!/bin/sh\n" + body + "\n")
+        os.chmod(p, 0o755)
+        with open(os.path.join(self.d, "builds", "history"), "a", newline="\n") as f:
+            f.write("%s 2026-11-17 10:00 %s manual\n" % (sha, menu))
+
+    def test_three_quick_failures_go_back_to_last_working_build(self):
+        self.keep_build("070427e", 'echo good-ran; exit 0')
+        self.keep_build("2917a5c", 'exit 0', menu="nomenu")         # never reached the menu: skipped
+        self.fake_menu('exit 1')
+        for _ in range(3):
+            self.assertEqual(self.run_wrapper(), 1)
+        self.assertEqual(self.stock_runs(), 0)
+        self.assertIn(b"back to the last known working build 070427e", self.log())
+        with open(os.path.join(self.d, "builds", "history")) as f:
+            self.assertTrue(f.read().endswith(" nomenu autoback\n"))
+        self.assertFalse(os.path.exists(os.path.join(self.d, "dmenu.bin.new")))
+        self.assertEqual(self.run_wrapper(), 0)                     # next start runs the good build
+        self.assertIn(b"good-ran", self.log())
+
+    def test_rolled_back_build_failing_too_starts_stock(self):
+        self.keep_build("070427e", 'echo old; exit 1')    # differs from the current build
+        self.fake_menu('exit 1')
+        for _ in range(3):
+            self.run_wrapper()                                      # third: roll back once
+        self.assertIn(b"back to the last known working build", self.log())
+        for _ in range(2):
+            self.assertEqual(self.run_wrapper(), 1)
+        self.assertEqual(self.run_wrapper(), 0)                     # third again: stock menu
+        self.assertEqual(self.stock_runs(), 1)
+        self.assertIn(b"stock menu for the rest of this boot", self.log())
+
+    def test_same_build_as_current_is_not_a_fallback(self):
+        self.fake_menu('exit 1')
+        bd = os.path.join(self.d, "builds", "070427e")
+        os.makedirs(bd)
+        shutil.copy(os.path.join(self.d, "dmenu.bin"), os.path.join(bd, "dmenu.bin"))
+        with open(os.path.join(self.d, "builds", "history"), "w", newline="\n") as f:
+            f.write("070427e 2026-11-17 10:00 menu manual\n")
+        for _ in range(3):
+            self.run_wrapper()
+        self.assertEqual(self.stock_runs(), 1)
+        self.assertNotIn(b"back to the last known working build", self.log())
+
     def test_success_resets_the_count(self):
         self.fake_menu('exit 1')
         self.run_wrapper()
