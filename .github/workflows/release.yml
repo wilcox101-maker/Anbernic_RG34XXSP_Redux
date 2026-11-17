@@ -51,7 +51,7 @@ jobs:
           [ -s notes.md ] || { echo "::error::CHANGELOG.md has no '## [$ver]' section; add it before tagging"; exit 1; }
           printf '\n---\nBuilt from `%s` (CI run %s). Device-checked items are linked to their result notes; anything else is not verified on a device.\n' \
             "${SHA:0:7}" "https://github.com/$REPO/actions/runs/${{ steps.run.outputs.id }}" >> notes.md
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: redux-dmenu-bin-aarch64
           run-id: ${{ steps.run.outputs.id }}
