@@ -67,6 +67,16 @@ add_custom_command(
     DEPENDS redux_heatguard ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
     COMMENT "Embedding the heat guard")
 
+# Package catalog for Settings > System > Packages: tools/extras.ini, the same file the PC tool
+# reads, embedded so the list on the device and on the PC never differ.
+set(REDUX_EXTRAS_BLOB ${CMAKE_CURRENT_BINARY_DIR}/extras_ini_blob.c)
+add_custom_command(
+    OUTPUT ${REDUX_EXTRAS_BLOB}
+    COMMAND ${CMAKE_COMMAND} -DIN=${CMAKE_CURRENT_SOURCE_DIR}/../tools/extras.ini -DOUT=${REDUX_EXTRAS_BLOB}
+            -DNAME=redux_extras_ini -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../tools/extras.ini ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    COMMENT "Embedding the package catalog")
+
 add_executable(rg34xxsp-redux
     src/main.c
     src/grid.c
@@ -76,6 +86,8 @@ add_executable(rg34xxsp-redux
     src/remap.c
     src/ui.c
     src/uistyle.c
+    src/pkgs.c
+    ${REDUX_EXTRAS_BLOB}
     src/netsvc.c
     src/launcher.c
     src/systems.c
@@ -195,6 +207,10 @@ target_include_directories(test_buildhist PRIVATE src)
 add_executable(test_updater tests/test_updater.c src/updater.c src/buildhist.c)
 target_include_directories(test_updater PRIVATE src)
 
+# Packages page: catalog parse and the apt command text (no apt run): ./test_pkgs.
+add_executable(test_pkgs tests/test_pkgs.c src/pkgs.c ${REDUX_EXTRAS_BLOB})
+target_include_directories(test_pkgs PRIVATE src)
+
 # SSH / SMB switches against a temp system.cfg (no systemctl): ./test_netsvc.
 add_executable(test_netsvc tests/test_netsvc.c src/netsvc.c)
 target_include_directories(test_netsvc PRIVATE src)
@@ -215,7 +231,7 @@ add_executable(test_sysinfo tests/test_sysinfo.c src/sysinfo.c)
 target_include_directories(test_sysinfo PRIVATE src)
 
 # Navigation test (back stack, Engineering tabs). Links the UI with the desktop platform; no window.
-add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/uistyle.c src/netsvc.c src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/powerkeys.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c)
+add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/uistyle.c src/netsvc.c src/pkgs.c ${REDUX_EXTRAS_BLOB} src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/powerkeys.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c)
 target_include_directories(test_ui_nav PRIVATE src)
 if(TARGET SDL2::SDL2)
     target_link_libraries(test_ui_nav PRIVATE SDL2::SDL2)
