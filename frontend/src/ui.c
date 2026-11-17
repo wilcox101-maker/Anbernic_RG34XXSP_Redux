@@ -70,7 +70,9 @@ static char eng_msg[GRID_COLS];   /* result of the last X/Y on Engineering */
 /* CPU tab controls (F5 step 3): rows Governor, Min, Max, cpu1, cpu2, cpu3. */
 enum { ENG_ROW_GOV = 0, ENG_ROW_MIN, ENG_ROW_MAX, ENG_ROW_CPU1, ENG_ROW_CPU2, ENG_ROW_CPU3, ENG_ROW_COUNT };
 static int eng_row, eng_editing, eng_pick;   /* eng_pick: index into the governor or OPP list */
-static char upd_sha[16];                     /* Update: the downloaded build waiting to be installed */
+static char upd_sha[16];                     /* Update: the build waiting to be installed */
+static int upd_row;                          /* Update tab: 0 = check for update, 1.. = history rows */
+static int upd_rollback;                     /* the confirm screen is a roll-back */
 static int eng_log_src;                      /* Logs tab: 0 redux.log, 1 eng-writes.log, 2 dmesg */
 /* Input tab (F5 step 5b): which logical buttons are held, and the last events. */
 #define IN_LOG 8
@@ -799,6 +801,32 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         dirty = 1;
         return;
     }
+    if (screen == SCREEN_ENG && eng_tab == ENG_UPDATE && (btn == LB_UP || btn == LB_DOWN)) {
+        buildhist_entry_t h[BUILDHIST_MAX];
+        int rows = 1 + platform_build_history(h, BUILDHIST_MAX);
+        upd_row = (upd_row + (btn == LB_DOWN ? 1 : rows - 1)) % rows;
+        dirty = 1;
+        return;
+    }
+    if (screen == SCREEN_ENG && eng_tab == ENG_UPDATE && btn == LB_A && upd_row > 0) {
+        /* Roll back (step 3): only to a build that reached the menu and is still kept here. */
+        buildhist_entry_t h[BUILDHIST_MAX];
+        int n = platform_build_history(h, BUILDHIST_MAX);
+        if (upd_row > n) { upd_row = 0; dirty = 1; return; }
+        const buildhist_entry_t *e = &h[upd_row - 1];
+        if (!strcmp(e->sha, REDUX_BUILD))     snprintf(eng_msg, sizeof eng_msg, "That is the running build.");
+        else if (!e->menu)                    snprintf(eng_msg, sizeof eng_msg, "%s never reached the menu: no roll-back to it.", e->sha);
+        else if (!platform_update_have(e->sha)) snprintf(eng_msg, sizeof eng_msg, "%s is no longer kept on the device.", e->sha);
+        else {
+            snprintf(upd_sha, sizeof upd_sha, "%s", e->sha);
+            upd_rollback = 1;
+            stock_started = 0; stock_msg[0] = '\0';
+            go(SCREEN_UPDATE_CONFIRM);
+            return;
+        }
+        dirty = 1;
+        return;
+    }
     if (screen == SCREEN_ENG && eng_tab == ENG_UPDATE && btn == LB_A) {
         ui_busy("Checking for an update", "Newest dev build from the repo over HTTPS,\nthen a checksum check. Needs Wi-Fi.");
         int rc = platform_update_download(REDUX_BUILD, upd_sha, sizeof upd_sha);
@@ -808,7 +836,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
                                      "The release data looks wrong: nothing kept." };
         int i = rc == 0 ? 0 : rc == 1 ? 1 : rc == -1 ? 2 : rc == -2 ? 3 : 4;
         snprintf(eng_msg, sizeof eng_msg, "%s", why[i]);
-        if (rc == 0) { stock_started = 0; stock_msg[0] = '\0'; go(SCREEN_UPDATE_CONFIRM); }
+        if (rc == 0) { upd_rollback = 0; stock_started = 0; stock_msg[0] = '\0'; go(SCREEN_UPDATE_CONFIRM); }
         else dirty = 1;
         return;
     }
@@ -1014,7 +1042,7 @@ void ui_tick(uint32_t now_ms) {
                 snprintf(stock_msg, sizeof stock_msg, "%s", bootscreen_message(rc));
             } else if (screen == SCREEN_UPDATE_CONFIRM) {
                 ui_busy("Installing", "Copying the new build, then reboot.");
-                int rc = platform_update_install(upd_sha, REDUX_BUILD, "update");
+                int rc = platform_update_install(upd_sha, REDUX_BUILD, upd_rollback ? "rollback" : "update");
                 stock_started = 1;
                 if (rc == 0) {
                     snprintf(stock_msg, sizeof stock_msg, "Installed %s: rebooting", upd_sha);
@@ -1280,16 +1308,19 @@ static void draw_eng_tab_body(void) {
         if (platform_last_good(&g) == 0) snprintf(t, sizeof t, "  Last known working:  %s   (%s)", g.sha, g.when);
         else snprintf(t, sizeof t, "  Last known working:  none recorded yet");
         body(3, t);
-        body(5, "  History (newest first)   Build     Installed          Reached menu   How");
+        body(5, "  [ Check for the newest dev build ]");
+        if (upd_row == 0) grid_invert(ROW_BODY0 + 5, 1, 38);
+        body(7, "  History (newest first)   Build     Installed          Reached menu   How");
         int n = platform_build_history(h, BUILDHIST_MAX);
-        if (n == 0) body(6, "    none yet: a build is recorded when it reaches the main menu");
+        if (n == 0) body(8, "    none yet: a build is recorded when it reaches the main menu");
         for (int k = 0; k < n; k++) {
-            snprintf(t, sizeof t, "                           %-9.9s %-18.18s %-14s %.11s", h[k].sha, h[k].when,
-                     h[k].menu ? "yes" : "no", h[k].how);
-            body(6 + k, t);
+            snprintf(t, sizeof t, "                           %-9.9s %-18.18s %-14s %-9.9s%s", h[k].sha, h[k].when,
+                     h[k].menu ? "yes" : "no", h[k].how, !strcmp(h[k].sha, REDUX_BUILD) ? " (running)" : "");
+            body(8 + k, t);
+            if (upd_row == k + 1) grid_invert(ROW_BODY0 + 8 + k, 1, GRID_COLS - 2);
         }
-        body(18, "  A: check for the newest dev build (Wi-Fi), then hold A 3 s to install and reboot.");
-        body(19, "  Roll back comes in the next step.");
+        body(19, "  Up/Down: pick.  A on Check: download (Wi-Fi).  A on a working build: roll back.");
+        body(20, "  Both end with a 3 s hold, then a reboot.");
     } else if (eng_tab == ENG_STORAGE) {
         eng_mount_t m[ENG_MAX_MOUNTS];
         platform_mounts(m);
@@ -1553,9 +1584,12 @@ void ui_draw(void) {
         }
         break;
     case SCREEN_UPDATE_CONFIRM: {
-        frame("Install update", stock_started ? "B:Back" : "Hold A 3s:Install and reboot  B:Cancel", 1, 0);
+        frame(upd_rollback ? "Roll back" : "Install update",
+              stock_started ? "B:Back" : "Hold A 3s:Install and reboot  B:Cancel", 1, 0);
         char line[GRID_COLS];
-        snprintf(line, sizeof line, "  New build:      %s   (downloaded, checksum OK)", upd_sha); body(0, line);
+        if (upd_rollback) snprintf(line, sizeof line, "  Roll back to:   %s   (reached the menu before; kept here)", upd_sha);
+        else snprintf(line, sizeof line, "  New build:      %s   (downloaded, checksum OK)", upd_sha);
+        body(0, line);
         snprintf(line, sizeof line, "  Running build:  %s   (kept for roll-back)", REDUX_BUILD); body(1, line);
         body(3, "  Installs it as dmenu.bin.new, then renames it, then reboots.");
         body(4, "  Hold A for 3 seconds. Release, or any other button, cancels.");

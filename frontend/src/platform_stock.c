@@ -103,6 +103,7 @@ int platform_update_download(const char *current, char *sha, size_t n) { return 
 int platform_update_install(const char *sha, const char *current, const char *how) {
     return updater_install(sha, current, how);
 }
+int platform_update_have(const char *sha) { return updater_have(sha); }
 int platform_hot(void) {
     FILE *f = fopen("/tmp/redux-hot", "r");   /* HG_FLAG */
     if (!f) return 0;
