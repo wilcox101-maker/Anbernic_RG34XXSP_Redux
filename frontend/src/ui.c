@@ -784,6 +784,13 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         return;
     }
     if (screen == SCREEN_ENG && eng_tab == ENG_LOGS && btn == LB_A) { eng_log_src = (eng_log_src + 1) % 3; dirty = 1; return; }
+    if (screen == SCREEN_ENG && eng_tab == ENG_DISPLAY && btn == LB_A) {
+        ui_busy("LED and rumble test", "Red LED 1 s, green LED off 1 s, rumble 0.5 s.\nThe green LED always comes back on.");
+        snprintf(eng_msg, sizeof eng_msg, "%s", platform_led_rumble_test() == 0
+                 ? "LED and rumble test done. Logged." : "LED/rumble test: a write failed. See eng-writes.log.");
+        dirty = 1;
+        return;
+    }
     if (screen == SCREEN_ENG && eng_tab == ENG_STORAGE && btn == LB_A) {
         eng_mount_t m[ENG_MAX_MOUNTS];
         platform_mounts(m);
@@ -1288,6 +1295,7 @@ static void draw_eng_tab_body(void) {
         snprintf(t, sizeof t, "  Brightness:   level %d of %d   (/dev/disp value %d)",
                  lvl, BRIGHTNESS_MAX, brightness_disp_value(lvl));
         body(4, t);
+        body(6, "  A: LED and rumble test (red LED, green LED off, rumble; ends with the green LED on)");
     } else {
         sysinfo_row_t rows[SYSINFO_MAX_ROWS];
         int n = sysinfo_collect(rows, SYSINFO_MAX_ROWS);

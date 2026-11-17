@@ -41,6 +41,14 @@ int eng_write_freq_limits(int min_khz, int max_khz);
 /* cpu 1-3 only: cpu0 always stays online. */
 int eng_write_core_online(int cpu, int on);
 
+/* LED and rumble test (F5 step 5c; values from Dale's device, 2026-11-17): red LED 1 s, green
+   power LED off 1 s, green back on, rumble 0.5 s. Always ends with the green LED on and the rumble
+   off, even if a write fails. Logged. 0 ok, -2 a write failed. Tests: engprofile_set_batt_dir(). */
+int eng_led_rumble_test(void);
+void engprofile_set_batt_dir(const char *dir);
+/* Tests: no sleeping. */
+void engprofile_set_no_sleep(int on);
+
 /* Save the current CPU policy as the profile. 0 ok. */
 int engprofile_save(void);
 /* Remove the profile (and any set-aside one). Stock settings from the next boot. 0 ok. */

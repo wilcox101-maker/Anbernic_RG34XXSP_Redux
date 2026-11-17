@@ -93,6 +93,7 @@ int platform_fsck(const char *dev) {
     if (st == -1 || !WIFEXITED(st)) return 8;
     return WEXITSTATUS(st);
 }
+int platform_led_rumble_test(void) { return eng_led_rumble_test(); }
 int platform_hot(void) {
     FILE *f = fopen("/tmp/redux-hot", "r");   /* HG_FLAG */
     if (!f) return 0;

@@ -252,6 +252,17 @@ int main(void) {
     }
     for (int i = 0; i < 3; i++) press(LB_R1);           /* Logs, System, CPU */
     expect(ui_eng_tab() == ENG_CPU, "tabs wrap back to CPU");
+    for (int i = 0; i < 4; i++) press(LB_R1);           /* Display */
+    expect(ui_eng_tab() == ENG_DISPLAY, "R1 x4 from CPU reaches Display");
+    press(LB_A);
+    {
+        char dump[8192];
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "LED and rumble test done") != NULL && ui_last_busy()
+               && strcmp(ui_last_busy(), "LED and rumble test") == 0, "Display A runs the LED/rumble test");
+    }
+    for (int i = 0; i < 5; i++) press(LB_R1);           /* back to CPU */
     press(LB_B);
     expect(ui_screen() == SCREEN_MAIN, "B from Engineering exits to Main, not the confirm screen");
 

@@ -44,6 +44,9 @@ int  platform_log_tail(int which, char lines[][ENG_LOG_COLS], int max);
    0 clean, 4 problems found, 8 could not check, 127 fsck missing. */
 int  platform_fsck(const char *dev);
 
+/* LED and rumble test (F5 step 5c). 0 ok. Always leaves the green LED on and the rumble off. */
+int  platform_led_rumble_test(void);
+
 /* 1 while the heat guard has the CPU capped (F5 step 4). */
 int  platform_hot(void);
 
