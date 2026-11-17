@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#define HOLD_TO_ENTER_MS 2000   /* Engineering Mode: hold A this long (ui-spec flag 3) */
+#define HOLD_TO_ENTER_MS 3000   /* Engineering Mode: hold A this long (Dale 2026-11-17: 3 s, like every other hold) */
 #define HOLD_DESTRUCT_MS 3000   /* destructive confirms: Stock Menu, and later Restart / Power Off */
 #define IDLE_WAIT_MS     1000   /* wake once a second so the clock can roll over */
 #define HOLD_WAIT_MS     50     /* smooth progress bar while A is held */
@@ -1299,10 +1299,10 @@ void ui_draw(void) {
         list(0, internet_items, COUNT(internet_items));
         break;
     case SCREEN_ENG_CONFIRM: {
-        frame("[ENGINEERING]", "Hold A:Enter  B:Back", 0, 1);
+        frame("[ENGINEERING]", "Hold A 3s:Enter  B:Back", 0, 1);
         body(0, "  Engineering Mode shows live CPU, GPU, thermal and power controls.");
         body(1, "  Changes apply live and are only kept if you choose \"Save as profile\".");
-        body(3, "  Hold A for 2 seconds to enter. Release to cancel.");
+        body(3, "  Hold A for 3 seconds to enter. Release to cancel.");
         draw_hold_bar(5, HOLD_TO_ENTER_MS);
         break;
     }
