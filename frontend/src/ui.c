@@ -1102,7 +1102,7 @@ static void draw_eng_tab_body(void) {
         body(7, "  Per-core:");
         for (int k = 0; k < 4; k++) {
             snprintf(t, sizeof t, "    cpu%d  %d MHz   %s", k, platform_cpu_cur_mhz(k),
-                     platform_cpu_online(k) ? "online" : "offline");
+                     k == 0 ? "online (always on)" : platform_cpu_online(k) ? "online" : "offline");
             body(8 + k, t);
         }
         body(13, "  OPP table (read from the chip):");

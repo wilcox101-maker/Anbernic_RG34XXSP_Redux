@@ -225,7 +225,7 @@ eng-writes.log and dmesg.
 │  Current:      1008 MHz                                                                │
 │                                                                                        │
 │  Per-core:                                                                             │
-│    cpu0  1008 MHz   online                                                             │
+│    cpu0  1008 MHz   online (always on)                                                 │
 │    cpu1  1008 MHz   online                                                             │
 │    cpu2  1008 MHz   online                                                             │
 │    cpu3  1008 MHz   online                                                             │
