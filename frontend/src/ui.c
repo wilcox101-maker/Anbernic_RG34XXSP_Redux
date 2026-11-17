@@ -183,7 +183,8 @@ const char *ui_last_busy(void) { return last_busy; }
 
 static void box_char(int col, int row, const char *ch) { grid_puts(col, row, ch, 0); }
 
-void ui_busy(const char *title, const char *detail) {
+/* full = 1: the window fills the screen (game and app launches, Dale 2026-11-17); 0: a centred box. */
+static void busy_draw(const char *title, const char *detail, int full) {
     char store[8][88];
     int n = 0, saw_wait = 0;
     if (!title) title = "";
@@ -213,10 +214,15 @@ void ui_busy(const char *title, const char *detail) {
     int inner = text_max + 2;          /* one space of padding on each side */
     if (inner < 24) inner = 24;
     if (inner > GRID_COLS - 6) inner = GRID_COLS - 6;
-    int box_w = inner + 2;
-    int top = (GRID_ROWS - (n + 2)) / 2;
-    int left = (GRID_COLS - box_w) / 2;
+    int box_w = full ? GRID_COLS : inner + 2;
+    int box_h = full ? GRID_ROWS : n + 2;           /* rows including both borders */
+    int top = full ? 0 : (GRID_ROWS - (n + 2)) / 2;
+    int left = full ? 0 : (GRID_COLS - box_w) / 2;
     if (top < 0) top = 0;
+    /* Full screen: the text block is centred inside; rows between stay empty. */
+    int text_left = full ? (GRID_COLS - text_max) / 2 : left + 2;
+    int text_top = full ? (GRID_ROWS - n) / 2 : top + 1;
+    if (full) { inner = GRID_COLS - 2; }
 
     grid_clear();
     box_char(left, top, "┌");
@@ -232,17 +238,20 @@ void ui_busy(const char *title, const char *detail) {
     int tcol = left + 3 + (box_w - 4 - tlen) / 2;
     if (tcol < left + 3) tcol = left + 3;
     grid_puts(tcol, top, tshow, 1);
-    for (int i = 0; i < n; i++) {
-        int r = top + 1 + i;
+    for (int r = top + 1; r < top + box_h - 1; r++) {
         box_char(left, r, "│");
         box_char(left + box_w - 1, r, "│");
+    }
+    for (int i = 0; i < n; i++) {
+        int r = text_top + i;
         if (!store[i][0]) {
-            for (int c = 1; c < box_w - 1; c++) box_char(left + c, r, "─");
+            if (full) for (int c = text_left; c < text_left + text_max; c++) box_char(c, r, "─");
+            else for (int c = 1; c < box_w - 1; c++) box_char(left + c, r, "─");
         } else {
-            grid_puts(left + 2, r, store[i], 0);
+            grid_puts(text_left, r, store[i], 0);
         }
     }
-    int bot = top + n + 1;
+    int bot = top + box_h - 1;
     box_char(left, bot, "└");
     for (int c = 1; c < box_w - 1; c++) box_char(left + c, bot, "─");
     box_char(left + box_w - 1, bot, "┘");
@@ -251,6 +260,9 @@ void ui_busy(const char *title, const char *detail) {
     if (present_one)
         for (int i = 0; i < PRESENT_BUFFERS; i++) present_one();
 }
+
+void ui_busy(const char *title, const char *detail)      { busy_draw(title, detail, 0); }
+void ui_busy_full(const char *title, const char *detail) { busy_draw(title, detail, 1); }
 
 static void engine_name(const system_entry_t *sys, char *out, size_t n) {
     if (!sys) { snprintf(out, n, "unknown"); return; }
@@ -289,7 +301,7 @@ static void show_loading(const system_entry_t *sys, const char *path) {
              "\nStarting emulator, please wait...%s",
              romscan_rom_name(sys_index, selected), romscan_title(sys_index),
              engine, card_of(path), tip);
-    ui_busy("Loading ROM", detail);
+    ui_busy_full("Loading ROM", detail);
 }
 
 void ui_init(void) {
@@ -597,7 +609,7 @@ static void app_start(int app) {
     if (rc == 0) {
         char detail[160];
         snprintf(detail, sizeof detail, "App     %s\n\nStarting, please wait...", apps_name(app));
-        ui_busy("Loading App", detail);
+        ui_busy_full("Loading App", detail);
         should_exit = 1;
     } else {
         snprintf(apps_msg, sizeof apps_msg, rc == -2 ? "Not installed on this device" : "Could not start");
