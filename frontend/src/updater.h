@@ -5,7 +5,8 @@
 /* Engineering > Update, step 2 (notes/2026-11-17-dale-decision-eng-update.md; security item, Dale
    merges). Downloads the newest dev build of this repo only, over HTTPS, checks it against the
    release's SHA256SUMS.txt, keeps it in /mnt/vendor/redux/builds/<sha>/, and installs it as
-   dmenu.bin.new + rename. Never touches the cards, the boot partition or run.sh. */
+   dmenu.bin.new + rename, with that build's bootlogo.bmp beside it (Dale 2026-11-17 A). Never
+   touches the cards or run.sh; the boot partition is written by bootscreen_install, called by the UI. */
 
 #define UPDATER_URL      "https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux/releases/download/dev"
 #define UPDATER_REDUX    "/mnt/vendor/redux"
@@ -27,6 +28,11 @@ int updater_download(const char *current_sha, char *sha_out, size_t n);
    and keeps the newest UPDATER_KEEP builds (never the current or the last known working one).
    0 ok; -1 no such build; -2 copy or rename failed (the old dmenu.bin stays). The caller reboots. */
 int updater_install(const char *sha, const char *current_sha, const char *how);
+
+/* 1 if the last updater_install also replaced /mnt/vendor/redux/bootlogo.bmp with that build's logo
+   (the release had one). The caller then rewrites the boot partition only if the Redux logo is the
+   one installed there (bootscreen_is_redux). */
+int updater_logo_changed(void);
 
 /* 1 if builds/<sha>/dmenu.bin is kept. */
 int updater_have(const char *sha);

@@ -176,7 +176,9 @@ jobs:
           cp build-arm64/rg34xxsp-redux dmenu.bin
       - name: Boot logo for the dev release (stock format)
         run: |
-          python3 tools/make_bootlogo.py --out bootlogo.bmp
+          # Stamped with this build, like the title bar (Dale 2026-11-17 A); the Update tab installs
+          # it together with the matching dmenu.bin.
+          python3 tools/make_bootlogo.py --version "0.1-dev $(echo "$GITHUB_SHA" | cut -c1-7)" --out bootlogo.bmp
           python3 tools/make_bootlogo.py --check bootlogo.bmp
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
