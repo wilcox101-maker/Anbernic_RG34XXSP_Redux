@@ -1,7 +1,8 @@
 # Installing Redux on a stock RG34XXSP card
 
-> **Not checked on the device yet.** The installer has only run against a test copy of the card's
-> folders. Until a device test is logged in `notes/`, treat this as a beta tool and keep a backup of your card.
+> **Pre-Beta.** Check, install, upgrade and uninstall were device-checked on Dale's unit on 2026-11-16
+> ([result](../notes/2026-11-16-dale-hw-result-185.md), checks 1-4). Only that one unit has run it:
+> keep a backup of your card.
 
 Redux replaces the stock menu. Games, saves, RetroArch and the stock apps stay as they are. The
 installer runs on your PC and talks to the handheld over Wi-Fi with SSH. It changes **one line** of
@@ -20,6 +21,13 @@ back.
   Put them in one folder.
 
 Find the handheld's IP address in the stock Wi-Fi settings.
+
+## Compatibility
+| | Tested | Notes |
+|---|---|---|
+| Hardware | **Original revision, 2 GB LPDDR4** (Dale's unit; 1979 MB seen by Linux, [survey](../notes/2026-11-12-dale-hw-result-device-survey.md)) | Revised "Metallic Blue" units (512 MB / 1 GB LPDDR3, different panel) are **untested**; see [field-reports.md](field-reports.md) |
+| Stock firmware | `rg34xxsp-fw-sd_202505` for the Phase 1 boot test (2026-11-10). The firmware version on the card the Redux frontend was tested on is not recorded yet | V1.0.6 (2026-05-26) has been read on the PC only ([diff](../notes/2026-11-12-claude-message-stock-v106-diff.md)); not run with Redux |
+| SD cards | The stock card in TF1 (system plus the Roms partition); a FAT (vfat) ROM card in TF2 (117 GB on Dale's unit) | Redux's own code never writes to either ROM card. Other card sizes and formats are untested |
 
 ## Install
 Open PowerShell in that folder:

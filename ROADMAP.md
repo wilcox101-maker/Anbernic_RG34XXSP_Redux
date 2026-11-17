@@ -91,8 +91,93 @@ hardware video decode for media, in-game HUD overlay, Wi-Fi idle scanning, featu
 earlier once Beta is out, if they don't put its exit test at risk.
 
 ### Progress estimate
-Rough, effort-weighted, as of 2026-11-17: **Beta ≈ 60%** (F3, F4 and F5 signed off; weights in README "Project status"), **1.0 ≈ 20%** (research and design; nothing booted on mainline yet). Phase 2 is the biggest
+Rough, effort-weighted, as of 2026-11-17: **Beta ≈ 60%** (F3, F4 and F5 signed off; weights in "Status detail" below), **1.0 ≈ 20%** (research and design; nothing booted on mainline yet). Phase 2 is the biggest
 unknown: it exists only as a design and nothing has booted yet. Update this line when a phase is signed off.
+
+## Status detail (moved from the README)
+
+*Updated 2026-11-17. **Device-checked** means Dale has run it on a real RG34XXSP and a result note in
+[`notes/`](notes/) records it. Everything else is merged and passes CI but hasn't been confirmed on
+hardware yet. Live task list: [`notes/STATUS.md`](notes/STATUS.md).*
+
+| Milestone | What it is | Progress (rough) |
+|---|---|---|
+| **Beta (v0.5)** | Redux frontend on the stock kernel, installable by anyone | ≈ 60% |
+| **1.0** | Purpose-built OS on a mainline kernel | ≈ 20% (research and design; nothing booted on mainline yet) |
+| **1.x** | After 1.0: ZRAM on mainline | not started |
+
+*How the Beta number is made: the Beta work is weighted by effort (F0-F2 25, F3 10, F4 10, F5 10, F6 15,
+installer 10, Phase 1 measurements 5, user docs 5, exit test and releases 10). Done: F0-F5, installer A,
+part of the docs. It was ≈ 40% on 2026-11-14 and ≈ 55% on 2026-11-17 before F5 was signed off.*
+
+#### Latest (2026-11-16)
+
+- **Device session #185** (dev `5d7dea6`): 27 of 30 checks passed, including the installer (check,
+  install, upgrade, uninstall) and the start-failure guard ([result](notes/2026-11-16-dale-hw-result-185.md)).
+- **F3 signed off:** five UI fonts and Reset All ([sign-off](notes/2026-11-16-dale-phase-gate-f3-signed-off.md)).
+- **F4 signed off:** lid sleep in the menu and in games, governor restore after a game, the menu dims after
+  60 s. Exit test: 50 lid cycles mid-game on `6d87953`, all slept and woke; save-before-sleep timing waived by
+  Dale ([sign-off](notes/2026-11-16-dale-phase-gate-f4-signed-off.md)).
+- **Game Room TF1/TF2 card picker**, device-checked with the cache crash fix (#216)
+  ([result](notes/2026-11-16-dale-hw-result-f4.md)).
+- **F5 Engineering Mode under way:** live read-outs and the safety net (logged writes, saved profile) are
+  device-checked on `d334375` ([result](notes/2026-11-16-dale-hw-result-f5-steps-1-2.md)). CPU controls,
+  the heat guard (caps the CPU at 75 °C, powers off at 90 °C) and the GPU, Storage and Logs tabs are built,
+  not device-checked.
+- **Research:** H700 project findings landed in Redux (#223): stock sleep is run by the BL31 firmware with
+  no SCP firmware, Wi-Fi is not a wake source, and the stock `loadapp.sh` formats p1/p7/p8 at boot if they
+  can't be mounted, so Redux must never leave them unmountable. Mainline work for 1.0 is in
+  [`docs/kernel-research/`](docs/kernel-research/README.md) (desk research; nothing booted yet).
+
+#### Completed
+- **Phase 0, dissect stock:** partitions, boot chain, hardware map, stock userspace inventory.
+- **Phase 1, stock-kernel baseline:** patched `boot.img` (5 ms input polling, `schedutil` governor,
+  write barriers). Boots to the menu in about 20 s on the device (2026-11-10).
+- **Frontend F0-F4 signed off:** UI spec, desktop prototype, launch parity with the stock menu, settings
+  parity (F3), power and lid (F4).
+- **Device-checked features:**
+  - Game launching through stock RetroArch (PS1, Neo Geo, CPS, Saturn and others), PSP, **MAME** and
+    **OpenBOR** (Contra on TF2, saves on TF1); back to the same game list after quitting. Another 27
+    system folders are mapped; not every one has been run on the device
+  - Game Room card picker (TF1/TF2); games on TF2 launch
+  - Installer A from the PC (check, install, upgrade, uninstall to stock) and the start-failure guard
+    (three quick failures fall back to the stock menu)
+  - BIOS-style UI: colour presets (Amber kept across a reboot), 5 UI fonts, Reset All; brightness, volume
+    and Screen Timeout kept
+  - Lid sleep and wake in the menu and in games; governor restored after a game; menu dimming
+  - Wi-Fi setup with a full on-screen keyboard
+  - **Redux boot screen:** install, restore, and the SSH restore
+  - Card Scripts: `.sh` ports on either card always listed and run when picked (#200)
+  - Apps: Terminal, Task Monitor (htop), Music, Ebook Reader, five Tools apps; File Manager on Main; Apps
+    resume where you left off. The Video Player plays through, but takes no buttons during playback (a
+    Redux front-end is planned in F6)
+  - System Tools, Restart/Power Off with a 3 s hold, restore the stock menu from Settings
+  - `tools/extras.py`: optional Ubuntu extras (htop) from a checklist, one SSH line
+
+#### In progress (merged, waiting for a device check)
+- **F5 Engineering Mode:** CPU controls (governor, min/max, cores 1-3), the heat guard, GPU, Storage and
+  Logs tabs, battery time left. Still to build: input viewer, LED and rumble test, a check-only filesystem
+  check (`fsck -n`)
+- Not yet run on the device: lid during Restart/Power Off from the menu, a ROM copied from the PC showing
+  after restart, start-up time with the ROM cache
+- Open device checks are listed in [`notes/STATUS.md`](notes/STATUS.md)
+
+#### Next (to reach Beta)
+- F5: finish and Dale's sign-off (exit test: 30 min at full load on the charger)
+- F6: Wi-Fi off unless needed, a Power & Lid settings page, Redux front-ends for the stock Video Player,
+  Music, Ebook Reader and File Manager
+- Installer B: a TF2 package installed from the device
+- Phase 1 measurements, stock vs. Redux: boot time, idle battery drain, temperature, button latency
+- User docs; Beta exit test: one week of daily use with no lost save; tagged `v0.5-beta.N` releases
+
+#### Future
+- **1.0, mainline:** mainline kernel and u-boot, a read-only system that runs from RAM, lid wake,
+  then the frontend checklists passed again on the new OS, and an install/update path
+- **1.x:** ZRAM (compressed RAM swap) on mainline
+- **Backlog:** Update option in Settings, DOS menu layout and a switch for it, a custom boot image picked
+  on the device, Game Room Favorites, Expert Mode (above-factory settings behind an unlock), PC link
+  (browser file manager), chiptune composer, vsync rebuilds of stock apps that tear, hardware video
+  decode, in-game HUD
 
 ## Non-goals
 - Overclocking or undervolting past the stock OPP table **by default** (it is possible only through the opt-in Expert Mode; see notes/2026-11-12-dale-decision-expert-mode.md)
