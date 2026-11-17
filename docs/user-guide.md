@@ -144,6 +144,35 @@ the handheld, it can break RetroArch. **[device-checked]** (htop).
 - If Redux fails to start three times in a row, the stock menu starts instead for that boot
   ([install.md](install.md#if-redux-wont-start)).
 
+## Troubleshooting and FAQ
+
+**`install.py --check` says…**
+| Message | Means | Do |
+|---|---|---|
+| `ready to install` | stock launcher found, nothing installed | install |
+| `Redux is installed; install again to upgrade, or uninstall` | Redux is already the launcher | install again to upgrade |
+| `STOPPED: no …/dmenu_ln` | not a stock RG34XXSP card, or the system partition isn't mounted | check you are on the stock firmware |
+| `STOPPED: dmenu_ln has an unknown CMD= line` | the launcher was changed by hand or by another firmware | nothing was touched; restore stock first |
+| `missing tool: …` | a command the installer needs isn't on the device | report it ([bug report](https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux/issues)) |
+| SSH `Connection refused` / `timed out` | wrong address, Wi-Fi off, or SSH switched off | see the next question |
+
+The install and uninstall messages are explained in [install.md](install.md#when-it-stops).
+
+**The handheld's IP address changed.** Your router hands out addresses, so it can change between
+sessions. Look it up again in the stock Wi-Fi settings (or your router's device list) and use the new
+one. To keep it fixed, reserve the address for the handheld in your router (DHCP reservation).
+
+**Redux doesn't start, or I want stock back.**
+- On the device: *Settings → System → Stock Menu* (hold A for 3 s).
+- From the PC: `python install.py --uninstall <ip>`, then restart.
+- If Redux fails to start three times in a row, the stock menu starts by itself for that boot; SSH
+  still works, so the PC uninstall above still works ([install.md](install.md#if-redux-wont-start)).
+
+**What does Redux never touch?** Redux's own code never writes to, formats or resizes your ROM cards
+(TF1's Roms partition and TF2). The stock engines it launches (RetroArch, OpenBOR) save there exactly
+as on stock. Redux never writes the bootloader region, and the installer changes one line of the stock
+launcher plus its own folder ([what changes](install.md#what-exactly-changes-on-the-handheld)).
+
 ## Known problems (2026-11-14)
 - Video Player crashes when you play a video (12a).
 - Stock File Manager and Terminal tear when the screen changes (stock graphics library has no
