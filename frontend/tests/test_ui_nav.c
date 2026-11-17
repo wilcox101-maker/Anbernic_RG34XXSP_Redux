@@ -29,7 +29,7 @@
 static int fails;
 static void expect(int cond, const char *what) { printf("%s %s\n", cond ? "ok  " : "FAIL", what); if (!cond) fails++; }
 static void press(logical_button_t b) { ui_button(b, 1, 1); ui_button(b, 0, 2); }
-static void down(int n) { while (n--) press(LB_DOWN); }
+static void down(int n) { while (n-- > 0) press(LB_DOWN); }
 static void tap(logical_button_t b, int n) { while (n--) press(b); }
 
 static int boot_mounts;
@@ -1138,12 +1138,16 @@ int main(void) {
         expect(strstr(dump, "File Manager") == NULL && strstr(dump, "Music Player") == NULL
                && strstr(dump, "Video Player") == NULL, "File Manager, Music and Video are on Main only");
         expect(apps_row_of(APP_FILES) == -1 && apps_row_of(APP_MUSIC) == -1 && apps_row_of(APP_VIDEO) == -1
-               && apps_count() == APP_COUNT - 3
-               && apps_list_id(apps_row_of(APP_PDF)) == APP_PDF, "Apps rows map to app ids without the Main apps");
+               && apps_row_of(APP_MIXER) == -1 && apps_row_of(APP_SPEAKER_TEST) == -1
+               && apps_row_of(APP_TOP) == -1 && apps_row_of(APP_BLUETOOTH) == -1
+               && apps_row_of(APP_INPUT_TEST) == -1 && apps_row_of(APP_NETWORK) == -1
+               && apps_count() == APP_COUNT - 9
+               && apps_list_id(apps_row_of(APP_PDF)) == APP_PDF,
+               "Apps rows map to app ids without the Main, Audio and Settings tools");
         int sorted = 1;
         for (int r = 1; r < apps_count(); r++)
             if (strcasecmp(apps_name(apps_list_id(r - 1)), apps_name(apps_list_id(r))) > 0) sorted = 0;
-        expect(sorted && apps_list_id(0) == APP_MIXER, "Apps rows are sorted by name (Audio Mixer first)");
+        expect(sorted, "Apps rows are sorted by name");
     }
     press(LB_A);
     expect(ui_should_exit() == 0 && ui_screen() == SCREEN_APPS, "a missing app does not launch");
@@ -1181,9 +1185,9 @@ int main(void) {
     mkdir("/tmp/redux-apps/mnt/mod", 0755); mkdir("/tmp/redux-apps/mnt/mod/ctrl", 0755);
     write_empty("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
     ui_init();
-    down(5); press(LB_A);              /* Apps */
-    down(apps_row_of(APP_TOP)); press(LB_A);
-    expect(ui_should_exit() == 1, "Task Monitor launches");
+    down(8); press(LB_A);              /* Settings */
+    down(8); press(LB_A);              /* Task Monitor (moved from Apps, Dale 2026-11-17) */
+    expect(ui_should_exit() == 1, "Task Monitor launches from Settings");
     {
         char line[256] = "";
         FILE *f = fopen("/tmp/redux-next-apps", "r");
@@ -1192,11 +1196,17 @@ int main(void) {
                "Task Monitor runs SimpleTerminal -e htop from its folder");
     }
     remove("/tmp/redux-next-apps");
+    remove(UI_RESUME_PATH);
 
     /* After an app from the Apps list, Redux restarts on the Apps list at the same row. */
     ui_init();
+    down(5); press(LB_A);              /* Apps */
+    down(apps_row_of(APP_TERMINAL)); press(LB_A);
+    expect(ui_should_exit() == 1, "Terminal launches from Apps");
+    remove("/tmp/redux-next-apps");
+    ui_init();
     expect(ui_screen() == SCREEN_APPS, "after an Apps launch, Redux restarts on the Apps list");
-    expect(ui_list_selected() == apps_row_of(APP_TOP), "the Apps list keeps the launched row");
+    expect(ui_list_selected() == apps_row_of(APP_TERMINAL), "the Apps list keeps the launched row");
     {
         FILE *sf = fopen(UI_RESUME_PATH, "r");
         expect(sf == NULL, "apps resume file is removed after a valid read");
@@ -1222,15 +1232,20 @@ int main(void) {
 
     /* Tools (Core Apps A): each runs a stock program in SimpleTerminal. */
     {
-        static const struct { int app; const char *args; } tools[] = {
-            { APP_MIXER, "-e alsamixer" }, { APP_NETWORK, "-e nmtui" },
-            { APP_BLUETOOTH, "-e bluetoothctl" }, { APP_INPUT_TEST, "-e evtest /dev/input/event1" },
-            { APP_SPEAKER_TEST, "-e speaker-test -t wav -c 2 -l 1" },
+        /* Settings row (Settings tools) or Audio row (audio < 0 means a Settings row). */
+        static const struct { int app; const char *args; int settings_row, audio_row; } tools[] = {
+            { APP_MIXER, "-e alsamixer", 0, 0 }, { APP_NETWORK, "-e nmtui", 7, -1 },
+            { APP_BLUETOOTH, "-e bluetoothctl", 5, -1 }, { APP_INPUT_TEST, "-e evtest /dev/input/event1", 6, -1 },
+            { APP_SPEAKER_TEST, "-e speaker-test -t wav -c 2 -l 1", 0, 1 },
         };
         for (unsigned t = 0; t < sizeof tools / sizeof tools[0]; t++) {
             ui_init();
-            down(5); press(LB_A);              /* Apps */
-            down(apps_row_of(tools[t].app)); press(LB_A);
+            down(8); press(LB_A);              /* Settings */
+            down(tools[t].settings_row); press(LB_A);
+            if (tools[t].audio_row >= 0) {
+                expect(ui_screen() == SCREEN_AUDIO, "Settings > Audio opens");
+                down(tools[t].audio_row); press(LB_A);
+            }
             char line[256] = "", want[256];
             FILE *f = fopen("/tmp/redux-next-apps", "r");
             if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }

@@ -43,8 +43,19 @@ static const app_t apps[APP_COUNT] = {
 static const char *root = "";
 
 /* Rows of the Apps list. File Manager, Music Player and Video Player are left out: they are on Main
-   (Dale, 2026-11-13 12d: A; 2026-11-17: Music and Video too). Rows are sorted by name (Dale, 2026-11-17). */
-static int listed(int i) { return i != APP_FILES && i != APP_MUSIC && i != APP_VIDEO; }
+   (Dale, 2026-11-13 12d: A; 2026-11-17: Music and Video too). Audio Mixer and Speaker Test live in
+   Settings > Audio; Task Monitor, Bluetooth, Input Test and Network Setup in Settings (Dale,
+   2026-11-17 11:49). Rows are sorted by name (Dale, 2026-11-17). */
+static int listed(int i) {
+    switch (i) {
+    case APP_FILES: case APP_MUSIC: case APP_VIDEO:
+    case APP_MIXER: case APP_SPEAKER_TEST:
+    case APP_TOP: case APP_BLUETOOTH: case APP_INPUT_TEST: case APP_NETWORK:
+        return 0;
+    default:
+        return 1;
+    }
+}
 
 static int order[APP_COUNT], n_order = -1;
 

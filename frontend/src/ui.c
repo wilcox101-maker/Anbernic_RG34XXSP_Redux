@@ -38,11 +38,16 @@ enum { MAIN_GAME_ROOM = 0, MAIN_MUSIC = 1, MAIN_VIDEO = 2, MAIN_DOCUMENTS = 3, M
 /* ROM names come from romscan (read-only). The desktop fixture recreates the
    five F0 names so this screen still matches the mock-up. */
 static const char *settings_items[] = {
-    "Audio", "Power & Lid", "System", "Emulation", "UI"
+    "Audio", "Power & Lid", "System", "Emulation", "UI",
+    "Bluetooth", "Input Test", "Network Setup", "Task Monitor"
 };
+/* Settings rows 5-8 open stock terminal tools (moved from Apps, Dale 2026-11-17 11:49). */
+static const int settings_app[] = { -1, -1, -1, -1, -1, APP_BLUETOOTH, APP_INPUT_TEST, APP_NETWORK, APP_TOP };
+static const char *audio_items[] = { "Audio Mixer", "Speaker Test" };
+static const int audio_app[] = { APP_MIXER, APP_SPEAKER_TEST };
 /* No Input row: button tests live on the Engineering Input tab (Dale, 2026-11-17). */
 /* No Display row: Brightness, Screen Timeout and Font live in Settings > UI (Dale, 2026-11-17 A). */
-enum { SETTINGS_SYSTEM = 2, SETTINGS_UI = 4 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
+enum { SETTINGS_AUDIO = 0, SETTINGS_SYSTEM = 2, SETTINGS_UI = 4 };   /* Network lives on the main menu only (Dale, 2026-11-12) */
 enum { SYSTEM_STOCK = 0, SYSTEM_TOOLS = 1, SYSTEM_RESTART = 2, SYSTEM_POWEROFF = 3, SYSTEM_BOOT = 5, SYSTEM_RESET = 6 };
 typedef struct { const char *label; int selectable; int action; } system_row_t;
 static const system_row_t system_rows[] = {
@@ -402,6 +407,7 @@ static int list_count(void) {
     case SCREEN_SETTINGS: return COUNT(settings_items);
     case SCREEN_UI_COLORS: return N_PRESETS;
     case SCREEN_UI:       return UI_ROWS;
+    case SCREEN_AUDIO:    return COUNT(audio_items);
     case SCREEN_INTERNET: return COUNT(internet_items);
     case SCREEN_APPS:     return apps_count();
     case SCREEN_WIFI:     return wifi_count();
@@ -947,7 +953,7 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
             }
         }
         if (selected == MAIN_INTERNET)    go(SCREEN_INTERNET);
-        if (selected == MAIN_SETTINGS)    go(SCREEN_SETTINGS);
+        if (selected == MAIN_SETTINGS)    { apps_msg[0] = '\0'; go(SCREEN_SETTINGS); }
         if (selected == MAIN_ENGINEERING) go(SCREEN_ENG_CONFIRM);
         if (selected == MAIN_NETWORK)     { go(SCREEN_WIFI); wifi_rescan(); }
         if (selected == MAIN_APPS)        { apps_msg[0] = '\0'; go(SCREEN_APPS); }
@@ -957,12 +963,19 @@ void ui_button(logical_button_t btn, int pressed, uint32_t now_ms) {
         if (selected == MAIN_FILES)       app_start(APP_FILES);
         return;
     }
+    if (btn == LB_A && screen == SCREEN_AUDIO) {
+        app_start(audio_app[selected]);
+        return;
+    }
     if (btn == LB_A && screen == SCREEN_APPS) {
         app_start(apps_list_id(selected));
         return;
     }
     if (btn == LB_A && screen == SCREEN_SETTINGS) {
+        if (selected == SETTINGS_AUDIO)   { apps_msg[0] = '\0'; go(SCREEN_AUDIO); }
         if (selected == SETTINGS_SYSTEM)  go(SCREEN_SYSTEM_DEFAULTS);
+        if (selected >= 0 && selected < COUNT(settings_app) && settings_app[selected] >= 0)
+            app_start(settings_app[selected]);
         if (selected == SETTINGS_UI)      { ui_msg[0] = '\0'; go(SCREEN_UI); }
         return;
     }
@@ -1484,6 +1497,12 @@ void ui_draw(void) {
     case SCREEN_SETTINGS:
         frame("Settings", "A:Enter  B:Back  M:Menu", 1, 0);
         list(0, settings_items, COUNT(settings_items));
+        if (apps_msg[0]) body(COUNT(settings_items) + 1, apps_msg);
+        break;
+    case SCREEN_AUDIO:
+        frame("Settings > Audio", "A:Open  B:Back  M:Menu", 1, 0);
+        list(0, audio_items, COUNT(audio_items));
+        body(COUNT(audio_items) + 1, apps_msg[0] ? apps_msg : "  Stock terminal tools. MENU quits back to Redux.");
         break;
     case SCREEN_UI: {
         frame("Settings > UI", "Up/Down:Select  Left/Right:Change  A:Open  B:Back  M:Menu", 1, 0);
