@@ -1211,9 +1211,9 @@ int main(void) {
     remove("/tmp/redux-next-apps");
     remove("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
 
-    /* Task Monitor: SimpleTerminal from rootfs with -e htop (/usr/bin/htop; not stock, see apps.c). */
-    mkdir("/tmp/redux-apps/mnt/mod", 0755); mkdir("/tmp/redux-apps/mnt/mod/ctrl", 0755);
-    write_empty("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
+    /* Task Monitor: Redux Terminal (written to /tmp by main) with -e htop (/usr/bin/htop; not stock, see apps.c). */
+    mkdir("/tmp/redux-apps/tmp", 0755);
+    write_empty("/tmp/redux-apps/tmp/redux-term");
     ui_init();
     down(8); press(LB_A);              /* Settings */
     down(8); press(LB_A);              /* Task Monitor (moved from Apps, Dale 2026-11-17) */
@@ -1222,8 +1222,8 @@ int main(void) {
         char line[256] = "";
         FILE *f = fopen("/tmp/redux-next-apps", "r");
         if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
-        expect(strcmp(line, "cd '/mnt/mod/ctrl' && LD_PRELOAD=/tmp/redux-vsync.so HOME=/root ./'SimpleTerminal' -e htop\n") == 0,
-               "Task Monitor runs SimpleTerminal -e htop from its folder");
+        expect(strcmp(line, "cd '/tmp' && HOME=/root ./'redux-term' -e htop\n") == 0,
+               "Task Monitor runs Redux Terminal -e htop from /tmp");
     }
     remove("/tmp/redux-next-apps");
     remove(UI_RESUME_PATH);
@@ -1260,13 +1260,13 @@ int main(void) {
     remove("/tmp/redux-next-apps");
     remove("/tmp/redux-apps/mnt/vendor/bin/music/ap.dge");
 
-    /* Tools (Core Apps A): each runs a stock program in SimpleTerminal. */
+    /* Tools (Core Apps A): each runs a stock program in Redux Terminal. */
     {
         /* Settings row (Settings tools) or Audio row (audio < 0 means a Settings row). */
         static const struct { int app; const char *args; int settings_row, audio_row; } tools[] = {
             { APP_MIXER, "-e alsamixer", 0, 0 }, { APP_NETWORK, "-e nmtui", 7, -1 },
             { APP_BLUETOOTH, "-e bluetoothctl", 5, -1 }, { APP_INPUT_TEST, "-e evtest /dev/input/event1", 6, -1 },
-            { APP_SPEAKER_TEST, "-e speaker-test -t wav -c 2 -l 1", 0, 1 },
+            { APP_SPEAKER_TEST, "--hold -e speaker-test -t wav -c 2 -l 1", 0, 1 },
         };
         for (unsigned t = 0; t < sizeof tools / sizeof tools[0]; t++) {
             ui_init();
@@ -1279,7 +1279,7 @@ int main(void) {
             char line[256] = "", want[256];
             FILE *f = fopen("/tmp/redux-next-apps", "r");
             if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
-            snprintf(want, sizeof want, "cd '/mnt/mod/ctrl' && LD_PRELOAD=/tmp/redux-vsync.so HOME=/root ./'SimpleTerminal' %s\n", tools[t].args);
+            snprintf(want, sizeof want, "cd '/tmp' && HOME=/root ./'redux-term' %s\n", tools[t].args);
             char label[96];
             snprintf(label, sizeof label, "Tools: %s launches", apps_name(tools[t].app));
             expect(ui_should_exit() == 1 && strcmp(line, want) == 0, label);
@@ -1287,8 +1287,8 @@ int main(void) {
             remove(UI_RESUME_PATH);   /* each tool starts from Main */
         }
     }
-    /* A failed launch must not leave the vsync preload for the next one (Read Only review, #4);
-       File Manager is now mc in the terminal. */
+    /* A failed launch leaves nothing behind for the next one (Read Only review, #4);
+       File Manager is mc in the terminal. */
     {
         char line[256] = "";
         FILE *f;
@@ -1305,17 +1305,17 @@ int main(void) {
         expect(apps_launch(APP_FILES) == 0, "File Manager launches");
         f = fopen("/tmp/redux-next-apps", "r");
         if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
-        expect(strstr(line, "./'SimpleTerminal' -e mc\n") != NULL, "File Manager is mc in the terminal");
+        expect(strstr(line, "./'redux-term' -e mc\n") != NULL, "File Manager is mc in the terminal");
         line[0] = '\0';
         expect(apps_launch(APP_NEOFETCH) == 0, "NeoFetch launches");
         f = fopen("/tmp/redux-next-apps", "r");
         if (f) { if (!fgets(line, sizeof line, f)) line[0] = '\0'; fclose(f); }
-        expect(strstr(line, "-e sh -c 'neofetch --off; exec sleep 86400'") != NULL, "NeoFetch runs without the logo and stays up");
+        expect(strstr(line, "./'redux-term' --hold -e neofetch --off\n") != NULL, "NeoFetch runs without the logo and stays up");
         expect(apps_row_of(APP_NEOFETCH) >= 0, "NeoFetch is in the Apps list");
         remove("/tmp/redux-next-apps");
         remove(UI_RESUME_PATH);
     }
-    remove("/tmp/redux-apps/mnt/mod/ctrl/SimpleTerminal");
+    remove("/tmp/redux-apps/tmp/redux-term");
     apps_set_root("");
 
     /* Card Scripts switch removed (Dale A, 2026-11-16): no row for it any more. */

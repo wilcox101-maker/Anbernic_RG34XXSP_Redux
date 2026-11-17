@@ -26,6 +26,7 @@ fits), File Manager = `mc`.
   Backspace, L1/R1 PgUp/PgDn, L2/R2 Home/End, Start F10, M quits); 2. the mouse and the Select
   on-screen keys; 3. the apps move onto it and SimpleTerminal retires. Y, L2/R2 and Start are
   Claude's additions to Dale's list (they clash with nothing); Dale can veto them in the PR-1 test.
+  Shipped: #275 (PR 1), #276 (PR 2), PR 3 (apps moved, SimpleTerminal retired). Device test pending.
 - **B:** keep SimpleTerminal and only tune what can be tuned from outside (it is a stock binary).
   Likely little gain on the font.
 - **C:** run the apps on the Linux text console with a sharp console font. Needs a key mapper for

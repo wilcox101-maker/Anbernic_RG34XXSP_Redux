@@ -2,6 +2,7 @@
  *
  *   redux-term                 a shell (bash)
  *   redux-term -e CMD ARGS...  run CMD; the terminal closes when it exits
+ *   redux-term --hold -e CMD   ...and stays until a button after CMD ends (neofetch, speaker test)
  *   redux-term --version
  *
  * A pty runs the program; vt.c keeps the screen; this file draws it with Redux's own 8x16 fonts on
@@ -456,10 +457,12 @@ static void stop_child(void) {
 int main(int argc, char **argv) {
     char *shell[] = { "bash", NULL };
     char **cmd = shell;
+    int hold = 0;
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--version")) { printf("redux-term %s\n", REDUX_BUILD); return 0; }
+        if (!strcmp(argv[i], "--hold")) { hold = 1; continue; }
         if (!strcmp(argv[i], "-e") && i + 1 < argc) { cmd = argv + i + 1; break; }
-        fprintf(stderr, "usage: redux-term [-e CMD ARGS...]\n");
+        fprintf(stderr, "usage: redux-term [--hold] [-e CMD ARGS...]\n");
         return 2;
     }
 
@@ -527,11 +530,12 @@ int main(int argc, char **argv) {
                 close(pty_fd); pty_fd = -1;
                 exit_status = WIFEXITED(st) ? WEXITSTATUS(st) : WIFSIGNALED(st) ? 128 + WTERMSIG(st) : 1;
                 ended = now_ms();
-                /* A clean exit after a real run just closes; a failure, or an exit within two
-                   seconds, stays so the message can be read (nothing else on the device shows it). */
-                if (exit_status == 0 && ended - started > 2000) break;
-                snprintf(footer, sizeof footer, " %s ended (exit %d). Press MENU to close. ",
-                         cmd[0], exit_status);
+                /* A clean exit after a real run just closes; a failure, an exit within two seconds,
+                   or --hold stays so the screen can be read (nothing else on the device shows it). */
+                if (exit_status == 0 && ended - started > 2000 && !hold) break;
+                if (exit_status == 0) snprintf(footer, sizeof footer, " Finished. Press a button to close. ");
+                else snprintf(footer, sizeof footer, " %s ended with error %d. Press a button to close. ",
+                              cmd[0], exit_status);
                 any_button = 0;
                 vt.dirty = 1;
             }

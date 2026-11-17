@@ -12,14 +12,14 @@ import tempfile
 import time
 
 
-def run(term, cmd, hold_ms=None):
+def run(term, cmd, hold_ms=None, extra=()):
     with tempfile.NamedTemporaryFile(suffix=".dump", delete=False) as f:
         dump = f.name
     env = dict(os.environ, SDL_VIDEODRIVER="dummy", REDUX_TERM_DUMP=dump)
     if hold_ms is not None:
         env["REDUX_TERM_HOLD_MS"] = str(hold_ms)
     t0 = time.time()
-    r = subprocess.run([term, "-e", "sh", "-c", cmd], env=env, timeout=60)
+    r = subprocess.run([term, *extra, "-e", "sh", "-c", cmd], env=env, timeout=60)
     with open(dump, encoding="utf-8", errors="replace") as f:
         text = f.read()
     os.unlink(dump)
@@ -49,6 +49,10 @@ def main():
     rc, text, took = run(term, 'echo oops >&2; exit 3', hold_ms=500)
     check(rc == 0 and "oops" in text, "stderr of a failed program is shown")
     check(0.4 < took < 10, "a failed program holds the screen (%.1f s)" % took)
+
+    # --hold keeps a clean, long run on screen until a button (the hold timeout here).
+    rc, text, took = run(term, 'echo kept; sleep 2.2', hold_ms=500, extra=["--hold"])
+    check(rc == 0 and text.startswith("kept") and 2.6 < took < 10, "--hold keeps a finished program on screen (%.1f s)" % took)
 
     # A curses-style program: alternate screen, scroll region, line drawing via ESC ( 0.
     rc, text, took = run(term, r'printf "\033[?1049h\033[2;29r\033[2;1H\033(0lqqk\033(B box\033[?1049l"; echo back; sleep 2.2')
