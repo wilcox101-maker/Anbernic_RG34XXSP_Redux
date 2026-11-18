@@ -22,11 +22,19 @@ jobs:
           # The runner resolver failed for every Ubuntu host; the public resolvers that fixed arm64 work here too.
           sudo rm -f /etc/resolv.conf
           printf "nameserver 1.1.1.1\nnameserver 8.8.8.8\n" | sudo tee /etc/resolv.conf >/dev/null
+          # 2026-11-18: the install hung silently to the 8 min limit three times (24 s when it works).
+          # Bound each fetch so a stalled mirror errors and is retried, and print what apt does.
+          A="-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30"
           for i in 1 2 3; do
-            sudo apt-get update -qq -o Acquire::Retries=3 -o APT::Update::Error-Mode=any && break
+            sudo apt-get update -qq $A -o APT::Update::Error-Mode=any && break
             sleep 15
           done
-          sudo apt-get install -y -qq -o Acquire::Retries=3 cmake libsdl2-dev
+          for i in 1 2 3; do
+            sudo timeout 150 apt-get install -y $A --no-install-recommends cmake libsdl2-dev && break
+            echo "apt-get install attempt $i failed; retrying"
+            sleep 10
+          done
+          command -v cmake && dpkg -s libsdl2-dev >/dev/null
       - name: Hard-rule checks
         run: python3 tools/check_rules.py
       - name: Build desktop (warnings are errors)
