@@ -10,6 +10,7 @@ ignored unless auxiliary assistant is in use"). With no active helper, the lead 
 | Role | Who | Access | State |
 |---|---|---|---|
 | **Owner** | Dale | everything; merges the gated PRs (`AGENTS.md`) | — |
+| **Overseer** | Claude, Claudius Maximus (Dale's general-assistant chat) | may act on behalf of any role here within AGENTS.md and CLAUDE.md; logs what it does in `ACTIVITY.md`; Dale's reserved decisions stay his | active (Dale 2026-11-18) |
 | **Lead** | Claude, the chat in the Redux Project named in the newest `notes/handoff-*.md` | push, PRs, merges within its standing permission, `ACTIVITY.md`, `STATUS.md`; assigns helper roles | active |
 | **Advisor: Manager** | Claude, the Redux Manager Project | read-only; files in Claude Files; relays Dale's commands as `MGR for DALE:` (`docs/commands.md`); merges PRs Dale or its decided plan hands it | active |
 | **Advisor: Read Only** | Claude, review chat | read-only; reviews as `FROM-REDUX-READONLY-*` files | on call |
@@ -20,7 +21,8 @@ ignored unless auxiliary assistant is in use"). With no active helper, the lead 
 | **Helper: Co-Programmer** (`coprog`) | Claude chat Dale runs for Redux | `coprog/` branches and PRs; never `main`, never merges | **active** (Dale 2026-11-18 12:32) |
 
 Advisors never push, comment, merge (except as the Manager row says) or log; their output reaches the
-lead only through Dale or the Manager relay. Any other Claude chat is advisory (`CLAUDE.md`).
+lead only through Dale or the Manager relay. The Overseer row is the exception (CLAUDE.md "One owner").
+Any other Claude chat is advisory (`CLAUDE.md`).
 
 ## Adding a helper (`ADD <name> <role>`, Dale only)
 A helper is any AI Dale brings in, or an assistant the lead decides it needs (a subagent, a second
