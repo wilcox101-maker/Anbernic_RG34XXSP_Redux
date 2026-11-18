@@ -198,3 +198,4 @@
 - 2026-11-17 15:59 · claude · read: Dale 15:57: remove B:Back from main menu · did: merged #288 main footer without B:Back
 - 2026-11-17 16:04 · claude · read: Dale 16:04: leaving work, Pause (no SWAP) · did: paused: nothing in flight, no open PRs; device pass on b9a207d pending (BT, CJK, picker log, Packages)
 - 2026-11-18 07:51 · claude · read: Dale 07:48 SWAP · did: merged #289 handoff-2026-11-18; STATUS points at it; chat ends
+- 2026-11-18 08:06 · claude · read: Dale 07:58-08:01: Owner, handoff-2026-11-18; terminal output in Chinese; push access · did: HELLO; merged #290 Redux Terminal English locale (C.UTF-8 for every terminal app, not on device). Next: device pass on the new main
