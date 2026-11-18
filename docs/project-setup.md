@@ -81,7 +81,7 @@ Style: AGENTS.md "Brevity" (result first, at most 5 lines; clarity for anything 
 
 Done in the first Project chat (ACTIVITY 2026-11-13 01:45): #111/#112/#113 merged, Device test
 queue #109 pinned, STATUS's Handoff points new chats at `HELLO` in the Project. Project chats have
-no tool to subscribe to #41, so each session reads it by REST at start (CLAUDE.md).
+no tool to subscribe to the inbox issue #303, so each session reads it by REST at start (CLAUDE.md).
 
 Every new chat in the Project needs only: **`HELLO`**
 
@@ -117,7 +117,7 @@ The one-word commands (HELLO, GO, HOLD, NEXT, TEST, SHIP, BRIEF) are already as 
   your Claude usage. (As of 2026-11-13 it no longer appears in the account's scheduled tasks.)
 - **Pin** the "Device test queue" issue. In a device session, open it, deploy the build named at the
   top of Releases → dev, and tick what passes.
-- **Comments:** start with `DALE:` (`rdale`), e.g. `DALE: HOLD` on #41. The next Claude session reads it.
+- **Comments:** start with `DALE:` (`rdale`), e.g. `DALE: HOLD` on the inbox issue #303. The next Claude session reads it.
 - The GitHub mobile app is optional, for when you're away from the computer.
 
 ---
