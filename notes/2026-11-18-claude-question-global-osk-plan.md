@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-18
 re: MGR for DALE letter FROM-REDUX-MANAGER-2026-11-18-b, Dale 11:00 GO on the global on-screen keyboard (OSK); plan only
-status: open
+status: acknowledged (Dale 11:23: A A B B A A; decision 2026-11-18-dale-decision-global-osk.md)
 ---
 
 # Plan: a global on-screen keyboard over any app (plan only, no code yet)
