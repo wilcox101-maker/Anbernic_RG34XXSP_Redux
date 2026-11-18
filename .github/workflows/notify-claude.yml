@@ -1,4 +1,4 @@
-# Wakes Claude when Grok has something ready: posts a comment on the Claude inbox PR (#41, a draft
+# Wakes Claude when a helper (grok/, readonly/) has something ready: posts a comment on the Claude inbox PR (#41, a draft
 # that is never merged; Claude watches it). Fires when a grok/ PR opens and when CI finishes on a
 # grok/ branch. Comments only; changes nothing else.
 name: notify-claude
@@ -19,7 +19,7 @@ env:
 
 jobs:
   pr-opened:
-    if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'grok/')
+    if: github.event_name == 'pull_request' && (startsWith(github.event.pull_request.head.ref, 'grok/') || startsWith(github.event.pull_request.head.ref, 'readonly/'))
     runs-on: ubuntu-latest
     steps:
       - name: Comment on the Claude inbox
@@ -30,10 +30,10 @@ jobs:
           REF: ${{ github.event.pull_request.head.ref }}
         run: |
           gh api "repos/$GITHUB_REPOSITORY/issues/$INBOX/comments" \
-            -f body="Grok opened PR #$NUM ($REF): $TITLE. Waiting for CI before review."
+            -f body="${REF%%/*} opened PR #$NUM ($REF): $TITLE. Waiting for CI before review."
 
   ci-finished:
-    if: github.event_name == 'workflow_run' && startsWith(github.event.workflow_run.head_branch, 'grok/')
+    if: github.event_name == 'workflow_run' && (startsWith(github.event.workflow_run.head_branch, 'grok/') || startsWith(github.event.workflow_run.head_branch, 'readonly/'))
     runs-on: ubuntu-latest
     steps:
       - name: Comment on the Claude inbox

@@ -17,7 +17,7 @@ import sys
 
 NOTES = "notes"
 SKIP = {"README.md", "STATUS.md", "ACTIVITY.md", "status-archive.md"}
-WHO = {"claude", "grok", "dale"}
+WHO = {"claude", "grok", "dale", "readonly"}
 EVENTS = {"phase-start", "milestone", "phase-gate", "handoff", "review-request", "review",
           "question", "decision", "blocker", "hw-result", "correction", "message"}
 NAME = re.compile(r"^\d{4}-\d{2}-\d{2}-(claude|grok|dale)-([a-z0-9-]+)\.md$")

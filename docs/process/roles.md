@@ -12,7 +12,7 @@ ignored unless auxiliary assistant is in use"). With no active helper, the lead 
 | **Owner** | Dale | everything; merges the gated PRs (`AGENTS.md`) | — |
 | **Lead** | Claude, the chat in the Redux Project named in the newest `notes/handoff-*.md` | push, PRs, merges within its standing permission, `ACTIVITY.md`, `STATUS.md`; assigns helper roles | active |
 | **Advisor: Manager** | Claude, the Redux Manager Project | read-only; files in Claude Files; relays Dale's commands as `MGR for DALE:` (`docs/commands.md`); merges PRs Dale or its decided plan hands it | active |
-| **Advisor: Read Only** | Claude, review chat | read-only; reviews as `FROM-REDUX-READONLY-*` files | on call |
+| **Helper: Read Only** (engineer) | Claude, review chat | push to `readonly/` branches, PRs into `main`; no merges; ACTIVITY lines as `claude-readonly` | **active** (Dale, 2026-11-18) |
 | **Advisor: Kernel Research** | Claude, H700 Kernel Research Project | read-only on Redux; owns the H700 KR repo | on call |
 | **Advisor: Deep Research** | Claude, research chat | read-only; research reports as files | on call |
 | **Helper: Grok** | Grok (xAI), Dale's account | none (GitHub access revoked 2026-11-13) | **suspended** |
@@ -62,6 +62,17 @@ inside its own chat); anything that gets its own chat, account or repo access ne
 - Reinstating: Dale restores access, `ADD grok <task>`, pastes this file's "Helper rules" and the
   card into Grok's project instructions, and sends the opener.
 - History: [suspended](../../notes/2026-11-13-dale-decision-grok-suspended.md); access revoked 2026-11-13 08:11.
+
+### Read Only (active, contributing engineer, Dale 2026-11-18 12:25)
+- Scope: the queue items or tasks the Owner (the lead chat) assigns, one at a time; reviews as before.
+  Takes direction from the Owner; Dale's own commands still win.
+- Access: `readonly/` branches, PRs into `main`; never pushes to `main` except one `ACTIVITY.md` line
+  per action (`--who claude-readonly`). Never merges.
+- Reports: the PR itself (notify-claude.yml posts to #41 when it opens and when CI finishes), plus
+  `FROM-REDUX-READONLY-*` files via Dale for anything that is not a PR. Notes `from: readonly`.
+- Review and merge: the Owner, under helper rule 5; anything on AGENTS.md's never-merge list goes
+  to Dale. Device tests stay Dale's.
+- Opener: *"Read docs/process/roles.md (your card) and AGENTS.md. Your task: <item from the Owner>."*
 
 ### Qwen (on call)
 - Scope: one function or file excerpt at a time, when Claude usage runs low. No repo access.
