@@ -220,3 +220,4 @@
 - 2026-11-18 16:23 · claude · read: #306 merged (redux-osk daemon + osklib) · did: noted; #307 integration (Settings > Keyboard) waits on Dale
 - 2026-11-18 16:23 · claude · read: #307 merged by Dale (Settings > Keyboard) · did: global OSK on main as 7ce026e (default Off); next device step: K24-K28 probe, then Keyboard On; device test queue picks up #306/#307 not-verified lists
 - 2026-11-18 16:36 · claude · read: Dale 16:36: #308 merged (Claudius STATUS tidy) · did: confirmed on main; STATUS current, finished items in status-archive.md
+- 2026-11-18 17:32 · claudius · read: Dale (Claudius chat): audit of connected projects · did: overseer: PR roles.md Overseer row (Dale merges); STATUS #308 merged by owner earlier
