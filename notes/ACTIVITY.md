@@ -214,3 +214,4 @@
 - 2026-11-18 14:11 · claude · read: Dale 14:07: consider removing PR #41; picked move to an issue · did: opened inbox issue #303 and #304 (bot + rule/docs references, Dale merges); skill update proposed; #41 closes after #304
 - 2026-11-18 14:11 · claude · read: #302 merged by Dale (Place in the org) · did: noted; #304 inbox move waits on Dale
 - 2026-11-18 14:25 · claude · read: Dale 14:23: project-setup.md still pointed at #41 · did: added docs/project-setup.md (2 lines) to #304; no other live #41 in docs/.github/CLAUDE.md
+- 2026-11-18 14:38 · claude · read: #304 merged by Dale (inbox issue #303) · did: closed draft PR #41 with a pointer to #303
