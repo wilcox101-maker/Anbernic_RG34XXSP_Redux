@@ -165,8 +165,8 @@ int osk_draw(uint32_t *px, int w, int h, int stride, const osk_t *k, const osk_d
         for (int col = 0; col < osk_cols(k->page, r); col++) {
             const osk_key_t *key = osk_key(k->page, r, col);
             if (hidden && hidden(key, user)) continue;
-            int x, y, kw, kh;
-            osk_draw_key_rect(w, h, k->page, r, col, &x, &y, &kw, &kh);
+            int x = 0, y = 0, kw = 0, kh = 0;
+            if (osk_draw_key_rect(w, h, k->page, r, col, &x, &y, &kw, &kh) != 0) continue;
             char label[16];
             osk_label(key, k->shift, label, (int)sizeof label);
             int latched = (key->mode == 1 && k->shift) || (key->mode == 2 && k->ctrl);
