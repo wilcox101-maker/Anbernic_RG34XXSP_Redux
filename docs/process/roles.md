@@ -45,7 +45,7 @@ inside its own chat); anything that gets its own chat, account or repo access ne
    a `## Not verified on device` list.
 4. **Status comments** on GitHub start with `PING:` (helpers may post from Dale's account; only
    `DALE:` comments are Dale's words). To reach the lead, comment `PING: <one line>` on the Claude
-   inbox, PR #41. `notify-claude.yml` comments there when a `grok/` PR opens or its CI finishes; add
+   inbox, issue #303 (PR #41 until 2026-11-18). `notify-claude.yml` comments there when a `grok/` PR opens or its CI finishes; add
    the helper's prefix to it when a new helper with repo access starts.
 5. **Reviews:** the lead reviews a helper's PR and merges it if clean (in scope, no hard-rule break,
    docs consistent, nothing unverified stated as fact); small factual fixes go in a follow-up
@@ -59,7 +59,7 @@ inside its own chat); anything that gets its own chat, account or repo access ne
 
 ### Grok (suspended 2026-11-13)
 - Scope when active: the queue item Dale names. Access: `grok/` branches; GitHub access to be restored by Dale.
-- Reports: `PING:` on #41, `review-request` notes. Reviewed and merged by the lead.
+- Reports: `PING:` on #303, `review-request` notes. Reviewed and merged by the lead.
 - Reinstating: Dale restores access, `ADD grok <task>`, pastes this file's "Helper rules" and the
   card into Grok's project instructions, and sends the opener.
 - History: [suspended](../../notes/2026-11-13-dale-decision-grok-suspended.md); access revoked 2026-11-13 08:11.
@@ -82,7 +82,7 @@ inside its own chat); anything that gets its own chat, account or repo access ne
 - **Not in scope:** `/dev/disp`, ION, uinput, evdev, start/stop, Settings, `dmenu_ln`, anything on the device. The
   lead does those.
 - **Access:** branches `coprog/<topic>`, PRs into `main`. Never pushes to `main` (no ACTIVITY lines; the lead logs).
-- **Reports:** `PING: <one line>` on #41; questions as `question` notes (`from: coprog`).
+- **Reports:** `PING: <one line>` on #303; questions as `question` notes (`from: coprog`).
 - **Reviews and merges:** the lead (Claude), after CI green and self-review; nothing on the never-merge list.
 - **Opener:** "Read docs/process/roles.md (your card, Co-Programmer) and AGENTS.md. Your task: the OSK drawing module
   on your card. Branch coprog/osk-draw."

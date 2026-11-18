@@ -9,7 +9,7 @@ Inside the Redux Project (instructions do the rest, see `docs/project-setup.md`)
 
 Outside the Project:
 > Approve repo push access. Read AGENTS.md and notes/STATUS.md, then continue.
-> Watch the Claude inbox, PR #41.
+> Watch the Claude inbox, issue #303.
 
 ## Claude: side or advice chat (another Claude owns the repo)
 > Read-only advisory session for the Redux repo. Clone it, but don't push, comment or log.
