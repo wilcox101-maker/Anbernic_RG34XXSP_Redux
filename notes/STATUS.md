@@ -20,6 +20,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - Owner: the Redux Project chat named in the newest handoff; every other chat is advisory. Grok is suspended; every queue item is Claude's.
 
 ## Waiting on Dale
+- **Keyboard UI mock-ups A/B/C** ([question](2026-11-18-claude-question-osk-ui-mockups.md); A recommended).
 - **Global OSK probe session** (K24-K28): kit ready in Claude Files (`redux-oskprobe-kr1-96ef78f.zip`), run sheet inside.
 - **Phase 2 direction** (before Phase 2, not urgent for Beta): the H700 Kernel Research Ubuntu 24.04 image with update rollback, or `docs/ram-system-design.md`'s read-only squashfs in RAM.
 
@@ -47,6 +48,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - `device-test-queue.yml` appends PRs whose not-verified list is just "none" (#194-#197 did); skip those to keep #185 short.
 
 ## Open notes
+- [2026-11-18-claude-question-osk-ui-mockups.md](2026-11-18-claude-question-osk-ui-mockups.md): claude → dale (keyboard UI mock-ups A/B/C)
 - [2026-11-18-dale-decision-add-coprog.md](2026-11-18-dale-decision-add-coprog.md): dale → all (Co-Programmer helper, coprog/)
 - [2026-11-18-dale-decision-global-osk-2.md](2026-11-18-dale-decision-global-osk-2.md): dale → all (OSK chord Menu + Select; no OSK in RetroArch)
 - [2026-11-16-dale-hw-result-f4.md](2026-11-16-dale-hw-result-f4.md): dale → all (F4 session on 6d87953: exit test PASS; crash fixed by #216; Update + DOS switch requests)
