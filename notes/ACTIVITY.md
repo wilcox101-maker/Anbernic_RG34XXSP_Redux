@@ -217,3 +217,4 @@
 - 2026-11-18 14:38 · claude · read: #304 merged by Dale (inbox issue #303) · did: closed draft PR #41 with a pointer to #303
 - 2026-11-18 14:39 · claudius · read: Dale (Claudius chat): annotate AGENTS line 51; overseer acts for all agents · did: overseer: e8acf43 on #304 (AGENTS: inbox now issue #303); PR #305 overseer authority (AGENTS + CLAUDE.md one-owner line), Dale merges
 - 2026-11-18 15:03 · claude · read: Dale 14:50: proceed (global OSK) · did: opened #306 redux-osk daemon + osklib (merge refused for me by the session's safety check, waits on Dale) and #307 integration, Settings > Keyboard default Off (stacked, Dale merges); all CI green
+- 2026-11-18 16:23 · claude · read: #306 merged (redux-osk daemon + osklib) · did: noted; #307 integration (Settings > Keyboard) waits on Dale
