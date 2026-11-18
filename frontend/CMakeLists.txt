@@ -203,6 +203,19 @@ target_include_directories(test_btchip PRIVATE src)
 add_executable(test_vt tests/test_vt.c term/vt.c term/osk.c term/cjk.c ${REDUX_CJK_BLOB})
 target_include_directories(test_vt PRIVATE term)
 
+# Global OSK (redux-osk): osklib from H700 KR-2/KR-3 (PR #63, e4a6516; GPL-2.0, BSP-origin ABI header)
+# adapted to keyboard UI A, plus the daemon's decisions (osk_core) and the daemon itself.
+set(REDUX_OSKLIB osk/osk_sys.c osk/osk_disp.c osk/osk_in.c osk/osk_kbd.c term/osk.c)
+add_executable(redux_osk osk/redux_osk.c osk/osk_core.c osk/osk_draw.c ${REDUX_OSKLIB} src/font.c src/font_extra.c)
+target_include_directories(redux_osk PRIVATE osk term src)
+target_compile_options(redux_osk PRIVATE -Wall -Wextra)
+add_executable(test_osk_core tests/test_osk_core.c osk/osk_core.c ${REDUX_OSKLIB})
+target_include_directories(test_osk_core PRIVATE osk term)
+foreach(t disp in kbd)
+  add_executable(test_osk_${t} tests/osk/test_${t}.c tests/osk/fake_sys.c ${REDUX_OSKLIB})
+  target_include_directories(test_osk_${t} PRIVATE osk term tests/osk)
+endforeach()
+
 # Global OSK drawing into plain memory (no SDL, no device): ./test_osk_draw, exit code 0 = pass.
 add_executable(test_osk_draw tests/test_osk_draw.c osk/osk_draw.c term/osk.c src/font.c src/font_extra.c)
 target_include_directories(test_osk_draw PRIVATE osk term src)
