@@ -206,3 +206,4 @@
 - 2026-11-18 12:24 · claude · read: Dale 12:24: run sheet received, Pause (no SWAP) · did: paused: nothing in flight, no open PRs; next: Dale's OSK probe session K24-K28, then the daemon on osklib
 - 2026-11-18 12:35 · claude · read: Dale 12:32-12:33: Co-Programmer works for the lead; own branch + PRs; first task OSK drawing · did: opened #295 roles: Co-Programmer helper (coprog/), card + decision + WHO + notify (Dale merges)
 - 2026-11-18 12:39 · claude · read: #295 merged (Co-Programmer helper) · did: Co-Programmer active on coprog/; waiting on its OSK drawing PR and Dale's probe session
+- 2026-11-18 13:07 · claude · read: MGR for DALE 12:46: DR-1..3 (H700 #64); Dale 12:47: chord Menu + Select, no OSK while RetroArch runs · did: merged #298 decision note (supersedes D3/D4); osklib chord default and Shift key to change at integration (Claude, no KR needed)
