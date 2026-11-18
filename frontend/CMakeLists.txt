@@ -203,6 +203,10 @@ target_include_directories(test_btchip PRIVATE src)
 add_executable(test_vt tests/test_vt.c term/vt.c term/osk.c term/cjk.c ${REDUX_CJK_BLOB})
 target_include_directories(test_vt PRIVATE term)
 
+# Global OSK drawing into plain memory (no SDL, no device): ./test_osk_draw, exit code 0 = pass.
+add_executable(test_osk_draw tests/test_osk_draw.c osk/osk_draw.c term/osk.c src/font.c src/font_extra.c)
+target_include_directories(test_osk_draw PRIVATE osk term src)
+
 # Boot Screen manager against a temp folder (no SDL, no device): ./test_bootscreen.
 add_executable(test_bootscreen tests/test_bootscreen.c src/bootscreen.c)
 target_include_directories(test_bootscreen PRIVATE src)
