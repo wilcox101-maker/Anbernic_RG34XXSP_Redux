@@ -210,3 +210,4 @@
 - 2026-11-18 13:10 · claude · read: coprog #297 OSK drawing (CI green) · did: reviewed + merged #297 (osk_draw + tests, in scope); merged #299 follow-up for Dale 12:47 (title, RetroArch helper dropped). Noted: #296 from another Claude session (Read Only) closed unmerged
 - 2026-11-18 13:41 · claude · read: MGR for DALE 13:36: rebuilt keyboard UI, mock-up first · did: merged #300 mock-ups A/B/C (A recommended), waiting on Dale's pick
 - 2026-11-18 13:51 · claude · read: Dale 13:42: keyboard UI A · did: merged #301 keyboard UI A: shared 3-page layout + framed caps, Redux Terminal uses it (arm64 -Werror fix in the PR); not on device. Next: redux-osk daemon on osklib
+- 2026-11-18 14:07 · claude · read: Dale 14:04: read claudius-maximus notes/handover-redux-org-alignment.md · did: opened #302 AGENTS.md Place in the org block (Dale merges)
