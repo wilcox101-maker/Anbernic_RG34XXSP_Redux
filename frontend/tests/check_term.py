@@ -15,7 +15,7 @@ import time
 LOG = None
 
 
-def run(term, cmd, hold_ms=None, extra=(), script=None):
+def run(term, cmd, hold_ms=None, extra=(), script=None, env_add=None):
     global LOG
     with tempfile.NamedTemporaryFile(suffix=".dump", delete=False) as f:
         dump = f.name
@@ -25,6 +25,8 @@ def run(term, cmd, hold_ms=None, extra=(), script=None):
         env["REDUX_TERM_HOLD_MS"] = str(hold_ms)
     if script:
         env["REDUX_TERM_SCRIPT"] = script
+    if env_add:
+        env.update(env_add)
     t0 = time.time()
     r = subprocess.run([term, *extra, "-e", "sh", "-c", cmd], env=env, timeout=60)
     with open(dump, encoding="utf-8", errors="replace") as f:
@@ -54,6 +56,12 @@ def main():
     check(rows[5][10:].startswith("T=xterm-256color C=90 L=30"), "cursor moves; TERM, COLUMNS and LINES are set")
     check(rows[6].startswith("30 90"), "the pty is 90 x 30")
     check(took < 10, "exits promptly (%.1f s)" % took)
+
+    # Stock starts the frontend with a Chinese locale; the terminal's programs get English (C.UTF-8).
+    rc, text, took = run(term, 'echo "L=$LANG A=${LC_ALL:-none} G=${LANGUAGE:-none} M=${LC_MESSAGES:-none}"; sleep 2.2',
+                         env_add={"LANG": "zh_CN.UTF-8", "LC_ALL": "zh_CN.UTF-8", "LANGUAGE": "zh_CN:zh",
+                                  "LC_MESSAGES": "zh_CN.UTF-8"})
+    check(text.startswith("L=C.UTF-8 A=none G=none M=none"), "a Chinese locale from the frontend becomes C.UTF-8")
 
     # A failing program keeps its screen and the footer until a button (here: the hold timeout).
     rc, text, took = run(term, 'echo oops >&2; exit 3', hold_ms=500)
