@@ -200,3 +200,4 @@
 - 2026-11-18 07:51 · claude · read: Dale 07:48 SWAP · did: merged #289 handoff-2026-11-18; STATUS points at it; chat ends
 - 2026-11-18 08:06 · claude · read: Dale 07:58-08:01: Owner, handoff-2026-11-18; terminal output in Chinese; push access · did: HELLO; merged #290 Redux Terminal English locale (C.UTF-8 for every terminal app, not on device). Next: device pass on the new main
 - 2026-11-18 11:12 · claude · read: MGR for DALE 11:01: global OSK GO, top task, everything else paused; R26 (H700 PR #61) · did: merged #291 global OSK plan note (D1-D6), STATUS queue item 0; waiting on Dale's A/B
+- 2026-11-18 11:20 · claude · read: Dale 11:10/11:20: KR/DR OSK task offer (FROM-REDUX-KERNEL-2026-11-18-r) · did: replied FROM-REDUX-OWNER-2026-11-18-s: KR-1 first, then KR-2+KR-3 (KR) with DR-1..3 (DR); KR-4 Redux, KR-5/DR-4 skipped, DR-5 later
