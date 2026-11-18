@@ -4,6 +4,13 @@ Dale owns the project; Claude is the **lead**. Roles: [`docs/roles.md`](docs/rol
 apply only while a helper is active). Routines in detail: [`docs/process.md`](docs/process.md).
 Agents talk only through [`notes/`](notes/); the notes are the memory.
 
+## Place in the org
+- **Dale** — owner.
+- **Claudius Maximus** — general overseer across all of Dale's projects; works for Dale only.
+- **Redux Manager** coordinates this repo (Redux CFW) together with **H700 Research**
+  (Allwinner-H700-Custom-Kernel-Research), which consumes Redux's stock device tree.
+- **Custom Hardware Design** — a shared support project, available for general support.
+
 ## Every session
 1. **Start:** last 20 lines of `notes/ACTIVITY.md`, `notes/STATUS.md`, open notes to you or `all`.
 2. **Work:** branch `claude/<topic>` (helpers: their prefix), PR into `main`, one topic per PR, from STATUS.
