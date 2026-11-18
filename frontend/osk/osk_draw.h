@@ -30,7 +30,7 @@ typedef struct {
 } osk_draw_style_t;
 
 /* Returns non-zero if a key is left off the keyboard (drawn as box background, label hidden).
-   The daemon passes osklib's osk_key_hidden wrapper; osk_draw_hide_ra below covers D4 B on its own. */
+   Kept generic; no key is hidden today (Dale 12:47: no OSK while RetroArch runs). */
 typedef int (*osk_hidden_fn)(const osk_key_t *key, void *user);
 
 /* Redux Terminal's look: light grey box, black text, highlighted key yellow, latched mode cyan. */
@@ -41,9 +41,6 @@ void osk_draw_style_default(osk_draw_style_t *s);
    header/footer text colour, highlighted key = the two swapped (Settings already keeps menu text
    and window colour apart, so it always shows), latched mode = Light Cyan on black. */
 void osk_draw_style_ui(osk_draw_style_t *s, uint32_t text_rgb, uint32_t hftext_rgb, uint32_t win_rgb);
-
-/* D4 B: while RetroArch runs (user points to a non-zero int), Esc and F1 are left off. */
-int osk_draw_hide_ra(const osk_key_t *key, void *user);
 
 /* The label a key shows with the current Shift state (Shift: letters upper-case, a key with a
    shifted symbol shows that symbol). Writes at most cap-1 chars plus NUL; returns the length. */
