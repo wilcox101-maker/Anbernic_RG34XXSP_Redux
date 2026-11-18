@@ -215,3 +215,4 @@
 - 2026-11-18 14:11 · claude · read: #302 merged by Dale (Place in the org) · did: noted; #304 inbox move waits on Dale
 - 2026-11-18 14:25 · claude · read: Dale 14:23: project-setup.md still pointed at #41 · did: added docs/project-setup.md (2 lines) to #304; no other live #41 in docs/.github/CLAUDE.md
 - 2026-11-18 14:38 · claude · read: #304 merged by Dale (inbox issue #303) · did: closed draft PR #41 with a pointer to #303
+- 2026-11-18 14:39 · claudius · read: Dale (Claudius chat): annotate AGENTS line 51; overseer acts for all agents · did: overseer: e8acf43 on #304 (AGENTS: inbox now issue #303); PR #305 overseer authority (AGENTS + CLAUDE.md one-owner line), Dale merges
