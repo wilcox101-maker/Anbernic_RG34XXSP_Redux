@@ -17,6 +17,7 @@ ignored unless auxiliary assistant is in use"). With no active helper, the lead 
 | **Advisor: Deep Research** | Claude, research chat | read-only; research reports as files | on call |
 | **Helper: Grok** | Grok (xAI), Dale's account | none (GitHub access revoked 2026-11-13) | **suspended** |
 | **Helper: Qwen** | local Qwen 3 on DLN-DALEW2 | none; works on excerpts Dale pastes (`ASK qwen`) | on call |
+| **Helper: Co-Programmer** (`coprog`) | Claude chat Dale runs for Redux | `coprog/` branches and PRs; never `main`, never merges | **active** (Dale 2026-11-18 12:32) |
 
 Advisors never push, comment, merge (except as the Manager row says) or log; their output reaches the
 lead only through Dale or the Manager relay. Any other Claude chat is advisory (`CLAUDE.md`).
@@ -69,3 +70,19 @@ inside its own chat); anything that gets its own chat, account or repo access ne
   rules: C99/SDL2, no new dependencies, no file writes outside the given function, no hardware
   claims; expected output). Dale brings the answer back; the lead reviews it and commits it on a
   `claude/` branch.
+
+### Co-Programmer (`coprog`, active since 2026-11-18)
+- Added by Dale 12:32 ("Co-Programmer works for you in this project"); access and task chosen by Dale 12:33:
+  own branch + PRs, first task the OSK drawing ([decision](../../notes/2026-11-18-dale-decision-add-coprog.md)).
+- **Scope now:** global OSK queue item 0, drawing only: `frontend/osk/osk_draw.{c,h}` renders the Redux OSK layout
+  (`frontend/term/osk.c`, unchanged) into an ARGB8888 buffer (`uint32_t *px, w, h, stride`) with Redux's 8x16
+  fonts (`frontend/src/font.c`) and the Settings > UI colours (`uistyle.c`): box, keys, highlighted key, Shift
+  labels, keys hidden while RetroArch runs (`osk_key_hidden` from KR's osklib, H700 PR #63). Plus host tests in
+  `frontend/tests/` (pixel checks, no SDL, no device). Plain C99, no new libraries.
+- **Not in scope:** `/dev/disp`, ION, uinput, evdev, start/stop, Settings, `dmenu_ln`, anything on the device. The
+  lead does those.
+- **Access:** branches `coprog/<topic>`, PRs into `main`. Never pushes to `main` (no ACTIVITY lines; the lead logs).
+- **Reports:** `PING: <one line>` on #41; questions as `question` notes (`from: coprog`).
+- **Reviews and merges:** the lead (Claude), after CI green and self-review; nothing on the never-merge list.
+- **Opener:** "Read docs/process/roles.md (your card, Co-Programmer) and AGENTS.md. Your task: the OSK drawing module
+  on your card. Branch coprog/osk-draw."

@@ -24,7 +24,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - **Phase 2 direction** (before Phase 2, not urgent for Beta): the H700 Kernel Research Ubuntu 24.04 image with update rollback, or `docs/ram-system-design.md`'s read-only squashfs in RAM.
 
 ## Queue (in order; all Claude unless marked)
-0. **Global on-screen keyboard (top task; Dale GO 11:00 via the Manager, R26 GO):** every other item and device test is paused until it is built, then all are re-checked against it ([plan](2026-11-18-claude-question-global-osk-plan.md); Dale A A B B A A, [decision](2026-11-18-dale-decision-global-osk.md): Menu + X, Esc/F1 hidden in RetroArch). KR-1 probe kit (H700 PR #62, `redux-oskprobe-kr1-96ef78f.zip`) and KR-2/KR-3 osklib (H700 PR #63, `redux-osklib-kr2-kr3-e4a6516.zip`) delivered 12:00/13:05, reviewed by Claude (kit = PR #62 source, osklib tests pass under ASan/UBSan). Next: Dale's probe session K24-K28 (`RUNSHEET.md`), then Claude builds the daemon on osklib (KR-4 lifecycle, Settings switch, menu flag). DR-1..3 pending.
+0. **Global on-screen keyboard (top task; Dale GO 11:00 via the Manager, R26 GO):** every other item and device test is paused until it is built, then all are re-checked against it ([plan](2026-11-18-claude-question-global-osk-plan.md); Dale A A B B A A, [decision](2026-11-18-dale-decision-global-osk.md): Menu + X, Esc/F1 hidden in RetroArch). KR-1 probe kit (H700 PR #62, `redux-oskprobe-kr1-96ef78f.zip`) and KR-2/KR-3 osklib (H700 PR #63, `redux-osklib-kr2-kr3-e4a6516.zip`) delivered 12:00/13:05, reviewed by Claude (kit = PR #62 source, osklib tests pass under ASan/UBSan). Next: Dale's probe session K24-K28 (`RUNSHEET.md`), then Claude builds the daemon on osklib (KR-4 lifecycle, Settings switch, menu flag); Co-Programmer (helper, `coprog/`, [decision](2026-11-18-dale-decision-add-coprog.md)) builds the drawing module `frontend/osk/osk_draw`. DR-1..3 pending.
 1. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons (folded into item 4, the Redux video front-end); Wolfenstein 3D Y and X: not a bug, it is a GBA ROM (no X/Y). Done: `/tmp/.next` + amixer (#202), scan cache (#203). Game Room X = Favorites, not built yet (placeholder). Then a short device re-check.
 2. ~~Game Room card picker~~ #205, device-checked 2026-11-16 (with the #216 crash fix).
 3. ~~F5 Engineering Mode~~ signed off 2026-11-17 ([note](2026-11-17-dale-phase-gate-f5-signed-off.md)). Follow-up: analog stick values on the Input tab.
@@ -47,6 +47,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - `device-test-queue.yml` appends PRs whose not-verified list is just "none" (#194-#197 did); skip those to keep #185 short.
 
 ## Open notes
+- [2026-11-18-dale-decision-add-coprog.md](2026-11-18-dale-decision-add-coprog.md): dale → all (Co-Programmer helper, coprog/)
 - [2026-11-18-dale-decision-global-osk.md](2026-11-18-dale-decision-global-osk.md): dale → all (global OSK D1-D6)
 - [2026-11-16-dale-hw-result-f4.md](2026-11-16-dale-hw-result-f4.md): dale → all (F4 session on 6d87953: exit test PASS; crash fixed by #216; Update + DOS switch requests)
 - [2026-11-16-dale-hw-result-reads-f4-2.md](2026-11-16-dale-hw-result-reads-f4-2.md): dale → claude (RetroArch 1.20.0, SAVE_FILES works, saves on cards, Wolf3D is GBA)
