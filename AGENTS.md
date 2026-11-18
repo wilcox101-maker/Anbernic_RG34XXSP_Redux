@@ -6,7 +6,9 @@ Agents talk only through [`notes/`](notes/); the notes are the memory.
 
 ## Place in the org
 - **Dale** — owner.
-- **Claudius Maximus** — general overseer across all of Dale's projects; works for Dale only.
+- **Claudius Maximus** — general overseer of all of Dale's interconnected projects; works for Dale
+  only. It may act on behalf of any agent here (owner, manager, engineers, helpers): read, branch,
+  push, comment, and open or merge PRs within this file's rules. What is reserved for Dale stays Dale's.
 - **Redux Manager** coordinates this repo (Redux CFW) together with **H700 Research**
   (Allwinner-H700-Custom-Kernel-Research), which consumes Redux's stock device tree.
 - **Custom Hardware Design** — a shared support project, available for general support.
