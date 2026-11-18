@@ -20,9 +20,11 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - Owner: the Redux Project chat named in the newest handoff; every other chat is advisory. Grok is suspended; every queue item is Claude's.
 
 ## Waiting on Dale
+- **Global OSK plan A/B** (D1-D6, [plan](2026-11-18-claude-question-global-osk-plan.md)).
 - **Phase 2 direction** (before Phase 2, not urgent for Beta): the H700 Kernel Research Ubuntu 24.04 image with update rollback, or `docs/ram-system-design.md`'s read-only squashfs in RAM.
 
 ## Queue (in order; all Claude unless marked)
+0. **Global on-screen keyboard (top task; Dale GO 11:00 via the Manager, R26 GO):** every other item and device test is paused until it is built, then all are re-checked against it ([plan](2026-11-18-claude-question-global-osk-plan.md), waiting on Dale's A/B). First step: the K24-K28 probe.
 1. **Fixes from #185** ([hw-result](2026-11-16-dale-hw-result-185.md)): video player buttons (folded into item 4, the Redux video front-end); Wolfenstein 3D Y and X: not a bug, it is a GBA ROM (no X/Y). Done: `/tmp/.next` + amixer (#202), scan cache (#203). Game Room X = Favorites, not built yet (placeholder). Then a short device re-check.
 2. ~~Game Room card picker~~ #205, device-checked 2026-11-16 (with the #216 crash fix).
 3. ~~F5 Engineering Mode~~ signed off 2026-11-17 ([note](2026-11-17-dale-phase-gate-f5-signed-off.md)). Follow-up: analog stick values on the Input tab.
@@ -45,6 +47,7 @@ who did what and when is in [ACTIVITY.md](ACTIVITY.md).
 - `device-test-queue.yml` appends PRs whose not-verified list is just "none" (#194-#197 did); skip those to keep #185 short.
 
 ## Open notes
+- [2026-11-18-claude-question-global-osk-plan.md](2026-11-18-claude-question-global-osk-plan.md): claude → dale (global OSK plan, D1-D6)
 - [2026-11-16-dale-hw-result-f4.md](2026-11-16-dale-hw-result-f4.md): dale → all (F4 session on 6d87953: exit test PASS; crash fixed by #216; Update + DOS switch requests)
 - [2026-11-16-dale-hw-result-reads-f4-2.md](2026-11-16-dale-hw-result-reads-f4-2.md): dale → claude (RetroArch 1.20.0, SAVE_FILES works, saves on cards, Wolf3D is GBA)
 - [2026-11-16-dale-hw-result-reads-f4.md](2026-11-16-dale-hw-result-reads-f4.md): dale → claude (FFplay.sh, no ecwolf, RetroArch network/save settings)
