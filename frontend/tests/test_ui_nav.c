@@ -6,6 +6,7 @@
 #include "uistyle.h"
 #include "netsvc.h"
 #include "btchip.h"
+#include "oskd.h"
 #include "platform.h"
 #include "launcher.h"
 #include "romscan.h"
@@ -968,6 +969,21 @@ int main(void) {
         expect(btchip_enabled() == 1, "A again switches it on");
         remove("/tmp/redux.bluetooth");
         btchip_set_paths(NULL, NULL);
+        /* On-screen keyboard (Dale 2026-11-18): off by default; A switches it on and off. */
+        remove("/tmp/redux.osk");
+        oskd_set_paths("/tmp/redux.osk", "/tmp/redux-osk-test-program");
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(strstr(dump, "Keyboard        Off") != NULL, "Settings shows Keyboard Off by default");
+        press(LB_DOWN); press(LB_A);   /* row 12 */
+        ui_draw();
+        grid_dump(dump, sizeof dump);
+        expect(oskd_enabled() == 1 && strstr(dump, "Keyboard        On") && strstr(dump, "Menu + Select"),
+               "A on Keyboard switches it on, saved, with the chord shown");
+        press(LB_A);
+        expect(oskd_enabled() == 0, "A again switches it off");
+        remove("/tmp/redux.osk"); remove("/tmp/redux-osk-test-program");
+        oskd_set_paths(NULL, NULL);
     }
 
     /* Brightness: Settings → UI row 0 (Display menu removed, Dale 2026-11-17 A); Left/Right steps 1-20. */

@@ -52,7 +52,7 @@ jobs:
       - name: OSK drawing tests
         run: ./build/test_osk_draw
       - name: Global OSK tests (osklib with fakes, daemon decisions)
-        run: for t in disp in kbd core; do ./build/test_osk_$t || exit 1; done
+        run: for t in osk_disp osk_in osk_kbd osk_core oskd; do ./build/test_$t || exit 1; done
       - name: Terminal smoke test (headless SDL, real pty)
         run: python3 frontend/tests/check_term.py ./build/redux_term
       - name: Wi-Fi tests
@@ -170,7 +170,7 @@ jobs:
           ./build-arm64/test_launcher
           ./build-arm64/test_vt
           ./build-arm64/test_osk_draw
-          for t in disp in kbd core; do ./build-arm64/test_osk_$t || exit 1; done
+          for t in osk_disp osk_in osk_kbd osk_core oskd; do ./build-arm64/test_$t || exit 1; done
           python3 frontend/tests/check_term.py ./build-arm64/redux_term
           ./build-arm64/test_remap_device
           ./build-arm64/test_wifi

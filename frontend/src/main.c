@@ -23,6 +23,7 @@
 #include "lidwatch.h"
 #include "term.h"
 #include "btchip.h"
+#include "oskd.h"
 #include "heatguard.h"
 #include "buildhist.h"
 #include "ui.h"
@@ -161,6 +162,8 @@ int main(int argc, char **argv) {
     else fprintf(stderr, "warning: could not write %s; no save flush on lid close\n", lidwatch_path());
     /* Bluetooth chip: stock's menu runs setBluetooth.sh init at boot; Redux does the same (Dale A). */
     if (btchip_at_start()) fprintf(stderr, "bluetooth: setBluetooth.sh init started\n");
+    /* Global on-screen keyboard (Dale 2026-11-18): only when Settings > On-screen Keyboard is On. */
+    if (oskd_at_start() < 0) fprintf(stderr, "warning: on-screen keyboard not started (%s)\n", oskd_path());
     /* Redux Terminal: Apps lists it only while this copy exists (apps_launch checks the path). */
     if (term_install() != 0) fprintf(stderr, "warning: could not write %s\n", term_path());
     /* F5 step 4: the heat guard. A copy already running (started earlier this boot) keeps going. */

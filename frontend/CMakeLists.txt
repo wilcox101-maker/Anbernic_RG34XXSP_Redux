@@ -67,6 +67,20 @@ add_custom_command(
     DEPENDS redux_heatguard ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
     COMMENT "Embedding the heat guard")
 
+# Global OSK (redux-osk): osklib from H700 KR-2/KR-3 (PR #63, e4a6516; GPL-2.0, BSP-origin ABI header)
+# adapted to keyboard UI A, plus the daemon's decisions (osk_core) and the daemon itself.
+set(REDUX_OSKLIB osk/osk_sys.c osk/osk_disp.c osk/osk_in.c osk/osk_kbd.c term/osk.c)
+add_executable(redux_osk osk/redux_osk.c osk/osk_core.c osk/osk_draw.c ${REDUX_OSKLIB} src/font.c src/font_extra.c)
+target_include_directories(redux_osk PRIVATE osk term src)
+target_compile_options(redux_osk PRIVATE -Wall -Wextra)
+set(REDUX_OSK_BLOB ${CMAKE_CURRENT_BINARY_DIR}/osk_blob.c)
+add_custom_command(
+    OUTPUT ${REDUX_OSK_BLOB}
+    COMMAND ${CMAKE_COMMAND} -DIN=$<TARGET_FILE:redux_osk> -DOUT=${REDUX_OSK_BLOB}
+            -DNAME=redux_osk_bin -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    DEPENDS redux_osk ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
+    COMMENT "Embedding the on-screen keyboard")
+
 # Redux Terminal (Dale 2026-11-17 A): a pty + VT100/xterm subset drawn with Redux's fonts. Built for
 # the same machine as dmenu.bin and embedded in it; Redux writes it to /tmp at start (src/term.c).
 # 16x16 CJK glyphs: term/cjk.hex (Unifont subset, text) -> cjk.bin (tools/cjkconv.py, Python 3
@@ -120,6 +134,8 @@ add_executable(rg34xxsp-redux
     ${REDUX_EXTRAS_BLOB}
     src/netsvc.c
     src/btchip.c
+    src/oskd.c
+    ${REDUX_OSK_BLOB}
     src/launcher.c
     src/systems.c
     src/romscan.c
@@ -197,18 +213,14 @@ endif()
 
 # Bluetooth chip init against a temp folder (no device): ./test_btchip.
 add_executable(test_btchip tests/test_btchip.c src/btchip.c)
+add_executable(test_oskd tests/test_oskd.c src/oskd.c ${REDUX_OSK_BLOB})
+target_include_directories(test_oskd PRIVATE src)
 target_include_directories(test_btchip PRIVATE src)
 
 # Terminal screen model (no SDL, no pty): ./test_vt, exit code 0 = pass.
 add_executable(test_vt tests/test_vt.c term/vt.c term/osk.c term/cjk.c ${REDUX_CJK_BLOB})
 target_include_directories(test_vt PRIVATE term)
 
-# Global OSK (redux-osk): osklib from H700 KR-2/KR-3 (PR #63, e4a6516; GPL-2.0, BSP-origin ABI header)
-# adapted to keyboard UI A, plus the daemon's decisions (osk_core) and the daemon itself.
-set(REDUX_OSKLIB osk/osk_sys.c osk/osk_disp.c osk/osk_in.c osk/osk_kbd.c term/osk.c)
-add_executable(redux_osk osk/redux_osk.c osk/osk_core.c osk/osk_draw.c ${REDUX_OSKLIB} src/font.c src/font_extra.c)
-target_include_directories(redux_osk PRIVATE osk term src)
-target_compile_options(redux_osk PRIVATE -Wall -Wextra)
 add_executable(test_osk_core tests/test_osk_core.c osk/osk_core.c ${REDUX_OSKLIB})
 target_include_directories(test_osk_core PRIVATE osk term)
 foreach(t disp in kbd)
@@ -295,7 +307,7 @@ add_executable(test_sysinfo tests/test_sysinfo.c src/sysinfo.c)
 target_include_directories(test_sysinfo PRIVATE src)
 
 # Navigation test (back stack, Engineering tabs). Links the UI with the desktop platform; no window.
-add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/uistyle.c src/netsvc.c src/btchip.c src/pkgs.c ${REDUX_EXTRAS_BLOB} src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/powerkeys.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c src/term.c ${REDUX_TERM_BLOB})
+add_executable(test_ui_nav tests/test_ui_nav.c src/ui.c src/uistyle.c src/netsvc.c src/btchip.c src/oskd.c ${REDUX_OSK_BLOB} src/pkgs.c ${REDUX_EXTRAS_BLOB} src/grid.c src/font.c src/font_extra.c src/platform.c src/launcher.c src/systems.c src/romscan.c src/wifi.c src/stockmenu.c src/power.c src/powerkeys.c src/volume.c src/brightness.c src/screentimeout.c src/sysinfo.c src/apps.c src/vsync.c ${REDUX_VSYNC_BLOB} src/ports.c src/bootscreen.c src/term.c ${REDUX_TERM_BLOB})
 target_include_directories(test_ui_nav PRIVATE src)
 if(TARGET SDL2::SDL2)
     target_link_libraries(test_ui_nav PRIVATE SDL2::SDL2)
