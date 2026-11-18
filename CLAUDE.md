@@ -11,7 +11,7 @@ Claude-specific additions. Detail: [`docs/process.md`](docs/process.md) (tooling
   the diff, not-verified list, one topic). A subagent inside the chat is fine; another chat or AI
   needs Dale's `ADD`. Hardware tests are Dale's: batch them.
 - **Start (HELLO):** attach the repo with **push** first (refused: ask Dale once to "retry"); read
-  inbox #41 by REST since the last claude ACTIVITY line, then ACTIVITY, STATUS Handoff, the handoff
+  inbox #303 by REST since the last claude ACTIVITY line, then ACTIVITY, STATUS Handoff, the handoff
   file, open notes.
 - **Tooling:** REST only (`gh api`, GraphQL is blocked); shallow clone; stage explicit paths, never
   `git add -A`; `push.negotiate=true`; deploy only main's CI build (merge-commit SHA).

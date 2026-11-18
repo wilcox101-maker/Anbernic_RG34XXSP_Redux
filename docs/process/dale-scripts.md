@@ -143,7 +143,7 @@ git clone https://github.com/wilcox101-maker/Anbernic_RG34XXSP_Redux; cd Anberni
    photo only when the screen itself is the question (layout, colours).
 2. **Batch:** run the scripts you were asked for, then paste everything in **one** message.
 3. **No PING between steps.** GitHub wakes Claude when a PR opens, CI finishes, or someone
-   comments on the inbox (#41). PING only when you've been waiting over 30 min, or before you stop for the day.
+   comments on the inbox (#303). PING only when you've been waiting over 30 min, or before you stop for the day.
 4. **CI is the first reviewer.** Claude reviews only green PRs; a red one goes back to Grok
    through the inbox automatically.
 5. **Grok builds, Claude reviews.** Claude writes code only when that's cheaper than another round

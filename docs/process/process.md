@@ -112,7 +112,7 @@ that finds nothing new adds no `ACTIVITY.md` line (visits Dale starts are always
 
 - GitHub GraphQL is blocked in Claude cloud sessions, so `gh pr list` / `gh pr view` fail. Use REST:
   `gh api repos/wilcox101-maker/anbernic_rg34xxsp_redux/pulls?state=open`, and
-  `.../issues/41/comments?since=<ISO time>` for the inbox.
+  `.../issues/303/comments?since=<ISO time>` for the inbox (issue #303; PR #41 until 2026-11-18).
 - ACTIVITY lines: `python3 tools/log_activity.py --read "…" --did "…" --trailer "<attribution line>"`
   (time from the clock, works from any branch, retries once if main moved). By hand, the time is
   `TZ=America/New_York date '+%Y-%m-%d %H:%M'`, and fetch main first: a shallow clone that is behind
@@ -171,5 +171,5 @@ Rules:
 - Read files in parts (`head`, `tail`, `grep`). Don't dump all of `notes/` or `STATUS.md` history
   into the chat.
 - Event notes go in `notes/`, addressed to `dale` or `all`; they are the memory between chats.
-- `notify-claude.yml` and inbox #41 stay; they are dormant while no helper with a `grok/` branch is
-  active (`docs/roles.md`).
+- `notify-claude.yml` and inbox issue #303 stay; they are dormant while no helper with a `grok/` or
+  `coprog/` branch is active (`docs/roles.md`).

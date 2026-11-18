@@ -1,5 +1,5 @@
-# Wakes Claude when Grok has something ready: posts a comment on the Claude inbox PR (#41, a draft
-# that is never merged; Claude watches it). Fires when a grok/ or coprog/ PR opens and when CI finishes on a
+# Wakes Claude when a helper has something ready: posts a comment on the Claude inbox issue (#303,
+# never closed; Claude reads it at every start; it replaced draft PR #41 on 2026-11-18). Fires when a grok/ or coprog/ PR opens and when CI finishes on a
 # grok/ or coprog/ branch. Comments only; changes nothing else.
 name: notify-claude
 
@@ -15,7 +15,7 @@ permissions:
   issues: write
 
 env:
-  INBOX: 41
+  INBOX: 303
 
 jobs:
   pr-opened:
@@ -30,7 +30,7 @@ jobs:
           REF: ${{ github.event.pull_request.head.ref }}
         run: |
           gh api "repos/$GITHUB_REPOSITORY/issues/$INBOX/comments" \
-            -f body="Grok opened PR #$NUM ($REF): $TITLE. Waiting for CI before review."
+            -f body="${REF%%/*} opened PR #$NUM ($REF): $TITLE. Waiting for CI before review."
 
   ci-finished:
     if: github.event_name == 'workflow_run' && (startsWith(github.event.workflow_run.head_branch, 'grok/') || startsWith(github.event.workflow_run.head_branch, 'coprog/'))
