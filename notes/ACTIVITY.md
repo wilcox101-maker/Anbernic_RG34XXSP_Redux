@@ -199,3 +199,4 @@
 - 2026-11-17 16:04 · claude · read: Dale 16:04: leaving work, Pause (no SWAP) · did: paused: nothing in flight, no open PRs; device pass on b9a207d pending (BT, CJK, picker log, Packages)
 - 2026-11-18 07:51 · claude · read: Dale 07:48 SWAP · did: merged #289 handoff-2026-11-18; STATUS points at it; chat ends
 - 2026-11-18 08:06 · claude · read: Dale 07:58-08:01: Owner, handoff-2026-11-18; terminal output in Chinese; push access · did: HELLO; merged #290 Redux Terminal English locale (C.UTF-8 for every terminal app, not on device). Next: device pass on the new main
+- 2026-11-18 11:12 · claude · read: MGR for DALE 11:01: global OSK GO, top task, everything else paused; R26 (H700 PR #61) · did: merged #291 global OSK plan note (D1-D6), STATUS queue item 0; waiting on Dale's A/B
