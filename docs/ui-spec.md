@@ -188,7 +188,7 @@ Settings                                                            BAT 87% CHG 
 │   SSH             Off                                                                  │
 │   SMB (Samba)     Off                                                                  │
 │   Bluetooth Radio On                                                                   │
-│                                                                                        │
+│   Keyboard        Off                                                                  │
 │                                                                                        │
 │                                                                                        │
 │                                                                                        │

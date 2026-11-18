@@ -11,7 +11,7 @@
 
 typedef struct {
     osk_t k;
-    int menu_up;           /* the Redux menu is on screen (/tmp/redux-menu.up) */
+    int menu_up;           /* the Redux menu (dmenu.bin) is running */
     int retroarch;         /* RetroArch is running */
 } osk_core_t;
 

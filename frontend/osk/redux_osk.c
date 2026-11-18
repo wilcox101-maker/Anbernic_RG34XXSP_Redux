@@ -8,7 +8,7 @@
  *   redux-osk          run (refuses if another redux-osk is running)
  *   redux-osk --off    one-shot: turn the OSK layer off (clears a layer left by a crash) and exit
  *
- * Rules: never opens over the Redux menu (/tmp/redux-menu.up) or while RetroArch runs; closes on lid
+ * Rules: never opens over the Redux menu (dmenu.bin running) or while RetroArch runs; closes on lid
  * close, power-key sleep and an HDMI change; hides the layer and releases the grab on exit. While
  * closed it holds no grab, commits nothing and sleeps in poll(). Writes only /tmp files.
  * Nothing here has run on the device yet.
@@ -35,7 +35,6 @@
 
 #define PID_PATH  "/tmp/redux-osk.pid"
 #define LOG_PATH  "/tmp/redux-osk.log"
-#define MENU_FLAG "/tmp/redux-menu.up"
 #define LID_CODE  110   /* KEY_INSERT on axp2202-pek (event0), as redux_lidwatch */
 
 static volatile sig_atomic_t quit;
@@ -56,8 +55,6 @@ static void logf_(const char *fmt, ...) {
     fclose(f);
 }
 
-static int file_exists(const char *p) { return access(p, F_OK) == 0; }
-
 /* Another redux-osk alive? (pid file + /proc/<pid>/comm) */
 static int already_running(void) {
     FILE *f = fopen(PID_PATH, "r");
@@ -75,24 +72,30 @@ static int already_running(void) {
     return strncmp(comm, "redux-osk", 9) == 0;
 }
 
-/* RetroArch running? Scan /proc/<pid>/comm (only when the chord comes, never in a loop). */
-static int retroarch_running(void) {
+/* A process whose name starts with prefix? Scans /proc/<pid>/comm; only called when the chord comes
+   and once a second while the keyboard is open, never while it is closed. */
+static int proc_running(const char *prefix) {
     DIR *d = opendir("/proc");
     if (!d) return 0;
     struct dirent *e;
     int found = 0;
+    size_t n = strlen(prefix);
     while (!found && (e = readdir(d))) {
         if (e->d_name[0] < '0' || e->d_name[0] > '9') continue;
         char path[300], comm[64] = "";
         snprintf(path, sizeof path, "/proc/%s/comm", e->d_name);
         FILE *f = fopen(path, "r");
         if (!f) continue;
-        if (fgets(comm, sizeof comm, f) && strncmp(comm, "retroarch", 9) == 0) found = 1;
+        if (fgets(comm, sizeof comm, f) && strncmp(comm, prefix, n) == 0) found = 1;
         fclose(f);
     }
     closedir(d);
     return found;
 }
+
+/* The Redux menu is dmenu.bin; it exits before an app starts (loadapp.sh runs /tmp/.next). */
+static int menu_running(void) { return proc_running("dmenu.bin"); }
+static int retroarch_running(void) { return proc_running("retroarch"); }
 
 static int hdmi_state(void) {
     static const char *paths[] = { "/sys/class/extcon/hdmi/state", "/sys/class/switch/hdmi/state", NULL };
@@ -206,9 +209,9 @@ int main(int argc, char **argv) {
         }
         if (core.k.open && a.kind == OSK_ACT_NONE) {
             int h = hdmi_state();
-            if (h != hdmi || file_exists(MENU_FLAG)) {
+            if (h != hdmi || menu_running() || retroarch_running()) {
                 a = osk_core_force_close(&core);
-                logf_("closed: %s", h != hdmi ? "HDMI change" : "menu up");
+                logf_("closed: %s", h != hdmi ? "HDMI change" : "menu or RetroArch up");
             } else if (!osk_in_is_grabbed(in) && opened_at && time(NULL) - opened_at >= 2) {
                 a = osk_core_force_close(&core);   /* another program holds the pad (EBUSY) */
                 logf_("closed: no grab (another program holds the pad)");
@@ -220,7 +223,7 @@ int main(int argc, char **argv) {
         osk_in_event_t ev;
         while (!quit && (r = osk_in_next_event(in, &ev)) == 1) {
             if (ev.kind == OSK_IN_TOGGLE && !core.k.open) {
-                core.menu_up = file_exists(MENU_FLAG);
+                core.menu_up = menu_running();
                 core.retroarch = core.menu_up ? 0 : retroarch_running();
             }
             a = osk_core_event(&core, &ev);
