@@ -135,7 +135,13 @@ static int spawn(char **argv) {
         setenv("TERM", "xterm-256color", 1);
         setenv("COLUMNS", "90", 1);
         setenv("LINES", "30", 1);
-        if (!getenv("LANG") && !getenv("LC_ALL")) setenv("LANG", "C.UTF-8", 1);   /* UTF-8 lines in mc */
+        /* English messages, UTF-8 text: stock starts the frontend with a Chinese locale, which every
+         * terminal app inherited (Dale 11-18). Clear every override, then C.UTF-8 (always present). */
+        static const char *lc[] = { "LANGUAGE", "LC_ALL", "LC_CTYPE", "LC_MESSAGES", "LC_TIME",
+            "LC_NUMERIC", "LC_COLLATE", "LC_MONETARY", "LC_PAPER", "LC_NAME", "LC_ADDRESS",
+            "LC_TELEPHONE", "LC_MEASUREMENT", "LC_IDENTIFICATION", NULL };
+        for (int i = 0; lc[i]; i++) unsetenv(lc[i]);
+        setenv("LANG", "C.UTF-8", 1);
         if (!getenv("HOME")) setenv("HOME", "/root", 1);
         unsetenv("LD_PRELOAD");   /* the vsync preload meant for SimpleTerminal, if it leaked in */
         signal(SIGINT, SIG_DFL); signal(SIGPIPE, SIG_DFL);
