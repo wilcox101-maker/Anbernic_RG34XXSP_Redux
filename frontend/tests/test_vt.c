@@ -225,34 +225,49 @@ int main(void) {
     feed("\x1b[?1000l");
     expect(t.mouse_mode == 0 && vt_mouse_bytes(&t, 0, 0, 0, 0, 0, out, sizeof out) == 0, "?1000l switches reports off");
 
-    /* On-screen keys (PR 2). */
+    /* On-screen keys: the shared layout (mock-up A, three pages). */
     osk_t k;
     osk_init(&k);
-    expect(!k.open && osk_key(k.row, k.col) && !strcmp(osk_key(k.row, k.col)->label, "q"), "the picker starts on q, closed");
-    for (int r = 0; r < OSK_ROWS; r++) {
-        int last = osk_cols(r) - 1;
-        if (osk_key_x(r, last) + osk_key(r, last)->width + 1 > VT_COLS - 1) { expect(0, "a keyboard row is wider than the box"); break; }
+    expect(!k.open && k.page == 0 && osk_cur(&k) && !strcmp(osk_cur(&k)->label, "q"), "the picker starts on q (page abc), closed");
+    {
+        int wide = 0;
+        for (int p = 0; p < OSK_PAGES; p++)
+            for (int r = 0; r < OSK_ROWS; r++) {
+                int n = osk_cols(p, r), last = n - 1;
+                if (n > OSK_MAX_COLS || osk_key_x2(p, r, last) + osk_key(p, r, last)->units2 != OSK_ROW_UNITS2) wide = 1;
+            }
+        expect(!wide, "every row on every page is exactly 10 key units wide");
     }
     expect(osk_press(&k, out, sizeof out) == 1 && out[0] == 'q', "A on q types q");
-    osk_move(&k, 1, 0);   /* down: lands on the key under q, which is the wide Shift */
-    expect(k.row == 3 && !strcmp(osk_key(k.row, k.col)->label, "Shift"), "moving down lands on the key below");
+    osk_move(&k, 2, 0);   /* two rows down from q: Shift sits under it */
+    expect(k.row == 2 && !strcmp(osk_cur(&k)->label, "Shift"), "moving down lands on the key below");
     expect(osk_press(&k, out, sizeof out) == 0 && k.shift, "pressing Shift sets Shift and types nothing");
     osk_move(&k, 0, 1);
-    expect(!strcmp(osk_key(k.row, k.col)->label, "a") && osk_press(&k, out, sizeof out) == 1 && out[0] == 'A' && k.shift,
+    expect(!strcmp(osk_cur(&k)->label, "z") && osk_press(&k, out, sizeof out) == 1 && out[0] == 'Z' && k.shift,
            "Shift types upper-case and stays on");
-    osk_move(&k, -2, 0);
-    expect(k.row == 1 && osk_press(&k, out, sizeof out) == 1 && out[0] == '@', "Shift on the digit row types the symbol");
+    osk_page(&k, 1);
+    expect(k.page == 1 && k.shift && k.row == 2, "R1: page 123, same row, Shift still on");
+    k.row = 0; k.col = 1;
+    expect(osk_press(&k, out, sizeof out) == 1 && out[0] == '@', "Shift on the digit row types the symbol");
     k.shift = 0;
-    k.row = 4; k.col = 0;
-    expect(!strcmp(osk_key(k.row, k.col)->label, "Ctrl") && osk_press(&k, out, sizeof out) == 0 && k.ctrl, "Ctrl is one-shot");
-    osk_move(&k, 0, 3);   /* c */
+    osk_page(&k, -1);
+    k.row = 3; k.col = 0;
+    expect(k.page == 0 && !strcmp(osk_cur(&k)->label, "Ctrl") && osk_press(&k, out, sizeof out) == 0 && k.ctrl, "Ctrl is one-shot");
+    osk_move(&k, -1, 0);   /* up from Ctrl: Shift */
+    k.col = 3;             /* c */
     expect(osk_press(&k, out, sizeof out) == 1 && out[0] == 3 && !k.ctrl, "Ctrl-C sends byte 3 and clears Ctrl");
-    osk_move(&k, -4, 0); k.col = 0;
+    osk_page(&k, -1);
+    expect(k.page == 2, "L1 from abc wraps to Fn");
+    k.row = 0; k.col = 0;
     expect(osk_press(&k, out, sizeof out) == 3 && out[0] == 0x1B && out[2] == 'P', "F1 sends SS3 P");
     osk_move(&k, 0, -1);
-    expect(!strcmp(osk_key(k.row, k.col)->label, "PgDn"), "left from the first key wraps to the last");
+    expect(!strcmp(osk_cur(&k)->label, "F10"), "left from the first key wraps to the last");
     osk_move(&k, -1, 0);
     expect(k.row == OSK_ROWS - 1, "up from the first row wraps to the last");
+    k.col = 7;
+    expect(osk_press(&k, out, sizeof out) == 3 && !memcmp(out, "\x1b[D", 3), "the left arrow key sends CSI D");
+    expect(!strcmp(osk_page_name(0), "abc") && !strcmp(osk_page_name(1), "123") && !strcmp(osk_page_name(2), "Fn"),
+           "page names abc, 123, Fn");
 
     /* CJK glyph table (CJK PR 2): Unifont 16x16 for 中, kana and fullwidth; nothing for Latin. */
     {
