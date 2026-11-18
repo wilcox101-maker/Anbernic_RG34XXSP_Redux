@@ -218,3 +218,4 @@
 - 2026-11-18 14:39 · claudius · read: Dale (Claudius chat): annotate AGENTS line 51; overseer acts for all agents · did: overseer: e8acf43 on #304 (AGENTS: inbox now issue #303); PR #305 overseer authority (AGENTS + CLAUDE.md one-owner line), Dale merges
 - 2026-11-18 15:03 · claude · read: Dale 14:50: proceed (global OSK) · did: opened #306 redux-osk daemon + osklib (merge refused for me by the session's safety check, waits on Dale) and #307 integration, Settings > Keyboard default Off (stacked, Dale merges); all CI green
 - 2026-11-18 16:23 · claude · read: #306 merged (redux-osk daemon + osklib) · did: noted; #307 integration (Settings > Keyboard) waits on Dale
+- 2026-11-18 16:23 · claude · read: #307 merged by Dale (Settings > Keyboard) · did: global OSK on main as 7ce026e (default Off); next device step: K24-K28 probe, then Keyboard On; device test queue picks up #306/#307 not-verified lists
