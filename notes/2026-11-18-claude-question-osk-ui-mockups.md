@@ -4,7 +4,7 @@ from: claude
 to: dale
 date: 2026-11-18
 re: MGR for DALE 13:36, rebuilt keyboard UI ("Uncrowded keys, buttons framed like a key, BIOS/DOS UI is good"); mock-ups for A/B before code
-status: open
+status: acknowledged (Dale 13:42: A; decision 2026-11-18-dale-decision-osk-ui.md)
 ---
 
 # Keyboard UI: three mock-ups

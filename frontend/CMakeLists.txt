@@ -86,8 +86,8 @@ add_custom_command(
             -DNAME=redux_cjk_bin -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
     DEPENDS ${REDUX_CJK_BIN} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed.cmake
     COMMENT "Embedding the CJK glyphs")
-add_executable(redux_term term/redux_term.c term/vt.c term/osk.c term/cjk.c ${REDUX_CJK_BLOB} src/font.c src/font_extra.c src/remap_device.c)
-target_include_directories(redux_term PRIVATE src term)
+add_executable(redux_term term/redux_term.c term/vt.c term/osk.c osk/osk_draw.c term/cjk.c ${REDUX_CJK_BLOB} src/font.c src/font_extra.c src/remap_device.c)
+target_include_directories(redux_term PRIVATE src term osk)
 target_compile_options(redux_term PRIVATE -Wall -Wextra)
 set(REDUX_TERM_BLOB ${CMAKE_CURRENT_BINARY_DIR}/term_blob.c)
 add_custom_command(

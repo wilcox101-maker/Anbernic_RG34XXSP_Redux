@@ -14,7 +14,7 @@
  * L1 / R1 = Page Up / Page Down, L2 / R2 = Home / End, START = F10, MENU = quit.
  * Mouse: the right stick moves a cursor, L3 = left click, R3 = right click, sent as xterm mouse
  * events to a program that asked for them (mc, htop, alsamixer). SELECT opens the on-screen keys
- * (osk.c): D-pad moves, A types, B or SELECT closes.
+ * (osk.c, drawn by ../osk/osk_draw.c): D-pad moves, A types, L1/R1 change page, B or SELECT closes.
  * On a PC the keyboard types into it (for development). REDUX_TERM_DUMP=<file> writes the final
  * screen as text at exit (the CI smoke test) and REDUX_TERM_RAW=<file> records every byte the
  * program sent (for fixing a program that draws wrong); REDUX_TERM_SHOT=<file.bmp> saves the last
@@ -38,6 +38,7 @@
 #include "vt.h"
 #include "font.h"
 #include "osk.h"
+#include "osk_draw.h"
 #include "cjk.h"
 #include "remap.h"
 #ifdef REDUX_PLATFORM_STOCK
@@ -212,51 +213,38 @@ static int cjk_slot(SDL_Renderer *ren, uint32_t cp, const uint8_t *glyph) {
 
 static SDL_Color dim(SDL_Color c) { c.r /= 2; c.g /= 2; c.b /= 2; return c; }
 
-/* The key picker as cells over the bottom rows: light grey box, black text, the chosen key yellow,
-   an active Shift/Ctrl cyan. */
-static void osk_cells(vt_cell_t out[OSK_HEIGHT][VT_COLS]) {
-    vt_cell_t bg = { ' ', 0, 7, 0, 0, 0 };
-    for (int r = 0; r < OSK_HEIGHT; r++) for (int c = 0; c < VT_COLS; c++) out[r][c] = bg;
-    out[0][0].ch = 0xDA; out[0][VT_COLS - 1].ch = 0xBF;
-    out[OSK_HEIGHT - 1][0].ch = 0xC0; out[OSK_HEIGHT - 1][VT_COLS - 1].ch = 0xD9;
-    for (int c = 1; c < VT_COLS - 1; c++) out[0][c].ch = out[OSK_HEIGHT - 1][c].ch = 0xC4;
-    for (int r = 1; r < OSK_HEIGHT - 1; r++) out[r][0].ch = out[r][VT_COLS - 1].ch = 0xB3;
-    const char *title = " Keys: D-pad moves, A types, B closes ";
-    for (int i = 0; title[i] && i + 2 < VT_COLS - 1; i++) out[0][i + 2].ch = (unsigned char)title[i];
-    for (int r = 0; r < OSK_ROWS; r++) {
-        for (int c = 0; c < osk_cols(r); c++) {
-            const osk_key_t *k = osk_key(r, c);
-            int x = osk_key_x(r, c), chosen = r == osk.row && c == osk.col;
-            int active = (k->mode == 1 && osk.shift) || (k->mode == 2 && osk.ctrl);
-            for (int i = 0; i < k->width + 2 && x + i < VT_COLS - 1; i++) {
-                vt_cell_t *cell = &out[r + 1][x + i];
-                cell->ch = (i == 0 || i == k->width + 1) ? ' ' : (unsigned char)k->label[i - 1];
-                if (osk.shift && !k->mode && !k->shifted && cell->ch >= 'a' && cell->ch <= 'z' && k->width == 1)
-                    cell->ch = (unsigned char)(cell->ch - 'a' + 'A');
-                if (osk.shift && k->shifted && i == 1) cell->ch = (unsigned char)k->shifted[0];
-                cell->bg = chosen ? 11 : active ? 14 : 7;
-            }
-        }
+/* The key picker: the shared Redux keyboard (osk_draw.c, mock-up A) drawn into a screen-sized
+   ARGB buffer and laid over the bottom of the terminal as a blended texture. */
+static SDL_Texture *osk_tex;
+static uint32_t osk_px[SCREEN_W * SCREEN_H];
+
+static void draw_osk(SDL_Renderer *ren) {
+    osk_draw_style_t st;
+    osk_draw_style_default(&st);
+    if (osk_draw(osk_px, SCREEN_W, SCREEN_H, SCREEN_W, &osk, &st, NULL, NULL) != 0) return;
+    if (!osk_tex) {
+        osk_tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_W, SCREEN_H);
+        if (!osk_tex) return;
+        SDL_SetTextureBlendMode(osk_tex, SDL_BLENDMODE_BLEND);
     }
+    SDL_UpdateTexture(osk_tex, NULL, osk_px, SCREEN_W * 4);
+    SDL_RenderCopy(ren, osk_tex, NULL, NULL);
 }
 
 static void draw(SDL_Renderer *ren, const char *footer) {
-    static vt_cell_t overlay[OSK_HEIGHT][VT_COLS];
-    int ov_top = osk.open ? VT_ROWS - OSK_HEIGHT : VT_ROWS;
-    if (osk.open) osk_cells(overlay);
     SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
     SDL_RenderClear(ren);
     for (int r = 0; r < VT_ROWS; r++) {
         for (int c = 0; c < VT_COLS; c++) {
-            vt_cell_t cell = r >= ov_top ? overlay[r - ov_top][c] : vt.cells[r][c];
-            if (cell.wide == 2 && r < ov_top && c > 0 && vt.cells[r][c - 1].wide == 1 && cjk_glyph(vt.cells[r][c - 1].cp))
+            vt_cell_t cell = vt.cells[r][c];
+            if (cell.wide == 2 && c > 0 && vt.cells[r][c - 1].wide == 1 && cjk_glyph(vt.cells[r][c - 1].cp))
                 continue;   /* drawn with its first half, background included */
             int fgi = cell.fg, bgi = cell.bg;
             if ((cell.attr & VT_BOLD) && fgi < 8) fgi += 8;   /* bold as bright, the console way */
             SDL_Color fg = palette[fgi & 15], bg = palette[bgi & 15];
             if (cell.attr & VT_DIM) fg = dim(fg);
             if (cell.attr & VT_INVERSE) { SDL_Color x = fg; fg = bg; bg = x; }
-            int at_cursor = vt.cursor_visible && r == vt.row && c == vt.col && !footer && r < ov_top;
+            int at_cursor = vt.cursor_visible && r == vt.row && c == vt.col && !footer;
             if (at_cursor) { SDL_Color x = fg; fg = bg; bg = x; if (fg.r == bg.r && fg.g == bg.g && fg.b == bg.b) bg = palette[7]; }
             SDL_Rect dst = { c * FONT_W, r * FONT_H, FONT_W, FONT_H };
             if (bg.r || bg.g || bg.b) {
@@ -266,7 +254,7 @@ static void draw(SDL_Renderer *ren, const char *footer) {
             /* A wide (CJK) glyph: 16x16 from Unifont over both cells; "??" when the table lacks it,
                so the columns still line up with what the program laid out. */
             unsigned char ch = cell.wide ? '?' : cell.ch;
-            if (cell.wide == 1 && c + 1 < VT_COLS && vt.cells[r][c + 1].wide == 2 && r < ov_top) {
+            if (cell.wide == 1 && c + 1 < VT_COLS && vt.cells[r][c + 1].wide == 2) {
                 const uint8_t *g = cjk_glyph(cell.cp);
                 int slot = g ? cjk_slot(ren, cell.cp, g) : -1;
                 if (slot >= 0) {
@@ -293,6 +281,7 @@ static void draw(SDL_Renderer *ren, const char *footer) {
             }
         }
     }
+    if (osk.open && !footer) draw_osk(ren);
     if (footer) {
         /* The program ended: one inverted line at the bottom, over the screen it left. */
         SDL_Rect bar = { 0, SCREEN_H - FONT_H, SCREEN_W, FONT_H };
@@ -398,8 +387,10 @@ static void act(logical_button_t b) {
         case LB_LEFT: osk_move(&osk, 0, -1); dirty_input = 1; return;
         case LB_RIGHT: osk_move(&osk, 0, 1); dirty_input = 1; return;
         case LB_A: { char buf[16]; int n = osk_press(&osk, buf, sizeof buf); if (n) write_all(buf, n); dirty_input = 1; return; }
+        case LB_L1: osk_page(&osk, -1); dirty_input = 1; return;
+        case LB_R1: osk_page(&osk, 1); dirty_input = 1; return;
         case LB_B: case LB_SELECT: osk_toggle(&osk); dirty_input = 1; logf_("picker closed"); return;
-        default: break;   /* X, Y, L1/R1, L2/R2, Start still reach the program */
+        default: break;   /* X, Y, L2/R2, Start still reach the program */
         }
     } else if (b == LB_SELECT) { osk_toggle(&osk); dirty_input = 1; logf_("picker opened"); return; }
     int k = button_key(b);
@@ -540,7 +531,8 @@ static void sdl_key(const SDL_KeyboardEvent *e, int down) {
     if (osk.open && down && !e->repeat) {
         /* With the picker open the arrow keys and Enter drive it, like the D-pad and A. */
         logical_button_t b = k == VTK_UP ? LB_UP : k == VTK_DOWN ? LB_DOWN : k == VTK_LEFT ? LB_LEFT :
-                             k == VTK_RIGHT ? LB_RIGHT : k == VTK_ENTER ? LB_A : k == VTK_ESC ? LB_B : LB_NONE;
+                             k == VTK_RIGHT ? LB_RIGHT : k == VTK_ENTER ? LB_A : k == VTK_ESC ? LB_B :
+                             k == VTK_PGUP ? LB_L1 : k == VTK_PGDN ? LB_R1 : LB_NONE;
         if (b != LB_NONE) { act(b); return; }
     }
     if (k >= 0) { if (down) { any_button = 1; send_key((vt_key_t)k); } return; }   /* SDL repeats for us */
