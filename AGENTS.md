@@ -48,7 +48,7 @@ STATUS's "Improvement ideas". Dale's `IMPROVE` decides; accepted ones ship as PR
   init script, u-boot env) and short quotes in docs (paths, config keys, a line or two).
 - Never write to the Roms partition (p1, `/mnt/mmc`). Reading ROM paths to list or launch games is
   fine; copying, creating, editing or deleting anything there is not. **One exception:** the PC link
-  (decision on inbox #41, 2026-11-12) may write there, only while the user has switched it on, with its
+  (decision on inbox #41, 2026-11-12; inbox now issue #303) may write there, only while the user has switched it on, with its
   safeguards: password, local network only, delete moves files to `.trash`, overwrite asks, and ROM uploads
   (ROM copy) only in **[Xroot Mode]**, the state after the one-time ownership acknowledgement
   ([decision](notes/2026-11-13-dale-decision-xroot-mode.md)). **Second exception:** a stock engine
