@@ -9,7 +9,7 @@ void osk_draw_style_default(osk_draw_style_t *s) {
     s->box_bg = OPAQUE(0xE5E5E5); s->box_fg = OPAQUE(0x000000); s->key_fg = OPAQUE(0x000000);
     s->sel_bg = OPAQUE(0xFFFF00); s->sel_fg = OPAQUE(0x000000);
     s->mode_bg = OPAQUE(0x00FFFF); s->mode_fg = OPAQUE(0x000000);
-    s->title = " Keyboard: D-pad moves, A types, B closes, Select Shift ";
+    s->title = " Keyboard: D-pad moves, A types, B or Menu+Select closes ";
 }
 
 void osk_draw_style_ui(osk_draw_style_t *s, uint32_t text_rgb, uint32_t hftext_rgb, uint32_t win_rgb) {
@@ -17,11 +17,6 @@ void osk_draw_style_ui(osk_draw_style_t *s, uint32_t text_rgb, uint32_t hftext_r
     s->box_bg = OPAQUE(win_rgb); s->box_fg = OPAQUE(hftext_rgb); s->key_fg = OPAQUE(text_rgb);
     s->sel_bg = OPAQUE(text_rgb); s->sel_fg = OPAQUE(win_rgb);
     s->mode_bg = OPAQUE(0x55FFFF); s->mode_fg = OPAQUE(0x000000);   /* uis_colors Light Cyan */
-}
-
-int osk_draw_hide_ra(const osk_key_t *key, void *user) {
-    if (!key || !user || !*(const int *)user) return 0;
-    return strcmp(key->label, "Esc") == 0 || strcmp(key->label, "F1") == 0;
 }
 
 int osk_draw_label(const osk_key_t *key, int shift, char *out, int cap) {

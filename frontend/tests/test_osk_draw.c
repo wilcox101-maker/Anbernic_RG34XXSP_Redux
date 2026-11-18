@@ -43,6 +43,11 @@ static int glyph_matches(int row, int col, int i, unsigned char ch, uint32_t fg,
     return 1;
 }
 
+static int hide_esc_f1(const osk_key_t *key, void *user) {
+    if (!key || !user || !*(const int *)user) return 0;
+    return strcmp(key->label, "Esc") == 0 || strcmp(key->label, "F1") == 0;
+}
+
 int main(void) {
     font_set_path("/tmp/redux-osk-draw-test-font-missing");   /* no saved font: VGA */
     font_load();
@@ -137,23 +142,23 @@ int main(void) {
     expect(glyph_matches(row, col, 0, 'C', st.mode_fg, st.mode_bg), "Ctrl latched: mode colours");
     k.ctrl = 0;
 
-    /* D4 B: Esc and F1 left off while RetroArch runs. */
+    /* The hidden-key callback: a key it names is left blank (generic; Esc/F1 as the example). */
     int er, ec, fr, fc;
     find("Esc", &er, &ec); find("F1", &fr, &fc);
     reset();
-    osk_draw(buf, W, H, STRIDE, &k, &st, osk_draw_hide_ra, &ra);
+    osk_draw(buf, W, H, STRIDE, &k, &st, hide_esc_f1, &ra);
     osk_draw_key_rect(W, H, er, ec, &x, &y, &w, &h);
-    expect(count(x, y, w, h, st.key_fg) > 0, "RetroArch not running: Esc shown");
+    expect(count(x, y, w, h, st.key_fg) > 0, "flag off: Esc shown");
     ra = 1;
     reset();
-    osk_draw(buf, W, H, STRIDE, &k, &st, osk_draw_hide_ra, &ra);
+    osk_draw(buf, W, H, STRIDE, &k, &st, hide_esc_f1, &ra);
     osk_draw_key_rect(W, H, er, ec, &x, &y, &w, &h);
     int esc_gone = count(x, y, w, h, st.box_bg) == w * h;
     osk_draw_key_rect(W, H, fr, fc, &x, &y, &w, &h);
-    expect(esc_gone && count(x, y, w, h, st.box_bg) == w * h, "RetroArch running: Esc and F1 blank");
+    expect(esc_gone && count(x, y, w, h, st.box_bg) == w * h, "flag on: Esc and F1 blank");
     find("F2", &row, &col);
-    expect(glyph_matches(row, col, 0, 'F', st.key_fg, st.box_bg), "RetroArch running: F2 still shown");
-    expect(!osk_draw_hide_ra(osk_key(fr, fc), NULL), "hide_ra with no flag: nothing hidden");
+    expect(glyph_matches(row, col, 0, 'F', st.key_fg, st.box_bg), "flag on: F2 still shown");
+    expect(!hide_esc_f1(osk_key(fr, fc), NULL), "callback with no flag: nothing hidden");
 
     /* Settings > UI colours. */
     osk_draw_style_t ui;
