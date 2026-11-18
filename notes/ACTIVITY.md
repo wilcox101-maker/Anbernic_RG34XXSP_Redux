@@ -211,3 +211,4 @@
 - 2026-11-18 13:41 · claude · read: MGR for DALE 13:36: rebuilt keyboard UI, mock-up first · did: merged #300 mock-ups A/B/C (A recommended), waiting on Dale's pick
 - 2026-11-18 13:51 · claude · read: Dale 13:42: keyboard UI A · did: merged #301 keyboard UI A: shared 3-page layout + framed caps, Redux Terminal uses it (arm64 -Werror fix in the PR); not on device. Next: redux-osk daemon on osklib
 - 2026-11-18 14:07 · claude · read: Dale 14:04: read claudius-maximus notes/handover-redux-org-alignment.md · did: opened #302 AGENTS.md Place in the org block (Dale merges)
+- 2026-11-18 14:11 · claude · read: Dale 14:07: consider removing PR #41; picked move to an issue · did: opened inbox issue #303 and #304 (bot + rule/docs references, Dale merges); skill update proposed; #41 closes after #304
