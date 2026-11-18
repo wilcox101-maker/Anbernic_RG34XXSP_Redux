@@ -4,7 +4,7 @@ from: dale
 to: all
 date: 2026-11-18
 re: global on-screen keyboard plan D1-D6 (Dale 11:23, "A, A, B(if no conflicts) B, A, A")
-status: open
+status: acknowledged (D3 and D4 replaced by 2026-11-18-dale-decision-global-osk-2.md)
 ---
 
 # Decision: global on-screen keyboard (OSK)
