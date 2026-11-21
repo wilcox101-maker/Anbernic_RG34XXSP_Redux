@@ -221,3 +221,4 @@
 - 2026-11-18 16:23 · claude · read: #307 merged by Dale (Settings > Keyboard) · did: global OSK on main as 7ce026e (default Off); next device step: K24-K28 probe, then Keyboard On; device test queue picks up #306/#307 not-verified lists
 - 2026-11-18 16:36 · claude · read: Dale 16:36: #308 merged (Claudius STATUS tidy) · did: confirmed on main; STATUS current, finished items in status-archive.md
 - 2026-11-18 17:32 · claudius · read: Dale (Claudius chat): audit of connected projects · did: overseer: PR roles.md Overseer row (Dale merges); STATUS #308 merged by owner earlier
+- 2026-11-21 03:02 · claude · read: Dale 11-21 02:59-03:01: changing direction; review H700 research and get up to speed · did: read H700 docs/STATUS + R29-R36/R33 + DR handoff 11-20d, Claude Files letters (Manager j-o, KR, Claudius), new public repo ReduxOS-Allwinner-H700; report to Dale
