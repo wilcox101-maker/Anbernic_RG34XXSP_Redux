@@ -21,7 +21,7 @@ Changes only the `boot` partition. Flash a copy of the stock card, then `dd` the
 - [ ] Find UART pads for a serial console
 
 ## Phase 2: Mainline + purpose-built OS
-The desk work (device tree, build scripts, DRAM sets, test kits) lives in the
+**Now ReduxOS** (Q12, 2026-11-21): the product is the [ReduxOS-Allwinner-H700](https://github.com/wilcox101-maker/ReduxOS-Allwinner-H700) repo; this section is the history. The desk work (device tree, build scripts, DRAM sets, test kits) lives in the
 [H700 Kernel Research](https://github.com/wilcox101-maker/Allwinner-H700-Custom-Kernel-Research) repo (KR), checked at `c77891f`; Redux links to it rather than redoing
 it. **Nothing in KR has booted on an RG34XX-SP.** Task IDs (K3, K4…) are KR's
 `docs/master-task-list.md`.
@@ -31,7 +31,7 @@ it. **Nothing in KR has booted on an RG34XX-SP.** Task IDs (K3, K4…) are KR's
       DRAM sets in `docs/r3-v106-boot0-dram-sets.md`). DRAM type on Dale's unit still needs K3 (UART)
 - [ ] Boot mainline kernel with a minimal initramfs and a serial console (KR kits: K3 UART pads, K4 FEL boot `docs/r2-fel-test-kit.md`)
 - [ ] Display, input, audio, PMIC/battery, Wi-Fi bring-up checklist (KR K-tasks: K2, K9/K18, K14–K16, K19, K21)
-- [ ] Read-only squashfs system loaded into RAM; ext4 data partition with barriers; watchdog (design: [docs/ram-system-design.md](docs/ram-system-design.md)). **Decision pending:** KR builds an Ubuntu 24.04 image instead (`docs/r7-image-tooling.md`, `r8-update-rollback.md`, `r13-ram-tier-defaults.md`); Dale picks which one Phase 2 follows before it starts
+- [ ] Read-only squashfs system loaded into RAM; ext4 data partition with barriers; watchdog (design: [docs/ram-system-design.md](docs/ram-system-design.md)). **Superseded in practice:** ReduxOS is built on Ubuntu 24.04 (ReduxOS repo); the Owner recommends recording that (P2, Dale) and carrying the RAM-tier ideas in as settings
 - [ ] Lid: `SW_LID` with lid-open as a wake source → flush saves → sync → suspend → resume to the same frame
 - [ ] Standard gamepad event codes; integer-scaled 3× output; audio/video sync to the panel's real refresh
 - [ ] Frontend + RetroArch, tuned for 720×480
@@ -65,11 +65,15 @@ Dale. No mainline kernel is needed.
 - **Exit test:** a fresh copy of the stock card plus the installer boots to Redux. F3–F6 checklists pass on
   the device. One week of daily use with no lost save and no unplanned trip back to stock.
 
-### 1.0: purpose-built OS on mainline
-- [ ] Phase 2 complete (mainline kernel, RAM-resident system, `SW_LID` wake)
-- [ ] F7: F2–F6 checklists pass again on mainline with no UI code changes outside the hardware layer
-- [ ] F8: install/update path for the new OS, measurements against stock and Beta, user docs
-- **Exit test:** a clean card boots mainline Redux to the menu, and every Beta checklist still passes
+### 1.0: ReduxOS on mainline (one finish line, Q12 2026-11-21)
+**ReduxOS 1.0 = the ReduxOS image + this frontend, with every Beta checklist passing on the mainline kernel, on the
+device.** The Redux Owner leads it (Dale, Q12). The one-page roadmap with stages S1–S5 (image, first light,
+bring-up, frontend port F7, release candidate F8) lives in the product repo:
+[ReduxOS-Allwinner-H700 `docs/roadmap.md`](https://github.com/wilcox101-maker/ReduxOS-Allwinner-H700/blob/main/docs/roadmap.md).
+- [ ] S1–S3: ReduxOS image, first light and hardware bring-up (replaces "Phase 2 complete")
+- [ ] F7 (S4): F2–F6 checklists pass again on ReduxOS with no UI code changes outside the hardware layer
+- [ ] F8 (S5): install/update/rollback, measurements against stock and Beta, user docs, signed images
+- **Exit test:** a clean ReduxOS card boots to the Redux menu, and every Beta checklist still passes
 
 ### 1.x: requirements after 1.0
 Required for the 1.x line ([decision](notes/2026-11-13-dale-decision-zram-v1x.md)). Starts only after every
